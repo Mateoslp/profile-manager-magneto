@@ -50,3 +50,15 @@ CREATE TABLE IF NOT EXISTS postulaciones (
     ),
     fecha_postulacion TIMESTAMP DEFAULT NOW()
 );
+
+-- Autenticación (JWT + roles)
+CREATE TABLE IF NOT EXISTS usuarios (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    rol VARCHAR(20) NOT NULL DEFAULT 'candidato' CHECK (rol IN ('candidato', 'admin')),
+    creado_en TIMESTAMP DEFAULT NOW()
+);
+
+ALTER TABLE perfiles ADD COLUMN IF NOT EXISTS usuario_id INTEGER REFERENCES usuarios(id);
+ALTER TABLE postulaciones ADD COLUMN IF NOT EXISTS siguiente_paso TEXT;

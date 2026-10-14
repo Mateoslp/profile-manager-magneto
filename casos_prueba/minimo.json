@@ -1,0 +1,112 @@
+[
+  {
+    "cv_texto": "Juliana López. Profesional en soporte técnico (semi-senior) con 4 años de experiencia. Estudié Ingeniería Informática. Vivo en Barranquilla. Habilidades: Windows Server, Atención al cliente, ITIL.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "soporte técnico",
+      "nivel": "semi-senior",
+      "ciudad": "Barranquilla",
+      "modalidad": "remoto",
+      "completitud": "minimo"
+    }
+  },
+  {
+    "cv_texto": "Valentina Giraldo. Profesional en desarrollo backend (senior) con 12 años de experiencia. Estudié Ingeniería Informática. Vivo en Bogotá. Habilidades: FastAPI, Python, PostgreSQL, Docker, APIs REST.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo backend",
+      "nivel": "senior",
+      "ciudad": "Bogotá",
+      "modalidad": "presencial",
+      "completitud": "minimo"
+    }
+  },
+  {
+    "cv_texto": "Laura Vélez. Profesional en DevOps (junior) con 1 años de experiencia. Estudié Ingeniería Informática. Vivo en Medellín. Habilidades: Kubernetes, CI/CD, AWS, Linux.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "DevOps",
+      "nivel": "junior",
+      "ciudad": "Medellín",
+      "modalidad": "remoto",
+      "completitud": "minimo"
+    }
+  },
+  {
+    "cv_texto": "Juliana Rodríguez. Profesional en desarrollo frontend (senior) con 8 años de experiencia. Estudié Ingeniería de Software. Vivo en Bogotá. Habilidades: React, Next.js, CSS.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "senior",
+      "ciudad": "Bogotá",
+      "modalidad": "remoto",
+      "completitud": "minimo"
+    }
+  },
+  {
+    "cv_texto": "Natalia Restrepo. Profesional en soporte técnico (junior) con 0 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Bucaramanga. Habilidades: Atención al cliente, ITIL, Redes.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "soporte técnico",
+      "nivel": "junior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "híbrido",
+      "completitud": "minimo"
+    }
+  },
+  {
+    "cv_texto": "Santiago Vélez. Profesional en desarrollo frontend (senior) con 7 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Cali. Habilidades: Next.js, TypeScript, CSS.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "senior",
+      "ciudad": "Cali",
+      "modalidad": "remoto",
+      "completitud": "minimo"
+    }
+  },
+  {
+    "cv_texto": "Felipe Gómez. Profesional en desarrollo backend (semi-senior) con 3 años de experiencia. Estudié Ingeniería de Software. Vivo en Cali. Habilidades: FastAPI, APIs REST, PostgreSQL, Docker.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo backend",
+      "nivel": "semi-senior",
+      "ciudad": "Cali",
+      "modalidad": "presencial",
+      "completitud": "minimo"
+    }
+  },
+  {
+    "cv_texto": "David Martínez. Profesional en ciencia de datos (semi-senior) con 4 años de experiencia. Estudié Ingeniería Informática. Vivo en Bucaramanga. Habilidades: Pandas, Machine Learning, SQL, Python, Power BI.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "ciencia de datos",
+      "nivel": "semi-senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "presencial",
+      "completitud": "minimo"
+    }
+  },
+  {
+    "cv_texto": "Santiago Restrepo. Profesional en DevOps (senior) con 12 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Barranquilla. Habilidades: Linux, AWS, Kubernetes, Docker.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "DevOps",
+      "nivel": "senior",
+      "ciudad": "Barranquilla",
+      "modalidad": "híbrido",
+      "completitud": "minimo"
+    }
+  },
+  {
+    "cv_texto": "Manuela Rodríguez. Profesional en DevOps (semi-senior) con 3 años de experiencia. Estudié Ingeniería Informática. Vivo en Cali. Habilidades: CI/CD, AWS, Docker, Linux, Kubernetes.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "DevOps",
+      "nivel": "semi-senior",
+      "ciudad": "Cali",
+      "modalidad": "híbrido",
+      "completitud": "minimo"
+    }
+  }
+]

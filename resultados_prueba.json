@@ -1,0 +1,1279 @@
+[
+  {
+    "categoria": "completo",
+    "ok": false,
+    "vacios": 0,
+    "esperado": {
+      "area": "soporte técnico",
+      "nivel": "semi-senior",
+      "ciudad": "Bogotá",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "sin_salario",
+    "ok": true,
+    "vacios": 1,
+    "perfil_id": 5,
+    "esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "categoria": "minimo",
+    "ok": true,
+    "vacios": 5,
+    "perfil_id": 61,
+    "esperado": {
+      "area": "soporte técnico",
+      "nivel": "semi-senior",
+      "ciudad": "Barranquilla",
+      "modalidad": "remoto",
+      "completitud": "minimo"
+    }
+  },
+  {
+    "categoria": "sin_contacto",
+    "ok": true,
+    "vacios": 2,
+    "perfil_id": 62,
+    "esperado": {
+      "area": "soporte técnico",
+      "nivel": "junior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "presencial",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": true,
+    "vacios": 0,
+    "perfil_id": 7,
+    "esperado": {
+      "area": "ciencia de datos",
+      "nivel": "junior",
+      "ciudad": "Cali",
+      "modalidad": "híbrido",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "sin_salario",
+    "ok": true,
+    "vacios": 1,
+    "perfil_id": 8,
+    "esperado": {
+      "area": "soporte técnico",
+      "nivel": "junior",
+      "ciudad": "Medellín",
+      "modalidad": "remoto",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "categoria": "minimo",
+    "ok": true,
+    "vacios": 5,
+    "perfil_id": 65,
+    "esperado": {
+      "area": "desarrollo backend",
+      "nivel": "senior",
+      "ciudad": "Bogotá",
+      "modalidad": "presencial",
+      "completitud": "minimo"
+    }
+  },
+  {
+    "categoria": "sin_contacto",
+    "ok": true,
+    "vacios": 2,
+    "perfil_id": 66,
+    "esperado": {
+      "area": "DevOps",
+      "nivel": "senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "remoto",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": true,
+    "vacios": 0,
+    "perfil_id": 67,
+    "esperado": {
+      "area": "soporte técnico",
+      "nivel": "junior",
+      "ciudad": "Barranquilla",
+      "modalidad": "presencial",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "sin_salario",
+    "ok": true,
+    "vacios": 1,
+    "perfil_id": 27,
+    "esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "semi-senior",
+      "ciudad": "Medellín",
+      "modalidad": "remoto",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "categoria": "minimo",
+    "ok": true,
+    "vacios": 5,
+    "perfil_id": 69,
+    "esperado": {
+      "area": "DevOps",
+      "nivel": "junior",
+      "ciudad": "Medellín",
+      "modalidad": "remoto",
+      "completitud": "minimo"
+    }
+  },
+  {
+    "categoria": "sin_contacto",
+    "ok": false,
+    "vacios": 0,
+    "esperado": {
+      "area": "desarrollo backend",
+      "nivel": "senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "remoto",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": false,
+    "vacios": 0,
+    "esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "junior",
+      "ciudad": "Barranquilla",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "sin_salario",
+    "ok": true,
+    "vacios": 1,
+    "perfil_id": 30,
+    "esperado": {
+      "area": "DevOps",
+      "nivel": "semi-senior",
+      "ciudad": "Cali",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "categoria": "minimo",
+    "ok": true,
+    "vacios": 5,
+    "perfil_id": 71,
+    "esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "senior",
+      "ciudad": "Bogotá",
+      "modalidad": "remoto",
+      "completitud": "minimo"
+    }
+  },
+  {
+    "categoria": "sin_contacto",
+    "ok": true,
+    "vacios": 2,
+    "perfil_id": 72,
+    "esperado": {
+      "area": "soporte técnico",
+      "nivel": "semi-senior",
+      "ciudad": "Cali",
+      "modalidad": "presencial",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": false,
+    "vacios": 0,
+    "esperado": {
+      "area": "soporte técnico",
+      "nivel": "junior",
+      "ciudad": "Medellín",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "sin_salario",
+    "ok": true,
+    "vacios": 1,
+    "perfil_id": 32,
+    "esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "senior",
+      "ciudad": "Bogotá",
+      "modalidad": "remoto",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "categoria": "minimo",
+    "ok": true,
+    "vacios": 5,
+    "perfil_id": 74,
+    "esperado": {
+      "area": "soporte técnico",
+      "nivel": "junior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "híbrido",
+      "completitud": "minimo"
+    }
+  },
+  {
+    "categoria": "sin_contacto",
+    "ok": true,
+    "vacios": 2,
+    "perfil_id": 75,
+    "esperado": {
+      "area": "soporte técnico",
+      "nivel": "semi-senior",
+      "ciudad": "Medellín",
+      "modalidad": "remoto",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": true,
+    "vacios": 0,
+    "perfil_id": 76,
+    "esperado": {
+      "area": "desarrollo backend",
+      "nivel": "junior",
+      "ciudad": "Barranquilla",
+      "modalidad": "presencial",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "sin_salario",
+    "ok": true,
+    "vacios": 1,
+    "perfil_id": 35,
+    "esperado": {
+      "area": "desarrollo backend",
+      "nivel": "semi-senior",
+      "ciudad": "Bogotá",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "categoria": "minimo",
+    "ok": true,
+    "vacios": 5,
+    "perfil_id": 78,
+    "esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "senior",
+      "ciudad": "Cali",
+      "modalidad": "remoto",
+      "completitud": "minimo"
+    }
+  },
+  {
+    "categoria": "sin_contacto",
+    "ok": true,
+    "vacios": 2,
+    "perfil_id": 79,
+    "esperado": {
+      "area": "DevOps",
+      "nivel": "junior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "híbrido",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": false,
+    "vacios": 0,
+    "esperado": {
+      "area": "ciencia de datos",
+      "nivel": "junior",
+      "ciudad": "Bogotá",
+      "modalidad": "presencial",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "sin_salario",
+    "ok": true,
+    "vacios": 1,
+    "perfil_id": 39,
+    "esperado": {
+      "area": "DevOps",
+      "nivel": "senior",
+      "ciudad": "Cali",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "categoria": "minimo",
+    "ok": true,
+    "vacios": 5,
+    "perfil_id": 81,
+    "esperado": {
+      "area": "desarrollo backend",
+      "nivel": "semi-senior",
+      "ciudad": "Cali",
+      "modalidad": "presencial",
+      "completitud": "minimo"
+    }
+  },
+  {
+    "categoria": "sin_contacto",
+    "ok": true,
+    "vacios": 2,
+    "perfil_id": 82,
+    "esperado": {
+      "area": "ciencia de datos",
+      "nivel": "junior",
+      "ciudad": "Medellín",
+      "modalidad": "remoto",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": true,
+    "vacios": 0,
+    "perfil_id": 42,
+    "esperado": {
+      "area": "ciencia de datos",
+      "nivel": "semi-senior",
+      "ciudad": "Barranquilla",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "sin_salario",
+    "ok": true,
+    "vacios": 1,
+    "perfil_id": 43,
+    "esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "semi-senior",
+      "ciudad": "Cali",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "categoria": "minimo",
+    "ok": true,
+    "vacios": 5,
+    "perfil_id": 85,
+    "esperado": {
+      "area": "ciencia de datos",
+      "nivel": "semi-senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "presencial",
+      "completitud": "minimo"
+    }
+  },
+  {
+    "categoria": "sin_contacto",
+    "ok": true,
+    "vacios": 2,
+    "perfil_id": 86,
+    "esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "semi-senior",
+      "ciudad": "Cali",
+      "modalidad": "presencial",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": true,
+    "vacios": 0,
+    "perfil_id": 46,
+    "esperado": {
+      "area": "DevOps",
+      "nivel": "junior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "sin_salario",
+    "ok": true,
+    "vacios": 1,
+    "perfil_id": 47,
+    "esperado": {
+      "area": "soporte técnico",
+      "nivel": "semi-senior",
+      "ciudad": "Barranquilla",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "categoria": "minimo",
+    "ok": true,
+    "vacios": 5,
+    "perfil_id": 89,
+    "esperado": {
+      "area": "DevOps",
+      "nivel": "senior",
+      "ciudad": "Barranquilla",
+      "modalidad": "híbrido",
+      "completitud": "minimo"
+    }
+  },
+  {
+    "categoria": "sin_contacto",
+    "ok": false,
+    "vacios": 0,
+    "esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "semi-senior",
+      "ciudad": "Bogotá",
+      "modalidad": "híbrido",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": true,
+    "vacios": 0,
+    "perfil_id": 49,
+    "esperado": {
+      "area": "desarrollo backend",
+      "nivel": "semi-senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "sin_salario",
+    "ok": true,
+    "vacios": 1,
+    "perfil_id": 50,
+    "esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "junior",
+      "ciudad": "Barranquilla",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "categoria": "minimo",
+    "ok": true,
+    "vacios": 5,
+    "perfil_id": 92,
+    "esperado": {
+      "area": "DevOps",
+      "nivel": "semi-senior",
+      "ciudad": "Cali",
+      "modalidad": "híbrido",
+      "completitud": "minimo"
+    }
+  },
+  {
+    "categoria": "sin_contacto",
+    "ok": false,
+    "vacios": 0,
+    "esperado": {
+      "area": "ciencia de datos",
+      "nivel": "senior",
+      "ciudad": "Barranquilla",
+      "modalidad": "presencial",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": false,
+    "vacios": 0,
+    "esperado": {
+      "area": "soporte técnico",
+      "nivel": "senior",
+      "ciudad": "Medellín",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "sin_salario",
+    "ok": true,
+    "vacios": 1,
+    "perfil_id": 52,
+    "esperado": {
+      "area": "ciencia de datos",
+      "nivel": "semi-senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "categoria": "sin_contacto",
+    "ok": true,
+    "vacios": 2,
+    "perfil_id": 94,
+    "esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "senior",
+      "ciudad": "Bogotá",
+      "modalidad": "presencial",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": false,
+    "vacios": 0,
+    "esperado": {
+      "area": "ciencia de datos",
+      "nivel": "senior",
+      "ciudad": "Cali",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "sin_salario",
+    "ok": true,
+    "vacios": 1,
+    "perfil_id": 54,
+    "esperado": {
+      "area": "DevOps",
+      "nivel": "semi-senior",
+      "ciudad": "Barranquilla",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "categoria": "sin_contacto",
+    "ok": true,
+    "vacios": 2,
+    "perfil_id": 96,
+    "esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "semi-senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "presencial",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": true,
+    "vacios": 0,
+    "perfil_id": 56,
+    "esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "semi-senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "híbrido",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "sin_salario",
+    "ok": true,
+    "vacios": 1,
+    "perfil_id": 57,
+    "esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "semi-senior",
+      "ciudad": "Cali",
+      "modalidad": "híbrido",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "categoria": "sin_contacto",
+    "ok": false,
+    "vacios": 0,
+    "esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "junior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "remoto",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": false,
+    "vacios": 0,
+    "esperado": {
+      "area": "ciencia de datos",
+      "nivel": "junior",
+      "ciudad": "Cali",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "sin_salario",
+    "ok": true,
+    "vacios": 1,
+    "perfil_id": 58,
+    "esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "semi-senior",
+      "ciudad": "Bogotá",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "categoria": "sin_contacto",
+    "ok": true,
+    "vacios": 2,
+    "perfil_id": 100,
+    "esperado": {
+      "area": "desarrollo backend",
+      "nivel": "semi-senior",
+      "ciudad": "Bogotá",
+      "modalidad": "remoto",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": true,
+    "vacios": 0,
+    "perfil_id": 101,
+    "esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "semi-senior",
+      "ciudad": "Medellín",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "sin_salario",
+    "ok": true,
+    "vacios": 1,
+    "perfil_id": 102,
+    "esperado": {
+      "area": "desarrollo backend",
+      "nivel": "semi-senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "categoria": "sin_contacto",
+    "ok": true,
+    "vacios": 2,
+    "perfil_id": 103,
+    "esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "junior",
+      "ciudad": "Bogotá",
+      "modalidad": "remoto",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": true,
+    "vacios": 0,
+    "perfil_id": 104,
+    "esperado": {
+      "area": "ciencia de datos",
+      "nivel": "senior",
+      "ciudad": "Medellín",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "sin_salario",
+    "ok": false,
+    "vacios": 0,
+    "esperado": {
+      "area": "desarrollo backend",
+      "nivel": "semi-senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "categoria": "sin_contacto",
+    "ok": true,
+    "vacios": 2,
+    "perfil_id": 105,
+    "esperado": {
+      "area": "DevOps",
+      "nivel": "semi-senior",
+      "ciudad": "Medellín",
+      "modalidad": "remoto",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": false,
+    "vacios": 0,
+    "esperado": {
+      "area": "DevOps",
+      "nivel": "semi-senior",
+      "ciudad": "Medellín",
+      "modalidad": "presencial",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "sin_salario",
+    "ok": true,
+    "vacios": 1,
+    "perfil_id": 106,
+    "esperado": {
+      "area": "soporte técnico",
+      "nivel": "senior",
+      "ciudad": "Bogotá",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "categoria": "sin_contacto",
+    "ok": false,
+    "vacios": 0,
+    "esperado": {
+      "area": "DevOps",
+      "nivel": "junior",
+      "ciudad": "Medellín",
+      "modalidad": "presencial",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": true,
+    "vacios": 0,
+    "perfil_id": 107,
+    "esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "semi-senior",
+      "ciudad": "Medellín",
+      "modalidad": "híbrido",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "sin_salario",
+    "ok": true,
+    "vacios": 1,
+    "perfil_id": 108,
+    "esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "senior",
+      "ciudad": "Medellín",
+      "modalidad": "remoto",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "categoria": "sin_contacto",
+    "ok": false,
+    "vacios": 0,
+    "esperado": {
+      "area": "DevOps",
+      "nivel": "senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "híbrido",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": true,
+    "vacios": 0,
+    "perfil_id": 109,
+    "esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "senior",
+      "ciudad": "Medellín",
+      "modalidad": "presencial",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "sin_salario",
+    "ok": true,
+    "vacios": 1,
+    "perfil_id": 110,
+    "esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "junior",
+      "ciudad": "Barranquilla",
+      "modalidad": "remoto",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "categoria": "sin_contacto",
+    "ok": true,
+    "vacios": 2,
+    "perfil_id": 111,
+    "esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "junior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "remoto",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": true,
+    "vacios": 0,
+    "perfil_id": 112,
+    "esperado": {
+      "area": "ciencia de datos",
+      "nivel": "semi-senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "presencial",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "sin_salario",
+    "ok": true,
+    "vacios": 1,
+    "perfil_id": 113,
+    "esperado": {
+      "area": "DevOps",
+      "nivel": "junior",
+      "ciudad": "Medellín",
+      "modalidad": "híbrido",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "categoria": "sin_contacto",
+    "ok": true,
+    "vacios": 2,
+    "perfil_id": 114,
+    "esperado": {
+      "area": "DevOps",
+      "nivel": "junior",
+      "ciudad": "Bogotá",
+      "modalidad": "presencial",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": true,
+    "vacios": 0,
+    "perfil_id": 115,
+    "esperado": {
+      "area": "DevOps",
+      "nivel": "semi-senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "presencial",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "sin_salario",
+    "ok": true,
+    "vacios": 1,
+    "perfil_id": 116,
+    "esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "senior",
+      "ciudad": "Bogotá",
+      "modalidad": "remoto",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": true,
+    "vacios": 0,
+    "perfil_id": 117,
+    "esperado": {
+      "area": "desarrollo backend",
+      "nivel": "semi-senior",
+      "ciudad": "Medellín",
+      "modalidad": "híbrido",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "sin_salario",
+    "ok": true,
+    "vacios": 1,
+    "perfil_id": 118,
+    "esperado": {
+      "area": "ciencia de datos",
+      "nivel": "junior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": false,
+    "vacios": 0,
+    "esperado": {
+      "area": "ciencia de datos",
+      "nivel": "semi-senior",
+      "ciudad": "Barranquilla",
+      "modalidad": "presencial",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "sin_salario",
+    "ok": true,
+    "vacios": 1,
+    "perfil_id": 119,
+    "esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "semi-senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": true,
+    "vacios": 0,
+    "perfil_id": 120,
+    "esperado": {
+      "area": "DevOps",
+      "nivel": "senior",
+      "ciudad": "Bogotá",
+      "modalidad": "presencial",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "sin_salario",
+    "ok": true,
+    "vacios": 1,
+    "perfil_id": 121,
+    "esperado": {
+      "area": "ciencia de datos",
+      "nivel": "junior",
+      "ciudad": "Bogotá",
+      "modalidad": "remoto",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": false,
+    "vacios": 0,
+    "esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "semi-senior",
+      "ciudad": "Medellín",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "sin_salario",
+    "ok": true,
+    "vacios": 1,
+    "perfil_id": 122,
+    "esperado": {
+      "area": "DevOps",
+      "nivel": "junior",
+      "ciudad": "Cali",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": false,
+    "vacios": 0,
+    "esperado": {
+      "area": "desarrollo backend",
+      "nivel": "senior",
+      "ciudad": "Bogotá",
+      "modalidad": "híbrido",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": false,
+    "vacios": 0,
+    "esperado": {
+      "area": "soporte técnico",
+      "nivel": "semi-senior",
+      "ciudad": "Cali",
+      "modalidad": "presencial",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": true,
+    "vacios": 0,
+    "perfil_id": 123,
+    "esperado": {
+      "area": "DevOps",
+      "nivel": "senior",
+      "ciudad": "Barranquilla",
+      "modalidad": "híbrido",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": true,
+    "vacios": 0,
+    "perfil_id": 124,
+    "esperado": {
+      "area": "ciencia de datos",
+      "nivel": "senior",
+      "ciudad": "Bogotá",
+      "modalidad": "presencial",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": true,
+    "vacios": 0,
+    "perfil_id": 125,
+    "esperado": {
+      "area": "DevOps",
+      "nivel": "senior",
+      "ciudad": "Medellín",
+      "modalidad": "híbrido",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": true,
+    "vacios": 0,
+    "perfil_id": 126,
+    "esperado": {
+      "area": "DevOps",
+      "nivel": "senior",
+      "ciudad": "Bogotá",
+      "modalidad": "híbrido",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": true,
+    "vacios": 0,
+    "perfil_id": 127,
+    "esperado": {
+      "area": "ciencia de datos",
+      "nivel": "junior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": false,
+    "vacios": 0,
+    "esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "junior",
+      "ciudad": "Medellín",
+      "modalidad": "híbrido",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": true,
+    "vacios": 0,
+    "perfil_id": 128,
+    "esperado": {
+      "area": "ciencia de datos",
+      "nivel": "junior",
+      "ciudad": "Medellín",
+      "modalidad": "híbrido",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": true,
+    "vacios": 0,
+    "perfil_id": 129,
+    "esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "senior",
+      "ciudad": "Medellín",
+      "modalidad": "híbrido",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": true,
+    "vacios": 0,
+    "perfil_id": 130,
+    "esperado": {
+      "area": "DevOps",
+      "nivel": "senior",
+      "ciudad": "Medellín",
+      "modalidad": "presencial",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": true,
+    "vacios": 0,
+    "perfil_id": 131,
+    "esperado": {
+      "area": "desarrollo backend",
+      "nivel": "semi-senior",
+      "ciudad": "Cali",
+      "modalidad": "híbrido",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": true,
+    "vacios": 0,
+    "perfil_id": 132,
+    "esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "semi-senior",
+      "ciudad": "Barranquilla",
+      "modalidad": "híbrido",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": true,
+    "vacios": 0,
+    "perfil_id": 133,
+    "esperado": {
+      "area": "soporte técnico",
+      "nivel": "junior",
+      "ciudad": "Medellín",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": false,
+    "vacios": 0,
+    "esperado": {
+      "area": "ciencia de datos",
+      "nivel": "semi-senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": true,
+    "vacios": 0,
+    "perfil_id": 134,
+    "esperado": {
+      "area": "DevOps",
+      "nivel": "senior",
+      "ciudad": "Barranquilla",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": true,
+    "vacios": 0,
+    "perfil_id": 135,
+    "esperado": {
+      "area": "DevOps",
+      "nivel": "semi-senior",
+      "ciudad": "Bogotá",
+      "modalidad": "presencial",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": false,
+    "vacios": 0,
+    "esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "junior",
+      "ciudad": "Barranquilla",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": false,
+    "vacios": 0,
+    "esperado": {
+      "area": "soporte técnico",
+      "nivel": "junior",
+      "ciudad": "Barranquilla",
+      "modalidad": "presencial",
+      "completitud": "completo"
+    }
+  },
+  {
+    "categoria": "completo",
+    "ok": true,
+    "vacios": 0,
+    "perfil_id": 136,
+    "esperado": {
+      "area": "desarrollo backend",
+      "nivel": "semi-senior",
+      "ciudad": "Medellín",
+      "modalidad": "híbrido",
+      "completitud": "completo"
+    }
+  }
+]

@@ -1,0 +1,1102 @@
+[
+  {
+    "cv_texto": "Santiago Gómez. Profesional en soporte técnico (semi-senior) con 3 años de experiencia. Estudié Ingeniería de Software. Vivo en Bogotá. Habilidades: Redes, Atención al cliente, Windows Server. Disponibilidad: en 1 mes. Prefiero trabajar de forma remoto. Contacto: santiago.gomez0@correo.com, 3014668136. Aspiración salarial: 6800000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "soporte técnico",
+      "nivel": "semi-senior",
+      "ciudad": "Bogotá",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Mariana Vélez. Profesional en desarrollo frontend (senior) con 11 años de experiencia. Estudié Ingeniería de Software. Vivo en Bucaramanga. Habilidades: Figma, TypeScript, React, CSS. Disponibilidad: en 15 días. Prefiero trabajar de forma presencial. Contacto: mariana.velez1@correo.com, 3143608513.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Santiago Rodríguez. Profesional en ciencia de datos (junior) con 1 años de experiencia. Estudié Ingeniería de Software. Vivo en Cali. Habilidades: Machine Learning, Python, Pandas. Disponibilidad: en 1 mes. Prefiero trabajar de forma híbrido. Contacto: santiago.rodriguez2@correo.com, 3247067228. Aspiración salarial: 3300000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "ciencia de datos",
+      "nivel": "junior",
+      "ciudad": "Cali",
+      "modalidad": "híbrido",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Valentina Gómez. Profesional en soporte técnico (junior) con 1 años de experiencia. Estudié Ingeniería de Sistemas. Vivo en Medellín. Habilidades: Atención al cliente, Windows Server, ITIL, Redes. Disponibilidad: en 1 mes. Prefiero trabajar de forma remoto. Contacto: valentina.gomez3@correo.com, 3135479144.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "soporte técnico",
+      "nivel": "junior",
+      "ciudad": "Medellín",
+      "modalidad": "remoto",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Andrés Vélez. Profesional en soporte técnico (junior) con 0 años de experiencia. Estudié Ingeniería de Sistemas. Vivo en Barranquilla. Habilidades: Atención al cliente, Redes, ITIL. Disponibilidad: inmediata. Prefiero trabajar de forma presencial. Contacto: andres.velez4@correo.com, 3165491946. Aspiración salarial: 3300000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "soporte técnico",
+      "nivel": "junior",
+      "ciudad": "Barranquilla",
+      "modalidad": "presencial",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Juliana López. Profesional en soporte técnico (semi-senior) con 4 años de experiencia. Estudié Ingeniería Informática. Vivo en Barranquilla. Habilidades: Windows Server, Atención al cliente, ITIL.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "soporte técnico",
+      "nivel": "semi-senior",
+      "ciudad": "Barranquilla",
+      "modalidad": "remoto",
+      "completitud": "minimo"
+    }
+  },
+  {
+    "cv_texto": "Sebastián Martínez. Profesional en calidad de software (QA) (semi-senior) con 3 años de experiencia. Estudié Ingeniería Informática. Vivo en Medellín. Habilidades: Postman, Jira, Pruebas automatizadas. Disponibilidad: en 1 mes. Prefiero trabajar de forma remoto. Contacto: sebastian.martinez6@correo.com, 3198852574.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "semi-senior",
+      "ciudad": "Medellín",
+      "modalidad": "remoto",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Mariana Zapata. Profesional en soporte técnico (junior) con 2 años de experiencia. Estudié Ingeniería de Software. Vivo en Bucaramanga. Habilidades: Atención al cliente, Windows Server, Redes. Disponibilidad: en 1 mes. Prefiero trabajar de forma presencial. Aspiración salarial: 3500000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "soporte técnico",
+      "nivel": "junior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "presencial",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "cv_texto": "Santiago Zapata. Profesional en DevOps (senior) con 10 años de experiencia. Estudié Ingeniería Informática. Vivo en Bucaramanga. Habilidades: Kubernetes, Docker, AWS, Linux. Disponibilidad: inmediata. Prefiero trabajar de forma remoto. Aspiración salarial: 8900000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "DevOps",
+      "nivel": "senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "remoto",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "cv_texto": "Camilo López. Profesional en calidad de software (QA) (junior) con 0 años de experiencia. Estudié Ingeniería de Software. Vivo en Barranquilla. Habilidades: Postman, Jira, Pruebas automatizadas. Disponibilidad: en 1 mes. Prefiero trabajar de forma remoto. Contacto: camilo.lopez9@correo.com, 3298099076. Aspiración salarial: 2900000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "junior",
+      "ciudad": "Barranquilla",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Laura Cardona. Profesional en DevOps (semi-senior) con 5 años de experiencia. Estudié Ingeniería de Software. Vivo en Cali. Habilidades: Docker, Kubernetes, Linux, AWS. Disponibilidad: inmediata. Prefiero trabajar de forma presencial. Contacto: laura.cardona10@correo.com, 3094860684.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "DevOps",
+      "nivel": "semi-senior",
+      "ciudad": "Cali",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Valentina Cardona. Profesional en soporte técnico (junior) con 0 años de experiencia. Estudié Ingeniería de Software. Vivo en Medellín. Habilidades: Windows Server, ITIL, Atención al cliente. Disponibilidad: en 15 días. Prefiero trabajar de forma remoto. Contacto: valentina.cardona11@correo.com, 3228930103. Aspiración salarial: 3500000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "soporte técnico",
+      "nivel": "junior",
+      "ciudad": "Medellín",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Esteban López. Profesional en desarrollo backend (junior) con 2 años de experiencia. Estudié Ingeniería de Software. Vivo en Barranquilla. Habilidades: Docker, Python, PostgreSQL, APIs REST. Disponibilidad: inmediata. Prefiero trabajar de forma presencial. Contacto: esteban.lopez12@correo.com, 3152833230. Aspiración salarial: 3800000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo backend",
+      "nivel": "junior",
+      "ciudad": "Barranquilla",
+      "modalidad": "presencial",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Laura Vélez. Profesional en ciencia de datos (junior) con 1 años de experiencia. Estudié Ingeniería de Sistemas. Vivo en Bogotá. Habilidades: Python, Machine Learning, SQL. Disponibilidad: inmediata. Prefiero trabajar de forma presencial. Contacto: laura.velez13@correo.com, 3081247595. Aspiración salarial: 3900000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "ciencia de datos",
+      "nivel": "junior",
+      "ciudad": "Bogotá",
+      "modalidad": "presencial",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Andrés Restrepo. Profesional en ciencia de datos (semi-senior) con 3 años de experiencia. Estudié Ingeniería de Software. Vivo en Barranquilla. Habilidades: Python, Machine Learning, Pandas, SQL. Disponibilidad: inmediata. Prefiero trabajar de forma remoto. Contacto: andres.restrepo14@correo.com, 3189164991. Aspiración salarial: 5000000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "ciencia de datos",
+      "nivel": "semi-senior",
+      "ciudad": "Barranquilla",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Felipe López. Profesional en desarrollo backend (senior) con 11 años de experiencia. Estudié Ingeniería de Sistemas. Vivo en Bucaramanga. Habilidades: Python, APIs REST, PostgreSQL, FastAPI. Disponibilidad: inmediata. Prefiero trabajar de forma remoto. Aspiración salarial: 12700000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo backend",
+      "nivel": "senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "remoto",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "cv_texto": "Valentina Giraldo. Profesional en desarrollo backend (senior) con 12 años de experiencia. Estudié Ingeniería Informática. Vivo en Bogotá. Habilidades: FastAPI, Python, PostgreSQL, Docker, APIs REST.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo backend",
+      "nivel": "senior",
+      "ciudad": "Bogotá",
+      "modalidad": "presencial",
+      "completitud": "minimo"
+    }
+  },
+  {
+    "cv_texto": "Laura Zapata. Profesional en soporte técnico (semi-senior) con 3 años de experiencia. Estudié Ingeniería de Sistemas. Vivo en Cali. Habilidades: ITIL, Windows Server, Redes, Atención al cliente. Disponibilidad: en 1 mes. Prefiero trabajar de forma presencial. Aspiración salarial: 4900000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "soporte técnico",
+      "nivel": "semi-senior",
+      "ciudad": "Cali",
+      "modalidad": "presencial",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "cv_texto": "Laura Vélez. Profesional en DevOps (junior) con 1 años de experiencia. Estudié Ingeniería Informática. Vivo en Medellín. Habilidades: Kubernetes, CI/CD, AWS, Linux.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "DevOps",
+      "nivel": "junior",
+      "ciudad": "Medellín",
+      "modalidad": "remoto",
+      "completitud": "minimo"
+    }
+  },
+  {
+    "cv_texto": "Santiago Martínez. Profesional en DevOps (junior) con 0 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Bucaramanga. Habilidades: Linux, Kubernetes, AWS, CI/CD. Disponibilidad: en 15 días. Prefiero trabajar de forma remoto. Contacto: santiago.martinez19@correo.com, 3249479356. Aspiración salarial: 3300000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "DevOps",
+      "nivel": "junior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Camilo Rodríguez. Profesional en soporte técnico (semi-senior) con 4 años de experiencia. Estudié Ingeniería de Sistemas. Vivo en Medellín. Habilidades: Atención al cliente, Redes, Windows Server. Disponibilidad: inmediata. Prefiero trabajar de forma remoto. Aspiración salarial: 5500000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "soporte técnico",
+      "nivel": "semi-senior",
+      "ciudad": "Medellín",
+      "modalidad": "remoto",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "cv_texto": "Daniela Vélez. Profesional en desarrollo backend (semi-senior) con 5 años de experiencia. Estudié Ingeniería de Sistemas. Vivo en Bucaramanga. Habilidades: Python, PostgreSQL, FastAPI. Disponibilidad: en 15 días. Prefiero trabajar de forma remoto. Contacto: daniela.velez21@correo.com, 3135186414. Aspiración salarial: 5800000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo backend",
+      "nivel": "semi-senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "David Restrepo. Profesional en calidad de software (QA) (senior) con 7 años de experiencia. Estudié Ingeniería de Software. Vivo en Bogotá. Habilidades: Postman, Pruebas automatizadas, Jira. Disponibilidad: en 1 mes. Prefiero trabajar de forma remoto. Contacto: david.restrepo22@correo.com, 3135476257.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "senior",
+      "ciudad": "Bogotá",
+      "modalidad": "remoto",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Santiago Restrepo. Profesional en desarrollo backend (semi-senior) con 3 años de experiencia. Estudié Ingeniería Informática. Vivo en Bogotá. Habilidades: FastAPI, APIs REST, Python, PostgreSQL. Disponibilidad: en 15 días. Prefiero trabajar de forma presencial. Contacto: santiago.restrepo23@correo.com, 3142164686.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo backend",
+      "nivel": "semi-senior",
+      "ciudad": "Bogotá",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Manuela Restrepo. Profesional en soporte técnico (senior) con 8 años de experiencia. Estudié Ingeniería Informática. Vivo en Medellín. Habilidades: Windows Server, Atención al cliente, ITIL, Redes. Disponibilidad: en 15 días. Prefiero trabajar de forma remoto. Contacto: manuela.restrepo24@correo.com, 3266799667. Aspiración salarial: 13600000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "soporte técnico",
+      "nivel": "senior",
+      "ciudad": "Medellín",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Manuela Rodríguez. Profesional en ciencia de datos (senior) con 7 años de experiencia. Estudié Ingeniería de Sistemas. Vivo en Cali. Habilidades: Python, Pandas, Machine Learning, SQL. Disponibilidad: en 1 mes. Prefiero trabajar de forma remoto. Contacto: manuela.rodriguez25@correo.com, 3256266630. Aspiración salarial: 12500000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "ciencia de datos",
+      "nivel": "senior",
+      "ciudad": "Cali",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Felipe Vélez. Profesional en DevOps (senior) con 9 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Cali. Habilidades: Linux, Kubernetes, Docker, CI/CD. Disponibilidad: en 1 mes. Prefiero trabajar de forma presencial. Contacto: felipe.velez26@correo.com, 3226049101.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "DevOps",
+      "nivel": "senior",
+      "ciudad": "Cali",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Mariana Hernández. Profesional en DevOps (junior) con 1 años de experiencia. Estudié Ingeniería Informática. Vivo en Bucaramanga. Habilidades: CI/CD, Linux, AWS, Docker. Disponibilidad: en 1 mes. Prefiero trabajar de forma híbrido. Aspiración salarial: 3500000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "DevOps",
+      "nivel": "junior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "híbrido",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "cv_texto": "Juliana Rodríguez. Profesional en desarrollo frontend (senior) con 8 años de experiencia. Estudié Ingeniería de Software. Vivo en Bogotá. Habilidades: React, Next.js, CSS.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "senior",
+      "ciudad": "Bogotá",
+      "modalidad": "remoto",
+      "completitud": "minimo"
+    }
+  },
+  {
+    "cv_texto": "Natalia Ospina. Profesional en ciencia de datos (junior) con 0 años de experiencia. Estudié Ingeniería de Software. Vivo en Medellín. Habilidades: Pandas, Machine Learning, Python. Disponibilidad: en 15 días. Prefiero trabajar de forma remoto. Aspiración salarial: 3800000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "ciencia de datos",
+      "nivel": "junior",
+      "ciudad": "Medellín",
+      "modalidad": "remoto",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "cv_texto": "Manuela Vélez. Profesional en calidad de software (QA) (semi-senior) con 4 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Bucaramanga. Habilidades: Postman, Pruebas automatizadas, Selenium, Jira. Disponibilidad: en 1 mes. Prefiero trabajar de forma híbrido. Contacto: manuela.velez30@correo.com, 3049745959. Aspiración salarial: 6100000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "semi-senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "híbrido",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Sebastián Hernández. Profesional en ciencia de datos (junior) con 2 años de experiencia. Estudié Ingeniería de Sistemas. Vivo en Cali. Habilidades: SQL, Python, Machine Learning, Power BI. Disponibilidad: en 15 días. Prefiero trabajar de forma remoto. Contacto: sebastian.hernandez31@correo.com, 3124589533. Aspiración salarial: 3300000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "ciencia de datos",
+      "nivel": "junior",
+      "ciudad": "Cali",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Esteban Castaño. Profesional en calidad de software (QA) (semi-senior) con 4 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Medellín. Habilidades: Pruebas automatizadas, Jira, Selenium, Postman. Disponibilidad: en 1 mes. Prefiero trabajar de forma remoto. Contacto: esteban.castano32@correo.com, 3147542890. Aspiración salarial: 5800000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "semi-senior",
+      "ciudad": "Medellín",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "David Giraldo. Profesional en desarrollo frontend (semi-senior) con 3 años de experiencia. Estudié Ingeniería de Software. Vivo en Cali. Habilidades: CSS, TypeScript, Figma. Disponibilidad: en 1 mes. Prefiero trabajar de forma presencial. Contacto: david.giraldo33@correo.com, 3228841505.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "semi-senior",
+      "ciudad": "Cali",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "David Gómez. Profesional en ciencia de datos (senior) con 10 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Medellín. Habilidades: Pandas, Machine Learning, Python, SQL. Disponibilidad: en 15 días. Prefiero trabajar de forma remoto. Contacto: david.gomez34@correo.com, 3154551070. Aspiración salarial: 12100000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "ciencia de datos",
+      "nivel": "senior",
+      "ciudad": "Medellín",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Juliana Restrepo. Profesional en DevOps (semi-senior) con 4 años de experiencia. Estudié Ingeniería de Sistemas. Vivo en Medellín. Habilidades: Linux, Docker, Kubernetes, CI/CD, AWS. Disponibilidad: en 1 mes. Prefiero trabajar de forma presencial. Contacto: juliana.restrepo35@correo.com, 3034344717. Aspiración salarial: 4500000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "DevOps",
+      "nivel": "semi-senior",
+      "ciudad": "Medellín",
+      "modalidad": "presencial",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Daniela López. Profesional en desarrollo frontend (semi-senior) con 5 años de experiencia. Estudié Ingeniería Informática. Vivo en Medellín. Habilidades: TypeScript, Figma, React, CSS. Disponibilidad: en 1 mes. Prefiero trabajar de forma híbrido. Contacto: daniela.lopez36@correo.com, 3111430812. Aspiración salarial: 5100000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "semi-senior",
+      "ciudad": "Medellín",
+      "modalidad": "híbrido",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Natalia Restrepo. Profesional en soporte técnico (junior) con 0 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Bucaramanga. Habilidades: Atención al cliente, ITIL, Redes.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "soporte técnico",
+      "nivel": "junior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "híbrido",
+      "completitud": "minimo"
+    }
+  },
+  {
+    "cv_texto": "Mateo Rodríguez. Profesional en calidad de software (QA) (senior) con 8 años de experiencia. Estudié Ingeniería Informática. Vivo en Medellín. Habilidades: Pruebas automatizadas, Selenium, Jira, Postman. Disponibilidad: en 1 mes. Prefiero trabajar de forma presencial. Contacto: mateo.rodriguez38@correo.com, 3129753457. Aspiración salarial: 13200000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "senior",
+      "ciudad": "Medellín",
+      "modalidad": "presencial",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "David Ospina. Profesional en ciencia de datos (semi-senior) con 5 años de experiencia. Estudié Ingeniería Informática. Vivo en Bucaramanga. Habilidades: Python, SQL, Pandas. Disponibilidad: inmediata. Prefiero trabajar de forma presencial. Contacto: david.ospina39@correo.com, 3197358385. Aspiración salarial: 5500000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "ciencia de datos",
+      "nivel": "semi-senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "presencial",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Julián Castaño. Profesional en desarrollo frontend (semi-senior) con 3 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Cali. Habilidades: Figma, TypeScript, CSS, React. Disponibilidad: en 15 días. Prefiero trabajar de forma presencial. Aspiración salarial: 5500000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "semi-senior",
+      "ciudad": "Cali",
+      "modalidad": "presencial",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "cv_texto": "David López. Profesional en soporte técnico (semi-senior) con 5 años de experiencia. Estudié Ingeniería Informática. Vivo en Barranquilla. Habilidades: Redes, Windows Server, ITIL. Disponibilidad: en 15 días. Prefiero trabajar de forma presencial. Contacto: david.lopez41@correo.com, 3236137284.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "soporte técnico",
+      "nivel": "semi-senior",
+      "ciudad": "Barranquilla",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "David Vélez. Profesional en DevOps (semi-senior) con 5 años de experiencia. Estudié Ingeniería de Sistemas. Vivo en Bucaramanga. Habilidades: CI/CD, AWS, Kubernetes, Linux, Docker. Disponibilidad: en 1 mes. Prefiero trabajar de forma presencial. Contacto: david.velez42@correo.com, 3236294016. Aspiración salarial: 5600000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "DevOps",
+      "nivel": "semi-senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "presencial",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "David Cardona. Profesional en desarrollo frontend (junior) con 0 años de experiencia. Estudié Ingeniería de Software. Vivo en Barranquilla. Habilidades: Next.js, TypeScript, React. Disponibilidad: en 15 días. Prefiero trabajar de forma presencial. Contacto: david.cardona43@correo.com, 3041237370.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "junior",
+      "ciudad": "Barranquilla",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Camilo Gómez. Profesional en calidad de software (QA) (semi-senior) con 5 años de experiencia. Estudié Ingeniería de Sistemas. Vivo en Bogotá. Habilidades: Pruebas automatizadas, Postman, Selenium, Jira. Disponibilidad: en 15 días. Prefiero trabajar de forma híbrido. Aspiración salarial: 6900000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "semi-senior",
+      "ciudad": "Bogotá",
+      "modalidad": "híbrido",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "cv_texto": "Julián Rodríguez. Profesional en desarrollo backend (semi-senior) con 4 años de experiencia. Estudié Ingeniería de Software. Vivo en Medellín. Habilidades: Python, FastAPI, APIs REST, Docker, PostgreSQL. Disponibilidad: en 1 mes. Prefiero trabajar de forma híbrido. Contacto: julian.rodriguez45@correo.com, 3087982241. Aspiración salarial: 6500000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo backend",
+      "nivel": "semi-senior",
+      "ciudad": "Medellín",
+      "modalidad": "híbrido",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Natalia Ospina. Profesional en ciencia de datos (semi-senior) con 5 años de experiencia. Estudié Ingeniería de Sistemas. Vivo en Barranquilla. Habilidades: Python, Power BI, Machine Learning, SQL, Pandas. Disponibilidad: inmediata. Prefiero trabajar de forma presencial. Contacto: natalia.ospina46@correo.com, 3033916107. Aspiración salarial: 6300000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "ciencia de datos",
+      "nivel": "semi-senior",
+      "ciudad": "Barranquilla",
+      "modalidad": "presencial",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Mariana Restrepo. Profesional en ciencia de datos (senior) con 10 años de experiencia. Estudié Ingeniería de Software. Vivo en Barranquilla. Habilidades: SQL, Power BI, Machine Learning. Disponibilidad: en 15 días. Prefiero trabajar de forma presencial. Aspiración salarial: 8200000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "ciencia de datos",
+      "nivel": "senior",
+      "ciudad": "Barranquilla",
+      "modalidad": "presencial",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "cv_texto": "Santiago Vélez. Profesional en desarrollo frontend (senior) con 7 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Cali. Habilidades: Next.js, TypeScript, CSS.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "senior",
+      "ciudad": "Cali",
+      "modalidad": "remoto",
+      "completitud": "minimo"
+    }
+  },
+  {
+    "cv_texto": "Felipe Cardona. Profesional en ciencia de datos (semi-senior) con 5 años de experiencia. Estudié Ingeniería de Sistemas. Vivo en Bucaramanga. Habilidades: Power BI, Python, Pandas. Disponibilidad: inmediata. Prefiero trabajar de forma presencial. Contacto: felipe.cardona49@correo.com, 3241433940.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "ciencia de datos",
+      "nivel": "semi-senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Mariana Zapata. Profesional en DevOps (senior) con 6 años de experiencia. Estudié Ingeniería Informática. Vivo en Bogotá. Habilidades: CI/CD, AWS, Docker, Kubernetes, Linux. Disponibilidad: en 15 días. Prefiero trabajar de forma presencial. Contacto: mariana.zapata50@correo.com, 3157850944. Aspiración salarial: 11300000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "DevOps",
+      "nivel": "senior",
+      "ciudad": "Bogotá",
+      "modalidad": "presencial",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Santiago Martínez. Profesional en DevOps (semi-senior) con 5 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Barranquilla. Habilidades: Linux, Docker, Kubernetes, CI/CD. Disponibilidad: en 1 mes. Prefiero trabajar de forma presencial. Contacto: santiago.martinez51@correo.com, 3152944841.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "DevOps",
+      "nivel": "semi-senior",
+      "ciudad": "Barranquilla",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Mariana Zapata. Profesional en calidad de software (QA) (semi-senior) con 4 años de experiencia. Estudié Ingeniería Informática. Vivo en Medellín. Habilidades: Postman, Jira, Selenium, Pruebas automatizadas. Disponibilidad: en 15 días. Prefiero trabajar de forma remoto. Contacto: mariana.zapata52@correo.com, 3183198037. Aspiración salarial: 6100000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "semi-senior",
+      "ciudad": "Medellín",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Julián Rodríguez. Profesional en desarrollo backend (senior) con 10 años de experiencia. Estudié Ingeniería de Sistemas. Vivo en Bogotá. Habilidades: APIs REST, Python, PostgreSQL, FastAPI. Disponibilidad: en 1 mes. Prefiero trabajar de forma híbrido. Contacto: julian.rodriguez53@correo.com, 3018741810. Aspiración salarial: 9000000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo backend",
+      "nivel": "senior",
+      "ciudad": "Bogotá",
+      "modalidad": "híbrido",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Daniela Ospina. Profesional en soporte técnico (semi-senior) con 5 años de experiencia. Estudié Ingeniería de Sistemas. Vivo en Cali. Habilidades: Windows Server, ITIL, Redes, Atención al cliente. Disponibilidad: en 15 días. Prefiero trabajar de forma presencial. Contacto: daniela.ospina54@correo.com, 3283290229. Aspiración salarial: 6000000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "soporte técnico",
+      "nivel": "semi-senior",
+      "ciudad": "Cali",
+      "modalidad": "presencial",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Esteban Castaño. Profesional en calidad de software (QA) (semi-senior) con 3 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Cali. Habilidades: Selenium, Postman, Jira, Pruebas automatizadas. Disponibilidad: en 15 días. Prefiero trabajar de forma híbrido. Contacto: esteban.castano55@correo.com, 3287328534.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "semi-senior",
+      "ciudad": "Cali",
+      "modalidad": "híbrido",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Laura Cardona. Profesional en desarrollo frontend (senior) con 9 años de experiencia. Estudié Ingeniería Informática. Vivo en Bogotá. Habilidades: CSS, Figma, Next.js, React. Disponibilidad: inmediata. Prefiero trabajar de forma presencial. Aspiración salarial: 8200000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "senior",
+      "ciudad": "Bogotá",
+      "modalidad": "presencial",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "cv_texto": "Paula Rodríguez. Profesional en calidad de software (QA) (semi-senior) con 3 años de experiencia. Estudié Ingeniería Informática. Vivo en Bogotá. Habilidades: Pruebas automatizadas, Selenium, Jira. Disponibilidad: en 1 mes. Prefiero trabajar de forma presencial. Contacto: paula.rodriguez57@correo.com, 3262347467.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "semi-senior",
+      "ciudad": "Bogotá",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "David Restrepo. Profesional en DevOps (senior) con 11 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Barranquilla. Habilidades: Docker, Kubernetes, AWS, CI/CD, Linux. Disponibilidad: inmediata. Prefiero trabajar de forma híbrido. Contacto: david.restrepo58@correo.com, 3112686231. Aspiración salarial: 8200000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "DevOps",
+      "nivel": "senior",
+      "ciudad": "Barranquilla",
+      "modalidad": "híbrido",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Felipe Gómez. Profesional en desarrollo backend (semi-senior) con 3 años de experiencia. Estudié Ingeniería de Software. Vivo en Cali. Habilidades: FastAPI, APIs REST, PostgreSQL, Docker.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo backend",
+      "nivel": "semi-senior",
+      "ciudad": "Cali",
+      "modalidad": "presencial",
+      "completitud": "minimo"
+    }
+  },
+  {
+    "cv_texto": "Valentina Giraldo. Profesional en ciencia de datos (senior) con 11 años de experiencia. Estudié Ingeniería Informática. Vivo en Bogotá. Habilidades: Pandas, Power BI, Machine Learning, SQL, Python. Disponibilidad: en 1 mes. Prefiero trabajar de forma presencial. Contacto: valentina.giraldo60@correo.com, 3208805654. Aspiración salarial: 13800000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "ciencia de datos",
+      "nivel": "senior",
+      "ciudad": "Bogotá",
+      "modalidad": "presencial",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "David Martínez. Profesional en desarrollo backend (semi-senior) con 4 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Bucaramanga. Habilidades: PostgreSQL, Docker, FastAPI, Python. Disponibilidad: en 1 mes. Prefiero trabajar de forma presencial. Contacto: david.martinez61@correo.com, 3114979651.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo backend",
+      "nivel": "semi-senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Mateo Giraldo. Profesional en DevOps (senior) con 8 años de experiencia. Estudié Ingeniería de Software. Vivo en Medellín. Habilidades: Docker, Linux, AWS, Kubernetes. Disponibilidad: en 1 mes. Prefiero trabajar de forma híbrido. Contacto: mateo.giraldo62@correo.com, 3096910964. Aspiración salarial: 10500000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "DevOps",
+      "nivel": "senior",
+      "ciudad": "Medellín",
+      "modalidad": "híbrido",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Laura Giraldo. Profesional en DevOps (senior) con 12 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Bogotá. Habilidades: Docker, AWS, Kubernetes, Linux, CI/CD. Disponibilidad: inmediata. Prefiero trabajar de forma híbrido. Contacto: laura.giraldo63@correo.com, 3046481437. Aspiración salarial: 8600000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "DevOps",
+      "nivel": "senior",
+      "ciudad": "Bogotá",
+      "modalidad": "híbrido",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Laura Martínez. Profesional en calidad de software (QA) (semi-senior) con 5 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Bucaramanga. Habilidades: Postman, Selenium, Jira, Pruebas automatizadas. Disponibilidad: en 1 mes. Prefiero trabajar de forma presencial. Aspiración salarial: 5000000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "semi-senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "presencial",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "cv_texto": "Mateo Rodríguez. Profesional en ciencia de datos (junior) con 1 años de experiencia. Estudié Ingeniería de Sistemas. Vivo en Bucaramanga. Habilidades: SQL, Machine Learning, Power BI, Pandas. Disponibilidad: en 1 mes. Prefiero trabajar de forma remoto. Contacto: mateo.rodriguez65@correo.com, 3238910069. Aspiración salarial: 3900000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "ciencia de datos",
+      "nivel": "junior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "David Castaño. Profesional en calidad de software (QA) (junior) con 2 años de experiencia. Estudié Ingeniería de Sistemas. Vivo en Medellín. Habilidades: Postman, Pruebas automatizadas, Jira, Selenium. Disponibilidad: inmediata. Prefiero trabajar de forma híbrido. Contacto: david.castano66@correo.com, 3172948178. Aspiración salarial: 3900000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "junior",
+      "ciudad": "Medellín",
+      "modalidad": "híbrido",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "David Martínez. Profesional en ciencia de datos (semi-senior) con 4 años de experiencia. Estudié Ingeniería Informática. Vivo en Bucaramanga. Habilidades: Pandas, Machine Learning, SQL, Python, Power BI.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "ciencia de datos",
+      "nivel": "semi-senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "presencial",
+      "completitud": "minimo"
+    }
+  },
+  {
+    "cv_texto": "Laura Ospina. Profesional en ciencia de datos (junior) con 1 años de experiencia. Estudié Ingeniería de Sistemas. Vivo en Medellín. Habilidades: SQL, Python, Pandas, Power BI, Machine Learning. Disponibilidad: inmediata. Prefiero trabajar de forma híbrido. Contacto: laura.ospina68@correo.com, 3114558545. Aspiración salarial: 3600000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "ciencia de datos",
+      "nivel": "junior",
+      "ciudad": "Medellín",
+      "modalidad": "híbrido",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Juliana López. Profesional en desarrollo frontend (senior) con 7 años de experiencia. Estudié Ingeniería de Software. Vivo en Medellín. Habilidades: Next.js, Figma, CSS, React, TypeScript. Disponibilidad: inmediata. Prefiero trabajar de forma híbrido. Contacto: juliana.lopez69@correo.com, 3025205279. Aspiración salarial: 9300000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "senior",
+      "ciudad": "Medellín",
+      "modalidad": "híbrido",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Mariana Martínez. Profesional en desarrollo backend (semi-senior) con 3 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Bucaramanga. Habilidades: PostgreSQL, Python, Docker. Disponibilidad: en 15 días. Prefiero trabajar de forma presencial. Contacto: mariana.martinez70@correo.com, 3212066326.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo backend",
+      "nivel": "semi-senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Mateo Vélez. Profesional en calidad de software (QA) (junior) con 1 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Bucaramanga. Habilidades: Postman, Jira, Pruebas automatizadas, Selenium. Disponibilidad: en 1 mes. Prefiero trabajar de forma remoto. Aspiración salarial: 2600000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "junior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "remoto",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "cv_texto": "Paula Rodríguez. Profesional en desarrollo backend (semi-senior) con 5 años de experiencia. Estudié Ingeniería de Sistemas. Vivo en Bogotá. Habilidades: APIs REST, PostgreSQL, FastAPI, Docker. Disponibilidad: en 1 mes. Prefiero trabajar de forma remoto. Aspiración salarial: 4900000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo backend",
+      "nivel": "semi-senior",
+      "ciudad": "Bogotá",
+      "modalidad": "remoto",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "cv_texto": "Santiago Zapata. Profesional en soporte técnico (senior) con 11 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Bogotá. Habilidades: ITIL, Windows Server, Atención al cliente. Disponibilidad: en 15 días. Prefiero trabajar de forma presencial. Contacto: santiago.zapata73@correo.com, 3116243691.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "soporte técnico",
+      "nivel": "senior",
+      "ciudad": "Bogotá",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Carolina Castaño. Profesional en desarrollo frontend (senior) con 9 años de experiencia. Estudié Ingeniería Informática. Vivo en Medellín. Habilidades: React, CSS, Figma. Disponibilidad: en 1 mes. Prefiero trabajar de forma remoto. Contacto: carolina.castano74@correo.com, 3082006313.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "senior",
+      "ciudad": "Medellín",
+      "modalidad": "remoto",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Santiago Restrepo. Profesional en DevOps (senior) con 12 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Barranquilla. Habilidades: Linux, AWS, Kubernetes, Docker.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "DevOps",
+      "nivel": "senior",
+      "ciudad": "Barranquilla",
+      "modalidad": "híbrido",
+      "completitud": "minimo"
+    }
+  },
+  {
+    "cv_texto": "Sebastián Rodríguez. Profesional en DevOps (senior) con 8 años de experiencia. Estudié Ingeniería Informática. Vivo en Medellín. Habilidades: CI/CD, Docker, AWS. Disponibilidad: en 15 días. Prefiero trabajar de forma presencial. Contacto: sebastian.rodriguez76@correo.com, 3025584716. Aspiración salarial: 11600000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "DevOps",
+      "nivel": "senior",
+      "ciudad": "Medellín",
+      "modalidad": "presencial",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Mateo Gómez. Profesional en desarrollo frontend (junior) con 2 años de experiencia. Estudié Ingeniería Informática. Vivo en Barranquilla. Habilidades: React, Figma, TypeScript, CSS, Next.js. Disponibilidad: en 15 días. Prefiero trabajar de forma remoto. Contacto: mateo.gomez77@correo.com, 3153640889.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "junior",
+      "ciudad": "Barranquilla",
+      "modalidad": "remoto",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Juliana Giraldo. Profesional en calidad de software (QA) (junior) con 0 años de experiencia. Estudié Ingeniería Informática. Vivo en Bogotá. Habilidades: Jira, Selenium, Postman. Disponibilidad: inmediata. Prefiero trabajar de forma remoto. Aspiración salarial: 2600000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "junior",
+      "ciudad": "Bogotá",
+      "modalidad": "remoto",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "cv_texto": "Manuela Rodríguez. Profesional en DevOps (semi-senior) con 3 años de experiencia. Estudié Ingeniería Informática. Vivo en Cali. Habilidades: CI/CD, AWS, Docker, Linux, Kubernetes.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "DevOps",
+      "nivel": "semi-senior",
+      "ciudad": "Cali",
+      "modalidad": "híbrido",
+      "completitud": "minimo"
+    }
+  },
+  {
+    "cv_texto": "Laura Martínez. Profesional en DevOps (semi-senior) con 4 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Medellín. Habilidades: CI/CD, Kubernetes, Docker, Linux, AWS. Disponibilidad: en 1 mes. Prefiero trabajar de forma remoto. Aspiración salarial: 6000000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "DevOps",
+      "nivel": "semi-senior",
+      "ciudad": "Medellín",
+      "modalidad": "remoto",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "cv_texto": "Camilo Restrepo. Profesional en desarrollo backend (semi-senior) con 3 años de experiencia. Estudié Ingeniería Informática. Vivo en Cali. Habilidades: Docker, APIs REST, FastAPI, Python, PostgreSQL. Disponibilidad: inmediata. Prefiero trabajar de forma híbrido. Contacto: camilo.restrepo81@correo.com, 3128719145. Aspiración salarial: 5800000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo backend",
+      "nivel": "semi-senior",
+      "ciudad": "Cali",
+      "modalidad": "híbrido",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Esteban Rodríguez. Profesional en desarrollo frontend (semi-senior) con 5 años de experiencia. Estudié Ingeniería de Software. Vivo en Barranquilla. Habilidades: TypeScript, Figma, React, Next.js. Disponibilidad: en 15 días. Prefiero trabajar de forma híbrido. Contacto: esteban.rodriguez82@correo.com, 3082913049. Aspiración salarial: 4700000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "semi-senior",
+      "ciudad": "Barranquilla",
+      "modalidad": "híbrido",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Mateo Cardona. Profesional en soporte técnico (junior) con 0 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Medellín. Habilidades: Windows Server, Atención al cliente, Redes. Disponibilidad: en 1 mes. Prefiero trabajar de forma remoto. Contacto: mateo.cardona83@correo.com, 3078783840. Aspiración salarial: 3300000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "soporte técnico",
+      "nivel": "junior",
+      "ciudad": "Medellín",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Juliana Zapata. Profesional en DevOps (junior) con 1 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Medellín. Habilidades: AWS, Linux, CI/CD, Docker, Kubernetes. Disponibilidad: inmediata. Prefiero trabajar de forma presencial. Aspiración salarial: 3900000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "DevOps",
+      "nivel": "junior",
+      "ciudad": "Medellín",
+      "modalidad": "presencial",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "cv_texto": "Camilo Castaño. Profesional en DevOps (junior) con 2 años de experiencia. Estudié Ingeniería de Software. Vivo en Medellín. Habilidades: Linux, Docker, Kubernetes, CI/CD. Disponibilidad: inmediata. Prefiero trabajar de forma híbrido. Contacto: camilo.castano85@correo.com, 3279411547.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "DevOps",
+      "nivel": "junior",
+      "ciudad": "Medellín",
+      "modalidad": "híbrido",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Paula Rodríguez. Profesional en DevOps (senior) con 6 años de experiencia. Estudié Ingeniería Informática. Vivo en Bucaramanga. Habilidades: Kubernetes, CI/CD, Linux. Disponibilidad: en 15 días. Prefiero trabajar de forma híbrido. Aspiración salarial: 9100000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "DevOps",
+      "nivel": "senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "híbrido",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "cv_texto": "Felipe Restrepo. Profesional en ciencia de datos (semi-senior) con 5 años de experiencia. Estudié Ingeniería Informática. Vivo en Bucaramanga. Habilidades: SQL, Python, Pandas, Machine Learning, Power BI. Disponibilidad: inmediata. Prefiero trabajar de forma remoto. Contacto: felipe.restrepo87@correo.com, 3193522845. Aspiración salarial: 7000000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "ciencia de datos",
+      "nivel": "semi-senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Daniela Castaño. Profesional en DevOps (senior) con 11 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Barranquilla. Habilidades: Docker, AWS, CI/CD, Kubernetes, Linux. Disponibilidad: en 1 mes. Prefiero trabajar de forma remoto. Contacto: daniela.castano88@correo.com, 3282567880. Aspiración salarial: 11800000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "DevOps",
+      "nivel": "senior",
+      "ciudad": "Barranquilla",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Mateo Gómez. Profesional en DevOps (semi-senior) con 3 años de experiencia. Estudié Ingeniería de Sistemas. Vivo en Bogotá. Habilidades: Kubernetes, Linux, Docker, AWS. Disponibilidad: en 1 mes. Prefiero trabajar de forma presencial. Contacto: mateo.gomez89@correo.com, 3119517619. Aspiración salarial: 6900000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "DevOps",
+      "nivel": "semi-senior",
+      "ciudad": "Bogotá",
+      "modalidad": "presencial",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Juliana Giraldo. Profesional en desarrollo frontend (senior) con 9 años de experiencia. Estudié Ingeniería Informática. Vivo en Bogotá. Habilidades: Figma, Next.js, TypeScript, CSS, React. Disponibilidad: en 1 mes. Prefiero trabajar de forma remoto. Contacto: juliana.giraldo90@correo.com, 3138452417.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "senior",
+      "ciudad": "Bogotá",
+      "modalidad": "remoto",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Paula López. Profesional en calidad de software (QA) (junior) con 1 años de experiencia. Estudié Ingeniería Informática. Vivo en Barranquilla. Habilidades: Postman, Selenium, Jira, Pruebas automatizadas. Disponibilidad: inmediata. Prefiero trabajar de forma remoto. Contacto: paula.lopez91@correo.com, 3093321942. Aspiración salarial: 3600000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "junior",
+      "ciudad": "Barranquilla",
+      "modalidad": "remoto",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Julián Castaño. Profesional en calidad de software (QA) (junior) con 2 años de experiencia. Estudié Ingeniería de Software. Vivo en Bucaramanga. Habilidades: Selenium, Postman, Jira. Disponibilidad: en 15 días. Prefiero trabajar de forma remoto. Aspiración salarial: 3400000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "junior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "remoto",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "cv_texto": "Mateo Gómez. Profesional en ciencia de datos (junior) con 1 años de experiencia. Estudié Ingeniería de Software. Vivo en Bucaramanga. Habilidades: Python, SQL, Power BI, Machine Learning. Disponibilidad: inmediata. Prefiero trabajar de forma presencial. Contacto: mateo.gomez93@correo.com, 3053450300.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "ciencia de datos",
+      "nivel": "junior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Felipe Ospina. Profesional en soporte técnico (junior) con 2 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Barranquilla. Habilidades: Redes, Windows Server, ITIL. Disponibilidad: inmediata. Prefiero trabajar de forma presencial. Contacto: felipe.ospina94@correo.com, 3299854536. Aspiración salarial: 2500000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "soporte técnico",
+      "nivel": "junior",
+      "ciudad": "Barranquilla",
+      "modalidad": "presencial",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Felipe López. Profesional en DevOps (junior) con 0 años de experiencia. Estudié Ingeniería de Software. Vivo en Bogotá. Habilidades: Docker, CI/CD, AWS. Disponibilidad: en 15 días. Prefiero trabajar de forma presencial. Aspiración salarial: 3900000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "DevOps",
+      "nivel": "junior",
+      "ciudad": "Bogotá",
+      "modalidad": "presencial",
+      "completitud": "sin_contacto"
+    }
+  },
+  {
+    "cv_texto": "Esteban Gómez. Profesional en calidad de software (QA) (semi-senior) con 3 años de experiencia. Estudié Ingeniería Informática. Vivo en Bucaramanga. Habilidades: Jira, Pruebas automatizadas, Postman. Disponibilidad: en 15 días. Prefiero trabajar de forma presencial. Contacto: esteban.gomez96@correo.com, 3107490791.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "semi-senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Mariana Castaño. Profesional en desarrollo backend (semi-senior) con 3 años de experiencia. Estudié Ingeniería de Software. Vivo en Medellín. Habilidades: FastAPI, Python, APIs REST, PostgreSQL. Disponibilidad: inmediata. Prefiero trabajar de forma híbrido. Contacto: mariana.castano97@correo.com, 3279028420. Aspiración salarial: 6800000 COP mensuales.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo backend",
+      "nivel": "semi-senior",
+      "ciudad": "Medellín",
+      "modalidad": "híbrido",
+      "completitud": "completo"
+    }
+  },
+  {
+    "cv_texto": "Valentina Cardona. Profesional en ciencia de datos (junior) con 1 años de experiencia. Estudié Ingeniería de Sistemas. Vivo en Bogotá. Habilidades: SQL, Power BI, Machine Learning. Disponibilidad: en 1 mes. Prefiero trabajar de forma remoto. Contacto: valentina.cardona98@correo.com, 3275249899.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "ciencia de datos",
+      "nivel": "junior",
+      "ciudad": "Bogotá",
+      "modalidad": "remoto",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Laura Hernández. Profesional en DevOps (junior) con 2 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Cali. Habilidades: CI/CD, Linux, AWS, Kubernetes. Disponibilidad: en 15 días. Prefiero trabajar de forma presencial. Contacto: laura.hernandez99@correo.com, 3129324908.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "DevOps",
+      "nivel": "junior",
+      "ciudad": "Cali",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  }
+]

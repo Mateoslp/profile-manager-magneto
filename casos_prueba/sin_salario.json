@@ -1,0 +1,277 @@
+[
+  {
+    "cv_texto": "Mariana Vélez. Profesional en desarrollo frontend (senior) con 11 años de experiencia. Estudié Ingeniería de Software. Vivo en Bucaramanga. Habilidades: Figma, TypeScript, React, CSS. Disponibilidad: en 15 días. Prefiero trabajar de forma presencial. Contacto: mariana.velez1@correo.com, 3143608513.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Valentina Gómez. Profesional en soporte técnico (junior) con 1 años de experiencia. Estudié Ingeniería de Sistemas. Vivo en Medellín. Habilidades: Atención al cliente, Windows Server, ITIL, Redes. Disponibilidad: en 1 mes. Prefiero trabajar de forma remoto. Contacto: valentina.gomez3@correo.com, 3135479144.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "soporte técnico",
+      "nivel": "junior",
+      "ciudad": "Medellín",
+      "modalidad": "remoto",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Sebastián Martínez. Profesional en calidad de software (QA) (semi-senior) con 3 años de experiencia. Estudié Ingeniería Informática. Vivo en Medellín. Habilidades: Postman, Jira, Pruebas automatizadas. Disponibilidad: en 1 mes. Prefiero trabajar de forma remoto. Contacto: sebastian.martinez6@correo.com, 3198852574.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "semi-senior",
+      "ciudad": "Medellín",
+      "modalidad": "remoto",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Laura Cardona. Profesional en DevOps (semi-senior) con 5 años de experiencia. Estudié Ingeniería de Software. Vivo en Cali. Habilidades: Docker, Kubernetes, Linux, AWS. Disponibilidad: inmediata. Prefiero trabajar de forma presencial. Contacto: laura.cardona10@correo.com, 3094860684.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "DevOps",
+      "nivel": "semi-senior",
+      "ciudad": "Cali",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "David Restrepo. Profesional en calidad de software (QA) (senior) con 7 años de experiencia. Estudié Ingeniería de Software. Vivo en Bogotá. Habilidades: Postman, Pruebas automatizadas, Jira. Disponibilidad: en 1 mes. Prefiero trabajar de forma remoto. Contacto: david.restrepo22@correo.com, 3135476257.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "senior",
+      "ciudad": "Bogotá",
+      "modalidad": "remoto",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Santiago Restrepo. Profesional en desarrollo backend (semi-senior) con 3 años de experiencia. Estudié Ingeniería Informática. Vivo en Bogotá. Habilidades: FastAPI, APIs REST, Python, PostgreSQL. Disponibilidad: en 15 días. Prefiero trabajar de forma presencial. Contacto: santiago.restrepo23@correo.com, 3142164686.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo backend",
+      "nivel": "semi-senior",
+      "ciudad": "Bogotá",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Felipe Vélez. Profesional en DevOps (senior) con 9 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Cali. Habilidades: Linux, Kubernetes, Docker, CI/CD. Disponibilidad: en 1 mes. Prefiero trabajar de forma presencial. Contacto: felipe.velez26@correo.com, 3226049101.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "DevOps",
+      "nivel": "senior",
+      "ciudad": "Cali",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "David Giraldo. Profesional en desarrollo frontend (semi-senior) con 3 años de experiencia. Estudié Ingeniería de Software. Vivo en Cali. Habilidades: CSS, TypeScript, Figma. Disponibilidad: en 1 mes. Prefiero trabajar de forma presencial. Contacto: david.giraldo33@correo.com, 3228841505.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "semi-senior",
+      "ciudad": "Cali",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "David López. Profesional en soporte técnico (semi-senior) con 5 años de experiencia. Estudié Ingeniería Informática. Vivo en Barranquilla. Habilidades: Redes, Windows Server, ITIL. Disponibilidad: en 15 días. Prefiero trabajar de forma presencial. Contacto: david.lopez41@correo.com, 3236137284.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "soporte técnico",
+      "nivel": "semi-senior",
+      "ciudad": "Barranquilla",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "David Cardona. Profesional en desarrollo frontend (junior) con 0 años de experiencia. Estudié Ingeniería de Software. Vivo en Barranquilla. Habilidades: Next.js, TypeScript, React. Disponibilidad: en 15 días. Prefiero trabajar de forma presencial. Contacto: david.cardona43@correo.com, 3041237370.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "junior",
+      "ciudad": "Barranquilla",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Felipe Cardona. Profesional en ciencia de datos (semi-senior) con 5 años de experiencia. Estudié Ingeniería de Sistemas. Vivo en Bucaramanga. Habilidades: Power BI, Python, Pandas. Disponibilidad: inmediata. Prefiero trabajar de forma presencial. Contacto: felipe.cardona49@correo.com, 3241433940.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "ciencia de datos",
+      "nivel": "semi-senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Santiago Martínez. Profesional en DevOps (semi-senior) con 5 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Barranquilla. Habilidades: Linux, Docker, Kubernetes, CI/CD. Disponibilidad: en 1 mes. Prefiero trabajar de forma presencial. Contacto: santiago.martinez51@correo.com, 3152944841.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "DevOps",
+      "nivel": "semi-senior",
+      "ciudad": "Barranquilla",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Esteban Castaño. Profesional en calidad de software (QA) (semi-senior) con 3 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Cali. Habilidades: Selenium, Postman, Jira, Pruebas automatizadas. Disponibilidad: en 15 días. Prefiero trabajar de forma híbrido. Contacto: esteban.castano55@correo.com, 3287328534.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "semi-senior",
+      "ciudad": "Cali",
+      "modalidad": "híbrido",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Paula Rodríguez. Profesional en calidad de software (QA) (semi-senior) con 3 años de experiencia. Estudié Ingeniería Informática. Vivo en Bogotá. Habilidades: Pruebas automatizadas, Selenium, Jira. Disponibilidad: en 1 mes. Prefiero trabajar de forma presencial. Contacto: paula.rodriguez57@correo.com, 3262347467.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "semi-senior",
+      "ciudad": "Bogotá",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "David Martínez. Profesional en desarrollo backend (semi-senior) con 4 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Bucaramanga. Habilidades: PostgreSQL, Docker, FastAPI, Python. Disponibilidad: en 1 mes. Prefiero trabajar de forma presencial. Contacto: david.martinez61@correo.com, 3114979651.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo backend",
+      "nivel": "semi-senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Mariana Martínez. Profesional en desarrollo backend (semi-senior) con 3 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Bucaramanga. Habilidades: PostgreSQL, Python, Docker. Disponibilidad: en 15 días. Prefiero trabajar de forma presencial. Contacto: mariana.martinez70@correo.com, 3212066326.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo backend",
+      "nivel": "semi-senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Santiago Zapata. Profesional en soporte técnico (senior) con 11 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Bogotá. Habilidades: ITIL, Windows Server, Atención al cliente. Disponibilidad: en 15 días. Prefiero trabajar de forma presencial. Contacto: santiago.zapata73@correo.com, 3116243691.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "soporte técnico",
+      "nivel": "senior",
+      "ciudad": "Bogotá",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Carolina Castaño. Profesional en desarrollo frontend (senior) con 9 años de experiencia. Estudié Ingeniería Informática. Vivo en Medellín. Habilidades: React, CSS, Figma. Disponibilidad: en 1 mes. Prefiero trabajar de forma remoto. Contacto: carolina.castano74@correo.com, 3082006313.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "senior",
+      "ciudad": "Medellín",
+      "modalidad": "remoto",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Mateo Gómez. Profesional en desarrollo frontend (junior) con 2 años de experiencia. Estudié Ingeniería Informática. Vivo en Barranquilla. Habilidades: React, Figma, TypeScript, CSS, Next.js. Disponibilidad: en 15 días. Prefiero trabajar de forma remoto. Contacto: mateo.gomez77@correo.com, 3153640889.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "junior",
+      "ciudad": "Barranquilla",
+      "modalidad": "remoto",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Camilo Castaño. Profesional en DevOps (junior) con 2 años de experiencia. Estudié Ingeniería de Software. Vivo en Medellín. Habilidades: Linux, Docker, Kubernetes, CI/CD. Disponibilidad: inmediata. Prefiero trabajar de forma híbrido. Contacto: camilo.castano85@correo.com, 3279411547.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "DevOps",
+      "nivel": "junior",
+      "ciudad": "Medellín",
+      "modalidad": "híbrido",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Juliana Giraldo. Profesional en desarrollo frontend (senior) con 9 años de experiencia. Estudié Ingeniería Informática. Vivo en Bogotá. Habilidades: Figma, Next.js, TypeScript, CSS, React. Disponibilidad: en 1 mes. Prefiero trabajar de forma remoto. Contacto: juliana.giraldo90@correo.com, 3138452417.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "desarrollo frontend",
+      "nivel": "senior",
+      "ciudad": "Bogotá",
+      "modalidad": "remoto",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Mateo Gómez. Profesional en ciencia de datos (junior) con 1 años de experiencia. Estudié Ingeniería de Software. Vivo en Bucaramanga. Habilidades: Python, SQL, Power BI, Machine Learning. Disponibilidad: inmediata. Prefiero trabajar de forma presencial. Contacto: mateo.gomez93@correo.com, 3053450300.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "ciencia de datos",
+      "nivel": "junior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Esteban Gómez. Profesional en calidad de software (QA) (semi-senior) con 3 años de experiencia. Estudié Ingeniería Informática. Vivo en Bucaramanga. Habilidades: Jira, Pruebas automatizadas, Postman. Disponibilidad: en 15 días. Prefiero trabajar de forma presencial. Contacto: esteban.gomez96@correo.com, 3107490791.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "calidad de software (QA)",
+      "nivel": "semi-senior",
+      "ciudad": "Bucaramanga",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Valentina Cardona. Profesional en ciencia de datos (junior) con 1 años de experiencia. Estudié Ingeniería de Sistemas. Vivo en Bogotá. Habilidades: SQL, Power BI, Machine Learning. Disponibilidad: en 1 mes. Prefiero trabajar de forma remoto. Contacto: valentina.cardona98@correo.com, 3275249899.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "ciencia de datos",
+      "nivel": "junior",
+      "ciudad": "Bogotá",
+      "modalidad": "remoto",
+      "completitud": "sin_salario"
+    }
+  },
+  {
+    "cv_texto": "Laura Hernández. Profesional en DevOps (junior) con 2 años de experiencia. Estudié Tecnología en Desarrollo de Software. Vivo en Cali. Habilidades: CI/CD, Linux, AWS, Kubernetes. Disponibilidad: en 15 días. Prefiero trabajar de forma presencial. Contacto: laura.hernandez99@correo.com, 3129324908.",
+    "expectativas": {},
+    "_esperado": {
+      "area": "DevOps",
+      "nivel": "junior",
+      "ciudad": "Cali",
+      "modalidad": "presencial",
+      "completitud": "sin_salario"
+    }
+  }
+]
