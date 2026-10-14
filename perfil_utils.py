@@ -1,6 +1,7 @@
 """Limpieza de lo que devuelve el Agente de Perfil antes de guardarlo en la BD.
 El LLM a veces devuelve listas, números como texto o textos más largos que la
 columna; aquí se normaliza todo para que el INSERT no falle."""
+import re
 
 MODALIDADES = {"remoto", "presencial", "hibrido"}
 
