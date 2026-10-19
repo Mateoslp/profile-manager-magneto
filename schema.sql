@@ -62,3 +62,18 @@ CREATE TABLE IF NOT EXISTS usuarios (
 
 ALTER TABLE perfiles ADD COLUMN IF NOT EXISTS usuario_id INTEGER REFERENCES usuarios(id);
 ALTER TABLE postulaciones ADD COLUMN IF NOT EXISTS siguiente_paso TEXT;
+
+-- Bitácora de mensajes e interacciones entre agentes
+CREATE TABLE IF NOT EXISTS bitacora_ia (
+    id              SERIAL PRIMARY KEY,
+    perfil_id       INTEGER NOT NULL REFERENCES perfiles(id) ON DELETE CASCADE,
+    postulacion_id  INTEGER REFERENCES postulaciones(id) ON DELETE SET NULL,
+    agente          VARCHAR(20)  NOT NULL,
+    para            VARCHAR(20)  NOT NULL,
+    tipo            VARCHAR(20)  NOT NULL,
+    texto           TEXT         NOT NULL,
+    datos           JSONB        NOT NULL DEFAULT '{}',
+    creado_en       TIMESTAMPTZ  NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_bitacora_perfil ON bitacora_ia(perfil_id);

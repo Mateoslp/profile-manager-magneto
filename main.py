@@ -11,6 +11,7 @@ Flujo en /docs:
     3. Botón "Authorize" (arriba a la derecha) -> pega el token
     4. Ya puedes usar /procesar-candidato y /postulaciones
 """
+import json
 import logging
 import os
 from contextlib import contextmanager
@@ -163,6 +164,7 @@ def procesar_candidato(datos: CandidatoIn, usuario: dict = Depends(limitar_llama
                 "cv_texto": datos.cv_texto,
                 "expectativas": datos.expectativas,
                 "vacantes_disponibles": vacantes,
+                "mensajes": [],
             }
         )
     except Exception:
@@ -173,7 +175,8 @@ def procesar_candidato(datos: CandidatoIn, usuario: dict = Depends(limitar_llama
         )
 
     perfil = limpiar_perfil(resultado["perfil_estructurado"])
-    postulacion = resultado["resultado_postulacion"]
+    postulacion = resultado.get("resultado_postulacion")
+    mensajes = resultado.get("mensajes", [])
 
     with conexion() as conn:
         cur = conn.cursor()
@@ -211,7 +214,7 @@ def procesar_candidato(datos: CandidatoIn, usuario: dict = Depends(limitar_llama
         perfil_id = fila["id"]
 
         postulacion_id = None
-        if postulacion.get("vacante_id"):
+        if postulacion and postulacion.get("vacante_id"):
             cur.execute(
                 """
                 INSERT INTO postulaciones (perfil_id, vacante_id, estado, siguiente_paso)
@@ -226,14 +229,56 @@ def procesar_candidato(datos: CandidatoIn, usuario: dict = Depends(limitar_llama
             )
             postulacion_id = cur.fetchone()["id"]
 
+        # Guardar bitácora
+        for msg in mensajes:
+            cur.execute(
+                """
+                INSERT INTO bitacora_ia
+                    (perfil_id, postulacion_id, agente, para, tipo, texto, datos)
+                VALUES (%s, %s, %s, %s, %s, %s, %s::jsonb);
+                """,
+                (
+                    perfil_id, postulacion_id,
+                    msg["agente"], msg["para"], msg["tipo"], msg["texto"],
+                    json.dumps(msg.get("datos", {}), ensure_ascii=False),
+                ),
+            )
+
     log.info("Candidato procesado perfil=%s postulacion=%s", perfil_id, postulacion_id)
     return {
         "perfil_id": perfil_id,
         "postulacion_id": postulacion_id,
         "perfil": perfil,
-        "recomendaciones": resultado["recomendaciones"],
-        "mensaje_seguimiento": resultado["mensaje_seguimiento"],
+        "recomendaciones": resultado.get("recomendaciones", []),
+        "mensaje_seguimiento": resultado.get("mensaje_seguimiento"),
+        "mensajes": mensajes,
     }
+
+
+# ---------- Bitácora de agentes ----------
+@app.get("/bitacora/{perfil_id}")
+def ver_bitacora(perfil_id: int, usuario: dict = Depends(usuario_actual)):
+    """Un candidato ve solo la bitácora de su perfil; un admin ve cualquiera."""
+    with conexion() as conn:
+        cur = conn.cursor()
+        if usuario["rol"] != "admin":
+            cur.execute(
+                "SELECT id FROM perfiles WHERE id = %s AND usuario_id = %s;",
+                (perfil_id, usuario["id"]),
+            )
+            if not cur.fetchone():
+                raise HTTPException(status_code=403, detail="No tenés acceso a esta bitácora")
+
+        cur.execute(
+            """
+            SELECT id, perfil_id, postulacion_id, agente, para, tipo, texto, datos, creado_en
+            FROM bitacora_ia
+            WHERE perfil_id = %s
+            ORDER BY creado_en;
+            """,
+            (perfil_id,),
+        )
+        return cur.fetchall()
 
 
 # ---------- Tablero de trazabilidad ----------
@@ -275,3 +320,116 @@ def cambiar_estado(
         raise HTTPException(status_code=404, detail="Postulación no encontrada")
     log.info("Postulación %s -> %s", postulacion_id, datos.estado)
     return fila
+
+
+# ---------- CVs de demo para pruebas ----------
+def _formatear_etiqueta_cv(esperado: dict) -> str:
+    if not isinstance(esperado, dict):
+        return "CV de ejemplo"
+    area = esperado.get("area", "")
+    area_map = {
+        "desarrollo backend": "Backend",
+        "desarrollo frontend": "Frontend",
+        "calidad de software (qa)": "QA",
+        "soporte técnico": "Soporte técnico",
+        "ciencia de datos": "Ciencia de datos",
+        "devops": "DevOps",
+    }
+    area_legible = area_map.get(area.lower(), area.capitalize())
+    nivel = esperado.get("nivel", "")
+    ciudad = esperado.get("ciudad", "")
+    completitud = esperado.get("completitud", "")
+    comp_map = {
+        "sin_salario": "sin salario",
+        "sin_contacto": "sin contacto",
+        "minimo": "mínimo",
+        "completo": "completo",
+    }
+    comp_legible = comp_map.get(completitud, completitud.replace("_", " "))
+
+    partes = []
+    if area_legible and nivel:
+        partes.append(f"{area_legible} {nivel}")
+    elif area_legible:
+        partes.append(area_legible)
+    elif nivel:
+        partes.append(nivel)
+
+    if ciudad:
+        partes.append(f"en {ciudad}")
+
+    base = " ".join(partes)
+    if comp_legible and comp_legible != "completo":
+        return f"{base}, {comp_legible}"
+    return base or "CV de ejemplo"
+
+
+def obtener_cvs_demo(carpeta: str = "casos_prueba", limite: int = 6) -> list:
+    if not os.path.isdir(carpeta):
+        return []
+    try:
+        archivos = sorted(os.listdir(carpeta))
+    except Exception:
+        return []
+
+    candidatos_por_archivo = {}
+    for archivo in archivos:
+        if not archivo.endswith(".json"):
+            continue
+        ruta = os.path.join(carpeta, archivo)
+        try:
+            with open(ruta, "r", encoding="utf-8") as f:
+                datos = json.load(f)
+                if isinstance(datos, list):
+                    candidatos_por_archivo[archivo] = datos
+        except Exception:
+            continue
+
+    if not candidatos_por_archivo:
+        return []
+
+    seleccionados = []
+    areas_vistas = set()
+
+    for archivo, items in candidatos_por_archivo.items():
+        for item in items:
+            if not isinstance(item, dict) or "cv_texto" not in item:
+                continue
+            esp = item.get("_esperado", {})
+            area = esp.get("area", "")
+            if area not in areas_vistas:
+                areas_vistas.add(area)
+                seleccionados.append(item)
+                break
+        if len(seleccionados) >= limite:
+            break
+
+    cvs_vistos = {s["cv_texto"] for s in seleccionados}
+    if len(seleccionados) < limite:
+        for items in candidatos_por_archivo.values():
+            for item in items:
+                if not isinstance(item, dict) or "cv_texto" not in item:
+                    continue
+                if item["cv_texto"] not in cvs_vistos:
+                    cvs_vistos.add(item["cv_texto"])
+                    seleccionados.append(item)
+                    if len(seleccionados) >= limite:
+                        break
+            if len(seleccionados) >= limite:
+                break
+
+    resultado = []
+    for idx, item in enumerate(seleccionados[:limite], start=1):
+        etiqueta = _formatear_etiqueta_cv(item.get("_esperado", {}))
+        resultado.append({
+            "id": idx,
+            "etiqueta": etiqueta,
+            "cv_texto": item["cv_texto"],
+        })
+    return resultado
+
+
+@app.get("/demo/cvs")
+def listar_cvs_demo(usuario: dict = Depends(usuario_actual)):
+    """Devuelve hasta 6 CVs de ejemplo variados para probar el sistema."""
+    return obtener_cvs_demo()
