@@ -574,3 +574,156 @@ def test_endpoint_demo_cvs_con_token():
         assert "etiqueta" in datos[0]
         assert "cv_texto" in datos[0]
         assert "_esperado" not in datos[0]
+
+
+# ---------- A1: empresa en recomendaciones ----------
+
+def test_agente_vacantes_conserva_empresa():
+    """agente_vacantes debe incluir empresa en el dict normalizado."""
+    from agents import agente_vacantes
+
+    v = {"id": 1, "titulo": "Vacante 1", "ubicacion": "Medellin",
+         "modalidad": "remoto", "salario_min": 3_000_000, "salario_max": 6_000_000}
+    estado = {
+        "vacantes_disponibles": [
+            {**v, "empresa": "Empresa XYZ", "descripcion": "ignorar"},
+        ]
+    }
+    resultado = agente_vacantes(estado)["vacantes_disponibles"][0]
+    assert resultado["empresa"] == "Empresa XYZ"
+    assert "descripcion" not in resultado
+
+
+def test_inari_incluye_empresa_en_recomendaciones():
+    """Las recomendaciones de Inari deben propagar el campo empresa."""
+    from agents import agente_inari
+
+    estado = {
+        "perfil_estructurado": {"ubicacion": "Medellin", "modalidad_preferida": "remoto"},
+        "vacantes_disponibles": [
+            {
+                "id": 1, "titulo": "Dev Backend", "empresa": "TechCorp S.A.",
+                "ubicacion": "Medellin", "modalidad": "remoto",
+                "salario_min": 4_000_000, "salario_max": 6_000_000,
+                "habilidades": "Python",
+            }
+        ],
+        "mensajes": [],
+    }
+    resultado = agente_inari(estado)
+    recs = resultado["recomendaciones"]
+    assert len(recs) >= 1
+    assert recs[0]["empresa"] == "TechCorp S.A."
+
+
+# ---------- A3: PATCH /postulaciones/{id}/estado ----------
+
+def _patch_cliente_y_mock(monkeypatch, postulacion_usuario_id,
+                           rol_peticionario, usuario_id_peticionario):
+    """Configura TestClient con conexion() parcheada para no tocar la BD."""
+    import main as main_mod
+    from contextlib import contextmanager
+
+    @contextmanager
+    def fake_conexion():
+        class FakeCursor:
+            def __init__(self):
+                self._rows = []
+
+            def execute(self, sql, params=None):
+                sql_lower = sql.lower().strip()
+                if sql_lower.startswith("select"):
+                    self._rows = [{"id": 1, "estado": "postulado",
+                                   "usuario_id": postulacion_usuario_id}]
+                elif sql_lower.startswith("update"):
+                    estado_nuevo = params[0] if params else "postulado"
+                    self._rows = [{"id": 1, "estado": estado_nuevo}]
+                else:
+                    self._rows = []
+
+            def fetchone(self):
+                return self._rows[0] if self._rows else None
+
+        class FakeConn:
+            def cursor(self): return FakeCursor()
+            def commit(self): pass
+            def rollback(self): pass
+            def close(self): pass
+
+        yield FakeConn()
+
+    monkeypatch.setattr(main_mod, "conexion", fake_conexion)
+    token = auth.crear_token(usuario_id_peticionario, rol_peticionario)
+    client = TestClient(main_mod.app)
+    return client, token
+
+
+def test_patch_estado_candidato_dueno_puede_mover(monkeypatch):
+    """El candidato dueno de la postulacion puede cambiar su estado."""
+    client, token = _patch_cliente_y_mock(
+        monkeypatch,
+        postulacion_usuario_id=42,
+        rol_peticionario="candidato",
+        usuario_id_peticionario=42,
+    )
+    res = client.patch(
+        "/postulaciones/1/estado",
+        json={"estado": "en_revision"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert res.status_code == 200
+    assert res.json()["estado"] == "en_revision"
+
+
+def test_patch_estado_candidato_ajeno_da_403(monkeypatch):
+    """Un candidato que intenta mover la postulacion de otro recibe 403."""
+    client, token = _patch_cliente_y_mock(
+        monkeypatch,
+        postulacion_usuario_id=99,
+        rol_peticionario="candidato",
+        usuario_id_peticionario=42,
+    )
+    res = client.patch(
+        "/postulaciones/1/estado",
+        json={"estado": "entrevista"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert res.status_code == 403
+
+
+def test_patch_estado_admin_puede_mover_cualquiera(monkeypatch):
+    """El admin puede mover la postulacion de cualquier candidato."""
+    client, token = _patch_cliente_y_mock(
+        monkeypatch,
+        postulacion_usuario_id=99,
+        rol_peticionario="admin",
+        usuario_id_peticionario=1,
+    )
+    res = client.patch(
+        "/postulaciones/1/estado",
+        json={"estado": "descartado"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert res.status_code == 200
+    assert res.json()["estado"] == "descartado"
+
+
+def test_patch_estado_invalido_da_422():
+    """Un estado no reconocido es rechazado por la validacion de Pydantic (422)."""
+    from main import app as main_app
+    token = auth.crear_token(1, "admin")
+    client = TestClient(main_app)
+    res = client.patch(
+        "/postulaciones/1/estado",
+        json={"estado": "rechazado"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert res.status_code == 422
+
+
+def test_patch_estado_requiere_autenticacion():
+    """Sin token, el endpoint devuelve 401 o 403."""
+    from main import app as main_app
+    client = TestClient(main_app)
+    res = client.patch("/postulaciones/1/estado", json={"estado": "entrevista"})
+    assert res.status_code in (401, 403)

@@ -215,16 +215,20 @@ def procesar_candidato(datos: CandidatoIn, usuario: dict = Depends(limitar_llama
 
         postulacion_id = None
         if postulacion and postulacion.get("vacante_id"):
+            # Tomar la afinidad de la primera recomendación (la mejor)
+            recs = resultado.get("recomendaciones") or []
+            afinidad_valor = recs[0].get("afinidad") if recs else None
             cur.execute(
                 """
-                INSERT INTO postulaciones (perfil_id, vacante_id, estado, siguiente_paso)
-                VALUES (%s, %s, %s, %s) RETURNING id;
+                INSERT INTO postulaciones (perfil_id, vacante_id, estado, siguiente_paso, afinidad)
+                VALUES (%s, %s, %s, %s, %s) RETURNING id;
                 """,
                 (
                     perfil_id,
                     postulacion["vacante_id"],
                     postulacion.get("estado", "postulado"),
                     resultado.get("mensaje_seguimiento"),
+                    afinidad_valor,
                 ),
             )
             postulacion_id = cur.fetchone()["id"]
@@ -284,10 +288,19 @@ def ver_bitacora(perfil_id: int, usuario: dict = Depends(usuario_actual)):
 # ---------- Tablero de trazabilidad ----------
 @app.get("/postulaciones")
 def listar_postulaciones(usuario: dict = Depends(usuario_actual)):
-    """Un candidato ve solo lo suyo; un admin ve todo."""
+    """Un candidato ve solo lo suyo; un admin ve todo.
+
+    Devuelve por cada postulación:
+      id, perfil_id, vacante_id, estado, siguiente_paso, fecha_postulacion,
+      afinidad, empresa, modalidad, salario_min, salario_max (de la vacante),
+      candidato (nombre del perfil), vacante (título de la vacante).
+    """
     consulta = """
-        SELECT p.id, p.estado, p.siguiente_paso, p.fecha_postulacion,
-               pf.nombre AS candidato, v.titulo AS vacante
+        SELECT p.id, p.perfil_id, p.vacante_id,
+               p.estado, p.siguiente_paso, p.fecha_postulacion, p.afinidad,
+               pf.nombre AS candidato,
+               v.titulo AS vacante, v.empresa, v.modalidad,
+               v.salario_min, v.salario_max
         FROM postulaciones p
         JOIN perfiles pf ON pf.id = p.perfil_id
         JOIN vacantes v ON v.id = p.vacante_id
@@ -306,20 +319,45 @@ def listar_postulaciones(usuario: dict = Depends(usuario_actual)):
 
 @app.patch("/postulaciones/{postulacion_id}/estado")
 def cambiar_estado(
-    postulacion_id: int, datos: EstadoIn, admin: dict = Depends(solo_admin)
+    postulacion_id: int,
+    datos: EstadoIn,
+    usuario: dict = Depends(usuario_actual),
 ):
-    """Solo el admin mueve una postulación de estado (en revisión, entrevista...)."""
+    """El admin puede mover cualquier postulación de estado.
+    El candidato dueño puede mover la suya (simula la respuesta de la empresa).
+    Cualquier otro candidato recibe 403.
+    """
     with conexion() as conn:
         cur = conn.cursor()
+        # Verificar que la postulación existe y recuperar el dueño
+        cur.execute(
+            """
+            SELECT p.id, p.estado, pf.usuario_id
+            FROM postulaciones p
+            JOIN perfiles pf ON pf.id = p.perfil_id
+            WHERE p.id = %s;
+            """,
+            (postulacion_id,),
+        )
+        fila = cur.fetchone()
+        if not fila:
+            raise HTTPException(status_code=404, detail="Postulación no encontrada")
+
+        # Autorización: admin puede todo; candidato solo la suya
+        if usuario["rol"] != "admin":
+            if fila["usuario_id"] != usuario["id"]:
+                raise HTTPException(
+                    status_code=403,
+                    detail="No tenés permiso para modificar esta postulación",
+                )
+
         cur.execute(
             "UPDATE postulaciones SET estado = %s WHERE id = %s RETURNING id, estado;",
             (datos.estado, postulacion_id),
         )
-        fila = cur.fetchone()
-    if not fila:
-        raise HTTPException(status_code=404, detail="Postulación no encontrada")
-    log.info("Postulación %s -> %s", postulacion_id, datos.estado)
-    return fila
+        resultado = cur.fetchone()
+    log.info("Postulación %s -> %s (por usuario %s)", postulacion_id, datos.estado, usuario["id"])
+    return resultado
 
 
 # ---------- CVs de demo para pruebas ----------

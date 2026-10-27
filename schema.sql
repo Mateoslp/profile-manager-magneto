@@ -77,3 +77,4 @@ CREATE TABLE IF NOT EXISTS bitacora_ia (
 );
 
 CREATE INDEX IF NOT EXISTS idx_bitacora_perfil ON bitacora_ia(perfil_id);
+ALTER TABLE postulaciones ADD COLUMN IF NOT EXISTS afinidad INTEGER;

@@ -167,6 +167,7 @@ def agente_vacantes(estado: EstadoProceso) -> EstadoProceso:
         normalizadas.append({
             "id": v.get("id"),
             "titulo": v.get("titulo"),
+            "empresa": v.get("empresa"),
             "ubicacion": v.get("ubicacion"),
             "modalidad": v.get("modalidad"),
             "salario_min": v.get("salario_min"),
