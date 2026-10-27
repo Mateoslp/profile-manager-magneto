@@ -64,7 +64,7 @@ export default function LoginPage({ onSuccess }: LoginPageProps) {
         onSuccess(email);
       } else {
         await apiRegistro(email, password);
-        setSuccess("¡Cuenta creada! Ahora iniciá sesión.");
+        setSuccess("¡Cuenta creada! Ahora inicia sesión.");
         setTab("login");
         setPassword("");
         setConfirm("");
@@ -87,8 +87,8 @@ export default function LoginPage({ onSuccess }: LoginPageProps) {
           </h1>
           <p className="mt-1 text-sm text-text-secondary">
             {tab === "login"
-              ? "Iniciá sesión para continuar"
-              : "Completá el formulario para registrarte"}
+              ? "Inicia sesión para continuar"
+              : "Completa el formulario para registrarte"}
           </p>
         </div>
 
@@ -173,7 +173,7 @@ export default function LoginPage({ onSuccess }: LoginPageProps) {
                 type="password"
                 autoComplete="new-password"
                 className="input"
-                placeholder="Repetí tu contraseña"
+                placeholder="Repite tu contraseña"
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
                 required
@@ -223,14 +223,14 @@ export default function LoginPage({ onSuccess }: LoginPageProps) {
         {/* Nota de política */}
         <p className="mt-5 text-center text-xs text-text-muted">
           {tab === "login"
-            ? "¿No tenés cuenta? Usá la pestaña "Crear cuenta"."
-            : "Al registrarte aceptás el uso de tus datos para el análisis de CV."}
+            ? "¿No tienes cuenta? Usa la pestaña 'Crear cuenta'."
+            : "Al registrarte aceptas el uso de tus datos para el análisis de CV."}
         </p>
       </div>
 
       {/* Datos de acceso de demo (orientación visual) */}
       <div className="mt-4 rounded-xl border border-accent/20 bg-accent/5 px-4 py-3 text-center text-xs text-text-secondary">
-        💡 Si es tu primera vez, creá una cuenta con cualquier correo y contraseña.
+        💡 Si es tu primera vez, crea una cuenta con cualquier correo y contraseña.
       </div>
     </div>
   );

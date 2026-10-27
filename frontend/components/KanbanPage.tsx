@@ -282,7 +282,7 @@ export default function KanbanPage({ onVolverResultados }: KanbanPageProps) {
         <div>
           <h2 className="text-2xl font-bold text-text-primary">Tablero de postulaciones</h2>
           <p className="mt-0.5 text-sm text-text-secondary">
-            Arrastrá las tarjetas entre columnas para actualizar el estado.
+            Arrastra las tarjetas entre columnas para actualizar el estado.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -351,7 +351,7 @@ export default function KanbanPage({ onVolverResultados }: KanbanPageProps) {
           <div>
             <p className="text-lg font-semibold text-text-primary">Sin postulaciones aún</p>
             <p className="mt-1 text-sm text-text-secondary max-w-sm">
-              Analizá tu CV y si tu puntaje supera el umbral, Kenti registrará
+              Analiza tu CV y si tu puntaje supera el umbral, Kenti registrará
               una postulación simulada que aparecerá aquí.
             </p>
           </div>
@@ -385,7 +385,7 @@ export default function KanbanPage({ onVolverResultados }: KanbanPageProps) {
       {/* Nota de simulación */}
       <p className="text-center text-xs text-text-muted pb-4">
         Las postulaciones en este tablero son simulaciones de un proceso de selección.
-        Podés mover las tarjetas para practicar cómo funcionaría el seguimiento.
+        Puedes mover las tarjetas para practicar cómo funcionaría el seguimiento.
       </p>
     </div>
   );

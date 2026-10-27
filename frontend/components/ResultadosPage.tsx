@@ -353,7 +353,7 @@ export default function ResultadosPage({
           <p className="text-sm leading-relaxed text-text-primary">{mensaje_seguimiento}</p>
           {postulacion_id !== null && (
             <p className="mt-3 text-xs text-text-muted italic">
-              Recordá que esta es una postulación simulada; no hay un proceso real de selección detrás.
+              Recuerda que esta es una postulación simulada; no hay un proceso real de selección detrás.
             </p>
           )}
         </div>

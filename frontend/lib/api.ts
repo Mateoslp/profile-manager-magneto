@@ -34,7 +34,7 @@ async function handleResponse<T>(res: Response): Promise<T> {
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("likai:unauthorized"));
     }
-    throw new Error("Sesión expirada. Por favor iniciá sesión nuevamente.");
+    throw new Error("Sesión expirada. Por favor inicia sesión nuevamente.");
   }
   if (!res.ok) {
     let detail = `Error ${res.status}`;

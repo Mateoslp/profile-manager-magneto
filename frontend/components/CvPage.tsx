@@ -62,9 +62,9 @@ export default function CvPage({ onResult }: CvPageProps) {
     <div className="animate-slide-up mx-auto w-full max-w-3xl space-y-6">
       {/* Cabecera */}
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-text-primary">Analizá tu CV</h2>
+        <h2 className="text-2xl font-bold text-text-primary">Analiza tu CV</h2>
         <p className="mt-1 text-sm text-text-secondary">
-          Pegá el texto de tu hoja de vida y los agentes de IA lo procesarán.
+          Pega el texto de tu hoja de vida y los agentes de IA lo procesarán.
         </p>
       </div>
 
@@ -74,7 +74,7 @@ export default function CvPage({ onResult }: CvPageProps) {
         <textarea
           id="cv-input"
           className="textarea min-h-[280px]"
-          placeholder="Pegá aquí el contenido de tu hoja de vida (experiencia, habilidades, educación, etc.)..."
+          placeholder="Pega aquí el contenido de tu hoja de vida (experiencia, habilidades, educación, etc.)..."
           value={cvTexto}
           onChange={(e) => setCvTexto(e.target.value)}
           disabled={loading}
@@ -133,7 +133,7 @@ export default function CvPage({ onResult }: CvPageProps) {
             <p className="text-xs mt-0.5 opacity-80">{error}</p>
             {is502 && (
               <p className="text-xs mt-1 opacity-70">
-                Los agentes de IA pueden tardar entre 2 y 15 segundos. Intentá de nuevo.
+                Los agentes de IA pueden tardar entre 2 y 15 segundos. Intenta de nuevo.
               </p>
             )}
           </div>
