@@ -7,13 +7,10 @@ import {
   CvDemo,
   ResultadoProcesar,
 } from "@/lib/api";
+import AgenteSvg, { AGENTES_META, AgenteNombre } from "@/components/escenario/AgenteSvg";
+import { usePrefersReducedMotion } from "@/components/escenario/mensajesUtils";
 
-const AGENTES = [
-  { id: "Lexi",  emoji: "🧠", desc: "Estructurando el CV..." },
-  { id: "Inari", emoji: "🔍", desc: "Buscando vacantes..." },
-  { id: "Kenti", emoji: "📝", desc: "Evaluando postulación..." },
-  { id: "Iris",  emoji: "📡", desc: "Preparando seguimiento..." },
-];
+const AGENTES_ESPERA: AgenteNombre[] = ["Lexi", "Inari", "Kenti", "Iris"];
 
 const MIN_CHARS = 30;
 
@@ -27,6 +24,9 @@ export default function CvPage({ onResult }: CvPageProps) {
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState<string | null>(null);
   const [is502,    setIs502]    = useState(false);
+  const [turnoLuz, setTurnoLuz] = useState(0);
+
+  const reducedMotion = usePrefersReducedMotion();
 
   /* Carga los CVs demo al montar */
   useEffect(() => {
@@ -34,6 +34,18 @@ export default function CvPage({ onResult }: CvPageProps) {
       .then(setDemos)
       .catch(() => {/* silencioso: si falla solo no aparecen los botones */});
   }, []);
+
+  /* Ilumina a los cuatro agentes uno tras otro mientras se espera la respuesta */
+  useEffect(() => {
+    if (!loading || reducedMotion) {
+      setTurnoLuz(0);
+      return;
+    }
+    const timer = setInterval(() => {
+      setTurnoLuz((prev) => (prev + 1) % AGENTES_ESPERA.length);
+    }, 900);
+    return () => clearInterval(timer);
+  }, [loading, reducedMotion]);
 
   async function analizar() {
     if (cvTexto.trim().length < MIN_CHARS || loading) return;
@@ -54,12 +66,12 @@ export default function CvPage({ onResult }: CvPageProps) {
     }
   }
 
-  const chars      = cvTexto.length;
+  const chars       = cvTexto.length;
   const faltanChars = Math.max(0, MIN_CHARS - chars);
   const canAnalyze  = chars >= MIN_CHARS && !loading;
 
   return (
-    <div className="animate-slide-up mx-auto w-full max-w-3xl space-y-6">
+    <div className="animate-slide-up motion-reduce:animate-none mx-auto w-full max-w-3xl space-y-6">
       {/* Cabecera */}
       <div className="text-center">
         <h2 className="text-2xl font-bold text-text-primary">Analiza tu CV</h2>
@@ -151,40 +163,58 @@ export default function CvPage({ onResult }: CvPageProps) {
         </div>
       )}
 
-      {/* Panel "pensando" mientras procesa */}
+      {/* Panel de espera: los cuatro agentes en estado "pensando", iluminándose uno tras otro */}
       {loading && (
-        <div id="thinking-panel" className="card p-6 space-y-4">
-          <p className="text-center text-sm font-medium text-text-secondary">
-            Los agentes están analizando tu CV…
+        <div
+          id="thinking-panel"
+          role="status"
+          aria-live="polite"
+          className="card p-6 space-y-5"
+        >
+          <p className="text-center text-sm font-semibold text-text-primary">
+            Los agentes están trabajando
           </p>
+
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {AGENTES.map((ag, i) => (
-              <div
-                key={ag.id}
-                className="card-elevated flex flex-col items-center gap-2 p-4 animate-thinking"
-                style={{ animationDelay: `${i * 0.35}s` }}
-              >
-                <span className="text-3xl">{ag.emoji}</span>
-                <span
-                  className={`text-xs font-bold agent-${ag.id.toLowerCase()}`}
-                  style={{ color: "var(--agent-color)" }}
+            {AGENTES_ESPERA.map((nombre, i) => {
+              const meta = AGENTES_META[nombre];
+              const iluminado = reducedMotion || turnoLuz === i;
+
+              return (
+                <div
+                  key={nombre}
+                  data-agente-espera={nombre}
+                  data-iluminado={iluminado ? "true" : "false"}
+                  className={[
+                    "flex flex-col items-center gap-2 rounded-2xl border p-4 transition-all duration-500 motion-reduce:transition-none",
+                    iluminado
+                      ? "bg-surface-elevated opacity-100"
+                      : "border-surface-border bg-surface-card opacity-50",
+                  ].join(" ")}
+                  style={
+                    iluminado
+                      ? {
+                          borderColor: meta.color,
+                          boxShadow: reducedMotion
+                            ? undefined
+                            : `0 0 20px ${meta.color}33`,
+                        }
+                      : undefined
+                  }
                 >
-                  {ag.id}
-                </span>
-                <span className="text-center text-xs text-text-muted">
-                  {ag.desc}
-                </span>
-                <div className="flex gap-0.5">
-                  {[0, 1, 2].map((d) => (
-                    <span
-                      key={d}
-                      className="h-1.5 w-1.5 rounded-full bg-accent animate-thinking"
-                      style={{ animationDelay: `${d * 0.2}s` }}
-                    />
-                  ))}
+                  <AgenteSvg agente={nombre} estado="pensando" size={68} />
+                  <span
+                    className="text-xs font-bold"
+                    style={{ color: meta.color }}
+                  >
+                    {meta.nombre}
+                  </span>
+                  <span className="text-center text-[11px] text-text-muted">
+                    {meta.rol}
+                  </span>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

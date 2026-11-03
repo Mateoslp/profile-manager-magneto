@@ -1,26 +1,29 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import { MensajeAgente, Perfil, Recomendacion, ResultadoProcesar } from "@/lib/api";
+import { AGENTES_META, AgenteNombre } from "@/components/escenario/AgenteSvg";
+import EscenarioAgentes from "@/components/escenario/EscenarioAgentes";
+import {
+  esOrigenRespaldo,
+  nombreVisibleNodo,
+  obtenerInfoTipo,
+  usePrefersReducedMotion,
+} from "@/components/escenario/mensajesUtils";
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
-const AGENT_COLORS: Record<string, string> = {
-  Lexi:  "#a78bfa",
-  Inari: "#34d399",
-  Kenti: "#fbbf24",
-  Iris:  "#60a5fa",
-};
-
-const TIPO_BADGE: Record<string, { label: string; cls: string }> = {
-  info:     { label: "Info",     cls: "chip-violet" },
-  alerta:   { label: "Alerta",   cls: "chip-yellow" },
-  decision: { label: "Decisión", cls: "chip bg-orange-900/40 text-orange-300 border border-orange-800/50" },
-};
+function colorPorAgente(agente: string): string {
+  const nombre = nombreVisibleNodo(agente) as AgenteNombre;
+  return AGENTES_META[nombre]?.color ?? "#9090b0";
+}
 
 function formatSalario(n: number | null) {
   if (!n) return null;
-  return new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(n);
+  return new Intl.NumberFormat("es-CO", {
+    style: "currency",
+    currency: "COP",
+    maximumFractionDigits: 0,
+  }).format(n);
 }
 
 // ─── Tarjeta de perfil ────────────────────────────────────────────────────
@@ -32,8 +35,11 @@ const PERFIL_CAMPOS: Array<{ key: keyof Perfil; label: string; format?: (v: unkn
   { key: "ubicacion",         label: "Ubicación" },
   { key: "experiencia_anios", label: "Experiencia", format: (v) => v ? `${v} años` : "" },
   { key: "educacion",         label: "Educación" },
-  { key: "aspiracion_salarial", label: "Aspiración salarial",
-    format: (v) => v ? (formatSalario(v as number) ?? "") : "" },
+  {
+    key: "aspiracion_salarial",
+    label: "Aspiración salarial",
+    format: (v) => (v ? formatSalario(v as number) ?? "" : ""),
+  },
   { key: "modalidad_preferida", label: "Modalidad preferida" },
   { key: "disponibilidad",    label: "Disponibilidad" },
   { key: "habilidades",       label: "Habilidades" },
@@ -51,12 +57,20 @@ function TarjetaPerfil({ perfil }: { perfil: Perfil }) {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {PERFIL_CAMPOS.map(({ key, label, format }) => {
           const raw   = perfil[key];
-          const valor = raw != null && raw !== ""
-            ? (format ? format(raw) : String(raw))
-            : null;
+          const valor =
+            raw != null && raw !== ""
+              ? format
+                ? format(raw)
+                : String(raw)
+              : null;
           return (
-            <div key={key} className="rounded-xl border border-surface-border bg-surface-elevated px-4 py-3">
-              <p className="text-xs font-medium uppercase tracking-wider text-text-muted">{label}</p>
+            <div
+              key={key}
+              className="rounded-xl border border-surface-border bg-surface-elevated px-4 py-3"
+            >
+              <p className="text-xs font-medium uppercase tracking-wider text-text-muted">
+                {label}
+              </p>
               {valor ? (
                 <p className="mt-0.5 text-sm text-text-primary break-words">{valor}</p>
               ) : (
@@ -73,43 +87,48 @@ function TarjetaPerfil({ perfil }: { perfil: Perfil }) {
   );
 }
 
-// ─── Conversación de agentes ──────────────────────────────────────────────
+// ─── Conversación de agentes en texto (acordeón de respaldo) ──────────────
 
-function BurbujaMensaje({ msg, visible }: { msg: MensajeAgente; visible: boolean }) {
-  if (!visible) return null;
-  const color = AGENT_COLORS[msg.agente] ?? "#9090b0";
-  const badge = TIPO_BADGE[msg.tipo] ?? { label: msg.tipo, cls: "chip-gray" };
-  const esRespaldo = msg.agente === "Iris" && (msg.datos as { origen?: string }).origen === "respaldo";
+function BurbujaMensaje({ msg }: { msg: MensajeAgente }) {
+  const emisor = nombreVisibleNodo(msg.agente);
+  const receptor = nombreVisibleNodo(msg.para);
+  const color = colorPorAgente(msg.agente);
+  const badge = obtenerInfoTipo(msg.tipo);
+  const mostrarRespaldo = esOrigenRespaldo(msg.datos);
 
   return (
-    <div className="animate-slide-in flex gap-3">
+    <div className="flex gap-3">
       {/* Avatar */}
       <div
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold"
         style={{ background: `${color}22`, color, border: `1.5px solid ${color}66` }}
       >
-        {msg.agente[0]}
+        {emisor[0] ?? "?"}
       </div>
 
       {/* Burbuja */}
       <div className="flex-1 space-y-1.5">
-        {/* Cabecera */}
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm font-semibold" style={{ color }}>
-            {msg.agente}
+            {emisor}
           </span>
-          <svg className="h-3 w-3 text-text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg
+            className="h-3 w-3 text-text-muted"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            aria-hidden="true"
+          >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
-          <span className="text-sm text-text-muted">{msg.para}</span>
-          <span className={badge.cls}>{badge.label}</span>
-          {esRespaldo && (
+          <span className="text-sm text-text-muted">{receptor}</span>
+          <span className={badge.clase}>{badge.etiqueta}</span>
+          {mostrarRespaldo && (
             <span className="chip bg-surface-elevated text-text-muted border border-surface-border text-[10px]">
-              respuesta de respaldo
+              Respuesta de respaldo
             </span>
           )}
         </div>
-        {/* Texto */}
         <div className="rounded-xl rounded-tl-none border border-surface-border bg-surface-elevated px-4 py-3">
           <p className="text-sm leading-relaxed text-text-primary">{msg.texto}</p>
         </div>
@@ -118,51 +137,45 @@ function BurbujaMensaje({ msg, visible }: { msg: MensajeAgente; visible: boolean
   );
 }
 
-function ConversacionAgentes({ mensajes }: { mensajes: MensajeAgente[] }) {
-  const [visibles, setVisibles] = useState(0);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  function iniciarAnimacion() {
-    setVisibles(0);
-    let i = 0;
-    intervalRef.current = setInterval(() => {
-      i++;
-      setVisibles(i);
-      if (i >= mensajes.length && intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    }, 600);
-  }
-
-  useEffect(() => {
-    iniciarAnimacion();
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mensajes]);
-
+function AcordeonConversacionTexto({
+  mensajes,
+  abiertoPorDefecto,
+}: {
+  mensajes: MensajeAgente[];
+  abiertoPorDefecto: boolean;
+}) {
   return (
-    <div className="card p-6 space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-xl">💬</span>
-          <h3 className="font-semibold text-text-primary">Conversación de los agentes</h3>
-        </div>
-        <button
-          id="btn-repetir-animacion"
-          type="button"
-          className="btn-ghost text-xs"
-          onClick={iniciarAnimacion}
+    <details
+      id="acordeon-conversacion-texto"
+      open={abiertoPorDefecto || undefined}
+      className="card group overflow-hidden"
+    >
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-6 py-4 text-sm font-semibold text-text-secondary transition-colors hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent">
+        <span className="flex items-center gap-2">
+          <span aria-hidden="true" className="text-lg">💬</span>
+          <span>Ver conversación en texto</span>
+          <span className="chip-gray text-[11px]">{mensajes.length}</span>
+        </span>
+        <svg
+          className="h-4 w-4 shrink-0 text-text-muted transition-transform duration-200 motion-reduce:transition-none group-open:rotate-180"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+          aria-hidden="true"
         >
-          ↺ Repetir
-        </button>
-      </div>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </summary>
 
-      <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
-        {mensajes.map((msg, idx) => (
-          <BurbujaMensaje key={idx} msg={msg} visible={idx < visibles} />
-        ))}
+      <div className="border-t border-surface-border px-6 py-5">
+        <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+          {mensajes.map((msg, idx) => (
+            <BurbujaMensaje key={idx} msg={msg} />
+          ))}
+        </div>
       </div>
-    </div>
+    </details>
   );
 }
 
@@ -179,12 +192,16 @@ function CirculoAfinidad({ pct }: { pct: number }) {
       <svg width="60" height="60" viewBox="0 0 60 60">
         <circle cx="30" cy="30" r={r} fill="none" stroke="#2d2d50" strokeWidth="5" />
         <circle
-          cx="30" cy="30" r={r}
-          fill="none" stroke={color} strokeWidth="5"
+          cx="30"
+          cy="30"
+          r={r}
+          fill="none"
+          stroke={color}
+          strokeWidth="5"
           strokeDasharray={`${dash} ${circ}`}
           strokeLinecap="round"
           transform="rotate(-90 30 30)"
-          style={{ transition: "stroke-dasharray 0.8s ease" }}
+          className="transition-all duration-700 ease-out motion-reduce:transition-none"
         />
         <text x="30" y="35" textAnchor="middle" fontSize="13" fontWeight="700" fill={color}>
           {pct}%
@@ -207,7 +224,7 @@ function TarjetaVacante({
   return (
     <div
       className={[
-        "card p-5 space-y-4 transition-all",
+        "card p-5 space-y-4 transition-all motion-reduce:transition-none",
         esPostulada ? "border-accent shadow-glow-sm" : "",
       ].join(" ")}
     >
@@ -276,9 +293,10 @@ export default function ResultadosPage({
   onVerTablero,
 }: ResultadosPageProps) {
   const { perfil, recomendaciones, mensajes, mensaje_seguimiento, postulacion_id } = resultado;
+  const reducedMotion = usePrefersReducedMotion();
 
   return (
-    <div className="animate-slide-up mx-auto w-full max-w-4xl space-y-8">
+    <div className="animate-slide-up motion-reduce:animate-none mx-auto w-full max-w-4xl space-y-8">
       <div className="text-center">
         <h2 className="text-2xl font-bold text-text-primary">Resultados del análisis</h2>
         <p className="mt-1 text-sm text-text-secondary">
@@ -286,11 +304,26 @@ export default function ResultadosPage({
         </p>
       </div>
 
+      {/* Escenario visual interactivo (arriba del perfil; con prefers-reduced-motion prioriza solo la lista de mensajes) */}
+      {mensajes.length > 0 && !reducedMotion && (
+        <EscenarioAgentes
+          mensajes={mensajes}
+          postulacionId={postulacion_id}
+          nombreCandidato={perfil.nombre}
+        />
+      )}
+
+      {/* Conversación en formato lista dentro del acordeón "Ver conversación en texto" */}
+      {mensajes.length > 0 && (
+        <AcordeonConversacionTexto
+          key={reducedMotion ? "reduced" : "normal"}
+          mensajes={mensajes}
+          abiertoPorDefecto={reducedMotion}
+        />
+      )}
+
       {/* Perfil */}
       <TarjetaPerfil perfil={perfil} />
-
-      {/* Conversación */}
-      {mensajes.length > 0 && <ConversacionAgentes mensajes={mensajes} />}
 
       {/* Vacantes recomendadas */}
       <div className="space-y-4">

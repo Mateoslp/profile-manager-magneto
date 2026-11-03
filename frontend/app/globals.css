@@ -197,6 +197,20 @@ body {
 .animate-thinking  { animation: thinking 1.6s ease-in-out infinite; }
 .animate-spin-slow { animation: spin-slow 2s linear infinite; }
 
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-fade-in,
+  .animate-slide-up,
+  .animate-slide-in,
+  .animate-thinking,
+  .animate-spin-slow,
+  .shimmer {
+    animation: none !important;
+  }
+}
+
 /* Shimmer para skeleton */
 .shimmer {
   background: linear-gradient(90deg,
