@@ -188,26 +188,42 @@ def agente_vacantes(estado: EstadoProceso) -> EstadoProceso:
     return estado
 
 
-# --- Recomendador: scoring simple por reglas (no necesita IA) ---
-def recomendador(estado: EstadoProceso) -> EstadoProceso:
-    perfil = estado["perfil_estructurado"]
+# --- Función parametrizada de scoring y recomendación ---
+def calcular_recomendaciones(
+    perfil: dict,
+    vacantes: list[dict],
+    peso_ubicacion: int = PESO_UBICACION,
+    peso_modalidad: int = PESO_MODALIDAD,
+    peso_salario: int = PESO_SALARIO,
+    peso_habilidad: int = PESO_HABILIDAD,
+    limite: int = 5,
+) -> list[dict]:
+    """Calcula el score y afinidad de cada vacante respecto al perfil según pesos configurables.
+    Devuelve las vacantes ordenadas de mayor a menor score (hasta `limite` vacantes).
+    """
+    puntaje_maximo = (
+        peso_ubicacion
+        + peso_modalidad
+        + peso_salario
+        + (peso_habilidad * MAX_HABILIDADES_MATCH)
+    )
     habilidades_candidato = _habilidades(perfil.get("habilidades"))
     candidatas = []
-    for v in estado["vacantes_disponibles"]:
+    for v in vacantes:
         score = 0
         if perfil.get("ubicacion") and v.get("ubicacion") == perfil["ubicacion"]:
-            score += PESO_UBICACION
+            score += peso_ubicacion
         if perfil.get("modalidad_preferida") and v.get("modalidad") == perfil["modalidad_preferida"]:
-            score += PESO_MODALIDAD
+            score += peso_modalidad
         aspiracion = perfil.get("aspiracion_salarial")
         if aspiracion and v.get("salario_max"):
             if v["salario_max"] >= aspiracion:
-                score += PESO_SALARIO
+                score += peso_salario
         habilidades_vacante = _habilidades(v.get("habilidades"))
         comunes = habilidades_candidato & habilidades_vacante
         faltantes = sorted(habilidades_vacante - habilidades_candidato)
-        score += min(len(comunes), MAX_HABILIDADES_MATCH) * PESO_HABILIDAD
-        afinidad = round(score / PUNTAJE_MAXIMO * 100)
+        score += min(len(comunes), MAX_HABILIDADES_MATCH) * peso_habilidad
+        afinidad = round(score / puntaje_maximo * 100) if puntaje_maximo > 0 else 0
         candidatas.append({
             **v,
             "score": score,
@@ -216,7 +232,21 @@ def recomendador(estado: EstadoProceso) -> EstadoProceso:
             "habilidades_faltantes": faltantes,
         })
     candidatas.sort(key=lambda x: x["score"], reverse=True)
-    estado["recomendaciones"] = candidatas[:5]
+    return candidatas[:limite] if limite else candidatas
+
+
+# --- Recomendador: scoring simple por reglas (no necesita IA) ---
+def recomendador(estado: EstadoProceso) -> EstadoProceso:
+    perfil = estado["perfil_estructurado"]
+    estado["recomendaciones"] = calcular_recomendaciones(
+        perfil=perfil,
+        vacantes=estado["vacantes_disponibles"],
+        peso_ubicacion=PESO_UBICACION,
+        peso_modalidad=PESO_MODALIDAD,
+        peso_salario=PESO_SALARIO,
+        peso_habilidad=PESO_HABILIDAD,
+        limite=5,
+    )
     return estado
 
 

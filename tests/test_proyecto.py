@@ -1043,3 +1043,234 @@ def test_lexi_respaldo_correo_extraido_coincide(monkeypatch):
     perfil = resultado["perfil_estructurado"]
 
     assert perfil["email"] == correo_esperado
+
+
+# ---------- Paquete F: Recálculo de recomendaciones con pesos personalizados ----------
+
+def _mock_db_recalcular(monkeypatch, perfiles=None, vacantes=None):
+    from contextlib import contextmanager
+    import main as main_mod
+
+    @contextmanager
+    def fake_conexion():
+        class FakeCursor:
+            def __init__(self):
+                self._rows = []
+
+            def execute(self, sql, params=None):
+                sql_lower = sql.lower()
+                if "from perfiles" in sql_lower:
+                    res = list(perfiles or [])
+                    if params:
+                        if len(params) == 2:
+                            pid, uid = params
+                            res = [p for p in res if p.get("id") == pid and p.get("usuario_id") == uid]
+                        elif len(params) == 1:
+                            param = params[0]
+                            if "usuario_id = %s" in sql_lower:
+                                res = [p for p in res if p.get("usuario_id") == param]
+                                res.sort(key=lambda p: p.get("id", 0), reverse=True)
+                            else:
+                                res = [p for p in res if p.get("id") == param]
+                    self._rows = res
+                elif "from vacantes" in sql_lower:
+                    self._rows = list(vacantes or [])
+                else:
+                    self._rows = []
+
+            def fetchone(self):
+                return self._rows[0] if self._rows else None
+
+            def fetchall(self):
+                return list(self._rows)
+
+        class FakeConn:
+            def cursor(self): return FakeCursor()
+            def commit(self): pass
+            def rollback(self): pass
+            def close(self): pass
+
+        yield FakeConn()
+
+    monkeypatch.setattr(main_mod, "conexion", fake_conexion)
+    return TestClient(main_mod.app)
+
+
+def test_recalcular_pesos_por_defecto_mismos_puntajes_que_flujo_actual(monkeypatch):
+    """Con pesos por defecto (2,2,1,2), el scoring da exactamente el mismo resultado."""
+    perfil = {
+        "id": 1,
+        "usuario_id": 10,
+        "nombre": "Ana Pérez",
+        "email": "ana@test.com",
+        "telefono": "3001234567",
+        "ubicacion": "Medellín",
+        "modalidad_preferida": "remoto",
+        "aspiracion_salarial": 4_000_000,
+        "experiencia_anios": 3,
+        "educacion": "Ingeniera",
+        "disponibilidad": "inmediata",
+        "habilidades": "Python, Docker",
+    }
+    vacantes = [
+        {
+            "id": 101,
+            "titulo": "Dev Python",
+            "empresa": "Tech Co",
+            "ubicacion": "Medellín",
+            "modalidad": "remoto",
+            "salario_min": 3_000_000,
+            "salario_max": 5_000_000,
+            "habilidades": "Python, Docker, SQL",
+        }
+    ]
+    client = _mock_db_recalcular(monkeypatch, perfiles=[perfil], vacantes=vacantes)
+    token = auth.crear_token(10, "candidato")
+
+    res = client.post(
+        "/perfil/recalcular-recomendaciones",
+        headers={"Authorization": f"Bearer {token}"},
+        json={},
+    )
+    assert res.status_code == 200
+    datos = res.json()
+    assert datos["perfil_id"] == 1
+    assert datos["pesos"] == {
+        "peso_ubicacion": 2,
+        "peso_modalidad": 2,
+        "peso_salario": 1,
+        "peso_habilidad": 2,
+    }
+    rec = datos["recomendaciones"][0]
+    # Ubicación (2) + Modalidad (2) + Salario (1) + Habilidades (2 * 2 = 4) = 9
+    assert rec["score"] == 9
+    assert rec["afinidad"] == round(9 / 11 * 100)
+    assert rec["habilidades_en_comun"] == ["docker", "python"]
+    assert rec["habilidades_faltantes"] == ["sql"]
+
+
+def test_recalcular_subir_peso_salario_cambia_orden(monkeypatch):
+    """Subir el peso del salario prioriza la vacante de mejor sueldo sobre la de mejor ubicación/modalidad."""
+    perfil = {
+        "id": 1,
+        "usuario_id": 10,
+        "nombre": "Carlos Gómez",
+        "email": "carlos@test.com",
+        "telefono": "3000000000",
+        "ubicacion": "Medellín",
+        "modalidad_preferida": "remoto",
+        "aspiracion_salarial": 5_000_000,
+        "experiencia_anios": 2,
+        "educacion": "Profesional",
+        "disponibilidad": "inmediata",
+        "habilidades": "",
+    }
+    vacante_cercana = {
+        "id": 1,
+        "titulo": "Vacante Cercana",
+        "empresa": "A",
+        "ubicacion": "Medellín",
+        "modalidad": "remoto",
+        "salario_min": 2_000_000,
+        "salario_max": 4_000_000,
+        "habilidades": "",
+    }
+    vacante_bien_paga = {
+        "id": 2,
+        "titulo": "Vacante Mejor Paga",
+        "empresa": "B",
+        "ubicacion": "Bogotá",
+        "modalidad": "presencial",
+        "salario_min": 5_000_000,
+        "salario_max": 7_000_000,
+        "habilidades": "",
+    }
+    client = _mock_db_recalcular(monkeypatch, perfiles=[perfil], vacantes=[vacante_cercana, vacante_bien_paga])
+    token = auth.crear_token(10, "candidato")
+
+    res_defecto = client.post(
+        "/perfil/recalcular-recomendaciones",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"peso_ubicacion": 2, "peso_modalidad": 2, "peso_salario": 1, "peso_habilidad": 0},
+    )
+    assert res_defecto.status_code == 200
+    ids_defecto = [r["id"] for r in res_defecto.json()["recomendaciones"]]
+    assert ids_defecto == [1, 2]
+
+    res_salario = client.post(
+        "/perfil/recalcular-recomendaciones",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"peso_ubicacion": 1, "peso_modalidad": 1, "peso_salario": 5, "peso_habilidad": 0},
+    )
+    assert res_salario.status_code == 200
+    ids_salario = [r["id"] for r in res_salario.json()["recomendaciones"]]
+    assert ids_salario == [2, 1]
+    assert ids_salario != ids_defecto
+
+
+def test_recalcular_todos_los_pesos_en_cero_da_422(monkeypatch):
+    """Poner todos los pesos en 0 debe ser rechazado con 422 Unprocessable Entity."""
+    client = _mock_db_recalcular(monkeypatch, perfiles=[], vacantes=[])
+    token = auth.crear_token(10, "candidato")
+
+    res = client.post(
+        "/perfil/recalcular-recomendaciones",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"peso_ubicacion": 0, "peso_modalidad": 0, "peso_salario": 0, "peso_habilidad": 0},
+    )
+    assert res.status_code == 422
+
+
+def test_recalcular_peso_mayor_a_cinco_da_422(monkeypatch):
+    """Un peso mayor que 5 debe ser rechazado con 422 Unprocessable Entity."""
+    client = _mock_db_recalcular(monkeypatch, perfiles=[], vacantes=[])
+    token = auth.crear_token(10, "candidato")
+
+    res = client.post(
+        "/perfil/recalcular-recomendaciones",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"peso_salario": 6},
+    )
+    assert res.status_code == 422
+
+
+def test_recalcular_perfil_id_ajeno_da_403(monkeypatch):
+    """Solicitar un perfil_id que no pertenece al usuario autenticado da 403 Forbidden."""
+    perfil_ajeno = {
+        "id": 99,
+        "usuario_id": 20,
+        "nombre": "Otro Usuario",
+    }
+    client = _mock_db_recalcular(monkeypatch, perfiles=[perfil_ajeno], vacantes=[])
+    token = auth.crear_token(10, "candidato")
+
+    res = client.post(
+        "/perfil/recalcular-recomendaciones",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"perfil_id": 99},
+    )
+    assert res.status_code == 403
+    assert "acceso" in res.json()["detail"].lower()
+
+
+def test_recalcular_usuario_sin_perfiles_da_404(monkeypatch):
+    """Si el usuario no tiene ningún perfil registrado y no pasa perfil_id, da 404."""
+    client = _mock_db_recalcular(monkeypatch, perfiles=[], vacantes=[])
+    token = auth.crear_token(10, "candidato")
+
+    res = client.post(
+        "/perfil/recalcular-recomendaciones",
+        headers={"Authorization": f"Bearer {token}"},
+        json={},
+    )
+    assert res.status_code == 404
+    assert "perfil" in res.json()["detail"].lower()
+
+
+def test_recalcular_sin_token_da_401():
+    """Llamar al endpoint sin encabezado de autenticación responde 401."""
+    import main as main_mod
+    client = TestClient(main_mod.app)
+    res = client.post("/perfil/recalcular-recomendaciones", json={})
+    assert res.status_code == 401
+

@@ -15,16 +15,16 @@ import json
 import logging
 import os
 from contextlib import contextmanager
-from typing import Literal
+from typing import Literal, Optional
 
 import psycopg2
 import psycopg2.extras
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
-from agents import app_grafo
+from agents import app_grafo, calcular_recomendaciones
 from auth import (
     crear_token,
     hashear_password,
@@ -86,6 +86,25 @@ class CandidatoIn(BaseModel):
 
 class EstadoIn(BaseModel):
     estado: Literal["postulado", "en_revision", "entrevista", "descartado"]
+
+
+class RecalcularRecomendacionesIn(BaseModel):
+    peso_ubicacion: int = Field(default=2, ge=0, le=5)
+    peso_modalidad: int = Field(default=2, ge=0, le=5)
+    peso_salario: int = Field(default=1, ge=0, le=5)
+    peso_habilidad: int = Field(default=2, ge=0, le=5)
+    perfil_id: Optional[int] = None
+
+    @model_validator(mode="after")
+    def validar_al_menos_un_peso(self):
+        if (
+            self.peso_ubicacion == 0
+            and self.peso_modalidad == 0
+            and self.peso_salario == 0
+            and self.peso_habilidad == 0
+        ):
+            raise ValueError("Al menos un peso debe ser mayor que 0")
+        return self
 
 
 # ---------- Público ----------
@@ -255,6 +274,85 @@ def procesar_candidato(datos: CandidatoIn, usuario: dict = Depends(limitar_llama
         "recomendaciones": resultado.get("recomendaciones", []),
         "mensaje_seguimiento": resultado.get("mensaje_seguimiento"),
         "mensajes": mensajes,
+    }
+
+
+# ---------- Recálculo de recomendaciones con pesos personalizados ----------
+@app.post("/perfil/recalcular-recomendaciones")
+def recalcular_recomendaciones(
+    datos: RecalcularRecomendacionesIn,
+    usuario: dict = Depends(usuario_actual),
+):
+    """Recalcula las recomendaciones de vacantes según los pesos personalizados del candidato.
+    Determinista, sin llamar a LLM y sin modificar la base de datos."""
+    with conexion() as conn:
+        cur = conn.cursor()
+        if datos.perfil_id is not None:
+            if usuario["rol"] == "admin":
+                cur.execute(
+                    "SELECT * FROM perfiles WHERE id = %s;",
+                    (datos.perfil_id,),
+                )
+            else:
+                cur.execute(
+                    "SELECT * FROM perfiles WHERE id = %s AND usuario_id = %s;",
+                    (datos.perfil_id, usuario["id"]),
+                )
+            perfil = cur.fetchone()
+            if not perfil:
+                raise HTTPException(
+                    status_code=403,
+                    detail="No tenés acceso a este perfil",
+                )
+        else:
+            cur.execute(
+                "SELECT * FROM perfiles WHERE usuario_id = %s ORDER BY id DESC LIMIT 1;",
+                (usuario["id"],),
+            )
+            perfil = cur.fetchone()
+            if not perfil:
+                raise HTTPException(
+                    status_code=404,
+                    detail="El usuario no tiene ningún perfil registrado",
+                )
+
+        cur.execute("SELECT * FROM vacantes ORDER BY id;")
+        vacantes_raw = cur.fetchall()
+
+    perfil_dict = limpiar_perfil(perfil)
+    vacantes_normalizadas = [
+        {
+            "id": v.get("id"),
+            "titulo": v.get("titulo"),
+            "empresa": v.get("empresa"),
+            "ubicacion": v.get("ubicacion"),
+            "modalidad": v.get("modalidad"),
+            "salario_min": v.get("salario_min"),
+            "salario_max": v.get("salario_max"),
+            "habilidades": v.get("habilidades"),
+        }
+        for v in vacantes_raw
+    ]
+
+    recs = calcular_recomendaciones(
+        perfil=perfil_dict,
+        vacantes=vacantes_normalizadas,
+        peso_ubicacion=datos.peso_ubicacion,
+        peso_modalidad=datos.peso_modalidad,
+        peso_salario=datos.peso_salario,
+        peso_habilidad=datos.peso_habilidad,
+        limite=5,
+    )
+
+    return {
+        "perfil_id": perfil["id"],
+        "pesos": {
+            "peso_ubicacion": datos.peso_ubicacion,
+            "peso_modalidad": datos.peso_modalidad,
+            "peso_salario": datos.peso_salario,
+            "peso_habilidad": datos.peso_habilidad,
+        },
+        "recomendaciones": recs,
     }
 
 
