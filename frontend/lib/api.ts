@@ -184,3 +184,33 @@ export async function apiGetBitacora(
   });
   return handleResponse<MensajeAgente[]>(res);
 }
+
+export interface PesosPrioridades {
+  peso_ubicacion: number;
+  peso_modalidad: number;
+  peso_salario: number;
+  peso_habilidad: number;
+  perfil_id?: number | null;
+}
+
+export interface ResultadoRecalculo {
+  perfil_id: number;
+  pesos: {
+    peso_ubicacion: number;
+    peso_modalidad: number;
+    peso_salario: number;
+    peso_habilidad: number;
+  };
+  recomendaciones: Recomendacion[];
+}
+
+export async function apiRecalcularRecomendaciones(
+  pesos: PesosPrioridades
+): Promise<ResultadoRecalculo> {
+  const res = await fetch(`${API_URL}/perfil/recalcular-recomendaciones`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(pesos),
+  });
+  return handleResponse<ResultadoRecalculo>(res);
+}
