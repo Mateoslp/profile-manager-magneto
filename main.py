@@ -190,7 +190,7 @@ def procesar_candidato(datos: CandidatoIn, usuario: dict = Depends(limitar_llama
                     %(experiencia_anios)s, %(educacion)s, %(aspiracion_salarial)s,
                     %(modalidad_preferida)s, %(disponibilidad)s, %(habilidades)s,
                     %(cv_texto)s)
-            ON CONFLICT (email) DO UPDATE SET
+            ON CONFLICT (usuario_id, email) DO UPDATE SET
                 nombre = EXCLUDED.nombre,
                 telefono = EXCLUDED.telefono,
                 ubicacion = EXCLUDED.ubicacion,
@@ -201,7 +201,6 @@ def procesar_candidato(datos: CandidatoIn, usuario: dict = Depends(limitar_llama
                 disponibilidad = EXCLUDED.disponibilidad,
                 habilidades = EXCLUDED.habilidades,
                 cv_texto = EXCLUDED.cv_texto
-            WHERE perfiles.usuario_id = EXCLUDED.usuario_id
             RETURNING id;
             """,
             {**perfil, "usuario_id": usuario["id"], "cv_texto": datos.cv_texto},
@@ -209,7 +208,7 @@ def procesar_candidato(datos: CandidatoIn, usuario: dict = Depends(limitar_llama
         fila = cur.fetchone()
         if not fila:
             raise HTTPException(
-                status_code=409, detail="Ese correo de perfil pertenece a otro usuario"
+                status_code=500, detail="No se pudo guardar o actualizar el perfil"
             )
         perfil_id = fila["id"]
 

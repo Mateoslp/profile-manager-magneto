@@ -727,3 +727,173 @@ def test_patch_estado_requiere_autenticacion():
     client = TestClient(main_app)
     res = client.patch("/postulaciones/1/estado", json={"estado": "entrevista"})
     assert res.status_code in (401, 403)
+
+
+# ---------- Paquete C: Unicidad por (usuario_id, email) ----------
+
+def _mock_procesar_candidato_db(monkeypatch):
+    """Mock de app_grafo y conexion() para probar la insercion/actualizacion de perfiles."""
+    import main as main_mod
+    from contextlib import contextmanager
+
+    class FakeGrafo:
+        def invoke(self, estado):
+            return {
+                "perfil_estructurado": {
+                    "nombre": "Candidato Demo",
+                    "email": "ejemplo@demo.com",
+                    "telefono": "3001234567",
+                    "ubicacion": "Medellin",
+                    "modalidad_preferida": "remoto",
+                    "aspiracion_salarial": 5_000_000,
+                    "habilidades": "Python",
+                },
+                "resultado_postulacion": None,
+                "mensajes": [],
+                "recomendaciones": [],
+            }
+
+    monkeypatch.setattr(main_mod, "app_grafo", FakeGrafo())
+
+    perfiles_guardados = {}
+
+    @contextmanager
+    def fake_conexion():
+        class FakeCursor:
+            def __init__(self):
+                self._last_id = None
+
+            def execute(self, sql, params=None):
+                sql_lower = sql.lower()
+                if "insert into perfiles" in sql_lower:
+                    assert "on conflict (usuario_id, email)" in sql_lower
+                    uid = params["usuario_id"]
+                    mail = params["email"]
+                    clave = (uid, mail)
+                    if clave not in perfiles_guardados:
+                        perfiles_guardados[clave] = len(perfiles_guardados) + 1
+                    self._last_id = perfiles_guardados[clave]
+
+            def fetchone(self):
+                if self._last_id is not None:
+                    return {"id": self._last_id}
+                return None
+
+            def fetchall(self):
+                return []
+
+        class FakeConn:
+            def cursor(self): return FakeCursor()
+            def commit(self): pass
+            def rollback(self): pass
+            def close(self): pass
+
+        yield FakeConn()
+
+    monkeypatch.setattr(main_mod, "conexion", fake_conexion)
+    return TestClient(main_mod.app), perfiles_guardados
+
+
+def test_dos_usuarios_distintos_con_mismo_email_no_chocan(monkeypatch):
+    """Dos usuarios diferentes pueden procesar el mismo email sin recibir 409."""
+    client, perfiles_guardados = _mock_procesar_candidato_db(monkeypatch)
+    token_u1 = auth.crear_token(1, "candidato")
+    token_u2 = auth.crear_token(2, "candidato")
+
+    cv_valido = "Ingeniero de Sistemas con experiencia en Python y bases de datos SQL."
+    res1 = client.post(
+        "/procesar-candidato",
+        json={"cv_texto": cv_valido, "expectativas": {}},
+        headers={"Authorization": f"Bearer {token_u1}"},
+    )
+    assert res1.status_code == 200
+    id1 = res1.json()["perfil_id"]
+
+    res2 = client.post(
+        "/procesar-candidato",
+        json={"cv_texto": cv_valido, "expectativas": {}},
+        headers={"Authorization": f"Bearer {token_u2}"},
+    )
+    assert res2.status_code == 200
+    id2 = res2.json()["perfil_id"]
+
+    assert id1 != id2
+    assert (1, "ejemplo@demo.com") in perfiles_guardados
+    assert (2, "ejemplo@demo.com") in perfiles_guardados
+
+
+def test_mismo_usuario_actualiza_su_perfil_en_reintento(monkeypatch):
+    """El mismo usuario que reenvia su CV actualiza su registro y recibe el mismo perfil_id."""
+    client, perfiles_guardados = _mock_procesar_candidato_db(monkeypatch)
+    token_u1 = auth.crear_token(10, "candidato")
+
+    cv_v1 = "Ingeniero de Sistemas con experiencia en Python y desarrollo backend."
+    cv_v2 = "Ingeniero de Sistemas con experiencia en Python, FastAPI y PostgreSQL."
+
+    res1 = client.post(
+        "/procesar-candidato",
+        json={"cv_texto": cv_v1, "expectativas": {}},
+        headers={"Authorization": f"Bearer {token_u1}"},
+    )
+    assert res1.status_code == 200
+    id1 = res1.json()["perfil_id"]
+
+    res2 = client.post(
+        "/procesar-candidato",
+        json={"cv_texto": cv_v2, "expectativas": {}},
+        headers={"Authorization": f"Bearer {token_u1}"},
+    )
+    assert res2.status_code == 200
+    id2 = res2.json()["perfil_id"]
+
+    assert id1 == id2
+    assert len(perfiles_guardados) == 1
+
+
+def test_usuario_no_puede_consultar_bitacora_de_perfil_ajeno(monkeypatch):
+    """Un usuario que intenta consultar la bitacora de otro recibe 403 Forbidden."""
+    import main as main_mod
+    from contextlib import contextmanager
+
+    perfil_dueno_id = 99
+    usuario_peticionario_id = 42
+
+    @contextmanager
+    def fake_conexion():
+        class FakeCursor:
+            def __init__(self):
+                self._rows = []
+
+            def execute(self, sql, params=None):
+                sql_lower = sql.lower()
+                if "from perfiles" in sql_lower:
+                    # SELECT id FROM perfiles WHERE id = %s AND usuario_id = %s;
+                    pid, uid = params
+                    if uid == perfil_dueno_id:
+                        self._rows = [{"id": pid}]
+                    else:
+                        self._rows = []
+                else:
+                    self._rows = []
+
+            def fetchone(self):
+                return self._rows[0] if self._rows else None
+
+            def fetchall(self):
+                return self._rows
+
+        class FakeConn:
+            def cursor(self): return FakeCursor()
+            def commit(self): pass
+            def rollback(self): pass
+            def close(self): pass
+
+        yield FakeConn()
+
+    monkeypatch.setattr(main_mod, "conexion", fake_conexion)
+    token = auth.crear_token(usuario_peticionario_id, "candidato")
+    client = TestClient(main_mod.app)
+
+    res = client.get("/bitacora/1", headers={"Authorization": f"Bearer {token}"})
+    assert res.status_code == 403
+    assert "acceso" in res.json()["detail"].lower()

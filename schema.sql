@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS vacantes (
 CREATE TABLE IF NOT EXISTS perfiles (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(100),
-    email VARCHAR(100) UNIQUE,
+    email VARCHAR(100),
     telefono VARCHAR(20),
     ubicacion VARCHAR(100),
     experiencia_anios INTEGER,
@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
 );
 
 ALTER TABLE perfiles ADD COLUMN IF NOT EXISTS usuario_id INTEGER REFERENCES usuarios(id);
+CREATE UNIQUE INDEX IF NOT EXISTS perfiles_usuario_email_key ON perfiles (usuario_id, email);
 ALTER TABLE postulaciones ADD COLUMN IF NOT EXISTS siguiente_paso TEXT;
 
 -- Bitácora de mensajes e interacciones entre agentes
