@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { apiGetPostulaciones, apiPatchEstado, Postulacion } from "@/lib/api";
+import SimuladorEntrevista from "@/components/SimuladorEntrevista";
 
 // ─── Tipos y constantes ───────────────────────────────────────────────────
 
@@ -31,12 +32,14 @@ function KanbanCard({
   isDragging,
   onDragStart,
   onDragEnd,
+  onPracticarEntrevista,
 }: {
   post: Postulacion;
   onMover: (id: number, estado: Estado) => void;
   isDragging: boolean;
   onDragStart: (id: number) => void;
   onDragEnd: () => void;
+  onPracticarEntrevista?: (post: Postulacion) => void;
 }) {
   const idx    = ORDEN_ESTADOS.indexOf(post.estado as Estado);
   const puedePrev = idx > 0;
@@ -100,6 +103,21 @@ function KanbanCard({
         </div>
       )}
 
+      {/* Botón para practicar entrevista simulada (solo en estado 'entrevista') */}
+      {post.estado === "entrevista" && (
+        <div className="mb-3">
+          <button
+            type="button"
+            onClick={() => onPracticarEntrevista?.(post)}
+            className="btn-primary text-xs w-full py-1.5 flex items-center justify-center gap-1.5"
+            title="Iniciar simulación de entrevista técnica para esta vacante"
+          >
+            <span aria-hidden="true">🎤</span>
+            <span>Practicar entrevista</span>
+          </button>
+        </div>
+      )}
+
       {/* Botones de movimiento (accesibilidad y mobile) */}
       <div className="flex gap-2 mt-1">
         <button
@@ -134,6 +152,7 @@ function KanbanColumna({
   draggingId,
   onDragStart,
   onDragEnd,
+  onPracticarEntrevista,
 }: {
   col: (typeof COLUMNAS)[0];
   postulaciones: Postulacion[];
@@ -141,6 +160,7 @@ function KanbanColumna({
   draggingId: number | null;
   onDragStart: (id: number) => void;
   onDragEnd: () => void;
+  onPracticarEntrevista?: (post: Postulacion) => void;
 }) {
   const [dragOver, setDragOver] = useState(false);
 
@@ -191,6 +211,7 @@ function KanbanColumna({
               isDragging={draggingId === p.id}
               onDragStart={onDragStart}
               onDragEnd={onDragEnd}
+              onPracticarEntrevista={onPracticarEntrevista}
             />
           ))}
         </div>
@@ -212,6 +233,7 @@ export default function KanbanPage({ onVolverResultados }: KanbanPageProps) {
   const [aviso,   setAviso]   = useState<string | null>(null);
   const [filtro,  setFiltro]  = useState("");
   const [dragging, setDragging] = useState<number | null>(null);
+  const [postulacionSimulando, setPostulacionSimulando] = useState<Postulacion | null>(null);
   const avisoClearRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function mostrarAviso(msg: string) {
@@ -377,9 +399,20 @@ export default function KanbanPage({ onVolverResultados }: KanbanPageProps) {
               draggingId={dragging}
               onDragStart={setDragging}
               onDragEnd={() => setDragging(null)}
+              onPracticarEntrevista={(post) => setPostulacionSimulando(post)}
             />
           ))}
         </div>
+      )}
+
+      {/* Modal Simulador de Entrevista */}
+      {postulacionSimulando && (
+        <SimuladorEntrevista
+          postulacionId={postulacionSimulando.id}
+          vacanteTitulo={postulacionSimulando.vacante}
+          empresa={postulacionSimulando.empresa}
+          onClose={() => setPostulacionSimulando(null)}
+        />
       )}
 
       {/* Nota de simulación */}

@@ -564,3 +564,140 @@ grafo.add_edge("Kenti", "Iris")
 grafo.add_edge("Iris", END)
 
 app_grafo = grafo.compile()
+
+
+# --- Paquete G: Simulador de Entrevista ---
+
+def generar_preguntas_entrevista(
+    vacante_titulo: str,
+    vacante_empresa: Optional[str] = None,
+    vacante_habilidades: Optional[str] = None,
+) -> list[dict]:
+    """Genera deterministamente exactamente 3 preguntas para la entrevista simulada:
+    1. Motivación hacia el rol.
+    2. Pregunta técnica sobre la primera habilidad requerida.
+    3. Pregunta de situación (trabajo en equipo / imprevisto)."""
+    habs = [h.strip() for h in re.split(r"[,;/\n]", str(vacante_habilidades or "")) if h.strip()]
+    primera_hab = habs[0] if habs else "las tecnologías requeridas"
+    empresa_txt = f" en {vacante_empresa}" if vacante_empresa else ""
+
+    return [
+        {
+            "id": 1,
+            "tipo": "motivacion",
+            "pregunta": f"¿Qué te motivó a postularte al rol de {vacante_titulo}{empresa_txt} y qué esperas aportar?",
+        },
+        {
+            "id": 2,
+            "tipo": "tecnica",
+            "pregunta": f"Cuéntanos sobre tu experiencia práctica trabajando con {primera_hab} y cómo resuelves desafíos cotidianos con esta herramienta.",
+        },
+        {
+            "id": 3,
+            "tipo": "situacion",
+            "pregunta": "Describe una situación desafiante trabajando en equipo o resolviendo un problema imprevisto, y qué aprendizaje te dejó.",
+        },
+    ]
+
+
+def _generar_feedback_respaldo(
+    respuestas: dict,
+    vacante_habilidades: Optional[str] = None,
+) -> dict:
+    """Feedback determinista por reglas cuando Gemini no está disponible."""
+    habs = [h.strip() for h in re.split(r"[,;/\n]", str(vacante_habilidades or "")) if h.strip()]
+    primera_hab = habs[0].lower() if habs else "tecnología"
+
+    r1 = respuestas.get("respuesta_1", "").strip()
+    r2 = respuestas.get("respuesta_2", "").strip()
+    r3 = respuestas.get("respuesta_3", "").strip()
+
+    evaluaciones = [
+        {
+            "id_pregunta": 1,
+            "claridad": "Buena" if len(r1) >= 40 else "Baja",
+            "pertinencia": "Adecuada" if len(r1) >= 40 else "Media",
+            "aspecto_a_mejorar": (
+                "Intenta conectar aún más tu trayectoria con las metas del rol."
+                if len(r1) >= 40
+                else "Tu respuesta es muy breve. Te sugerimos profundizar más en tus motivos de interés."
+            ),
+        },
+        {
+            "id_pregunta": 2,
+            "claridad": "Buena" if len(r2) >= 40 else "Media",
+            "pertinencia": "Alta" if primera_hab in r2.lower() else "Mejorable",
+            "aspecto_a_mejorar": (
+                "Menciona proyectos o métricas concretas donde hayas usado esta tecnología."
+                if primera_hab in r2.lower()
+                else f"No mencionaste directamente {primera_hab}. Conviene dar detalles específicos de cómo la aplicas."
+            ),
+        },
+        {
+            "id_pregunta": 3,
+            "claridad": "Buena" if len(r3) >= 50 else "Baja",
+            "pertinencia": "Alta" if len(r3) >= 50 else "Media",
+            "aspecto_a_mejorar": (
+                "Resalta el aprendizaje final y cómo impactó positivamente en el equipo."
+                if len(r3) >= 50
+                else "Explica con más detalle la situación, la acción que tomaste y el resultado obtenido."
+            ),
+        },
+    ]
+
+    return {
+        "evaluacion_respuestas": evaluaciones,
+        "comentario_general": "Práctica completada con éxito. Recuerda que este ejercicio es una simulación de práctica y no garantiza resultados en un proceso de selección real.",
+    }
+
+
+def evaluar_entrevista_simulada(
+    vacante_titulo: str,
+    respuestas: dict,
+    vacante_habilidades: Optional[str] = None,
+) -> tuple[dict, str]:
+    """Evalúa las 3 respuestas de la entrevista simulada en una sola llamada a Gemini.
+    Devuelve (feedback_dict, origen) donde origen es 'gemini' o 'respaldo'."""
+    prompt = f"""Eres un entrevistador técnico evaluando una simulación de entrevista para el puesto '{vacante_titulo}'.
+Evalúa de forma constructiva las siguientes 3 respuestas del candidato:
+1. Motivación: {respuestas.get('respuesta_1', '')}
+2. Técnica: {respuestas.get('respuesta_2', '')}
+3. Situación: {respuestas.get('respuesta_3', '')}
+
+Devuelve UNICAMENTE un JSON válido con esta estructura exacta, sin texto adicional ni marcas de código:
+{{
+  "evaluacion_respuestas": [
+    {{
+      "id_pregunta": 1,
+      "claridad": "Buena|Media|Baja",
+      "pertinencia": "Alta|Media|Baja",
+      "aspecto_a_mejorar": "Frase corta y constructiva de mejora"
+    }},
+    {{
+      "id_pregunta": 2,
+      "claridad": "Buena|Media|Baja",
+      "pertinencia": "Alta|Media|Baja",
+      "aspecto_a_mejorar": "Frase corta y constructiva de mejora"
+    }},
+    {{
+      "id_pregunta": 3,
+      "claridad": "Buena|Media|Baja",
+      "pertinencia": "Alta|Media|Baja",
+      "aspecto_a_mejorar": "Frase corta y constructiva de mejora"
+    }}
+  ],
+  "comentario_general": "Mensaje motivador breve de máximo 2 frases para preparar la entrevista real, sin promesas de contratación."
+}}
+"""
+    origen = "gemini"
+    try:
+        respuesta = llm.invoke(prompt)
+        parsed = parsear_json(extraer_texto(respuesta))
+        if not isinstance(parsed, dict) or "evaluacion_respuestas" not in parsed:
+            raise ValueError("Respuesta de Gemini no contiene la estructura requerida")
+        if len(parsed.get("evaluacion_respuestas", [])) != 3:
+            raise ValueError("No contiene las 3 evaluaciones de respuesta")
+        return parsed, origen
+    except Exception:
+        origen = "respaldo"
+        return _generar_feedback_respaldo(respuestas, vacante_habilidades), origen

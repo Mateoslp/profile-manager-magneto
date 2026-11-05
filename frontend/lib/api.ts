@@ -248,3 +248,69 @@ export async function apiGetPlanBCoaching(
   });
   return handleResponse<ResultadoPlanBCoaching>(res);
 }
+
+// ─── Simulador de entrevista ───────────────────────────────────────────────
+
+export interface PreguntaEntrevista {
+  id: number;
+  tipo: "motivacion" | "tecnica" | "situacion";
+  pregunta: string;
+}
+
+export interface PreguntasEntrevistaResponse {
+  postulacion_id: number;
+  vacante: string;
+  empresa: string | null;
+  preguntas: PreguntaEntrevista[];
+}
+
+export interface EvaluacionItem {
+  id_pregunta: number;
+  claridad: string;
+  pertinencia: string;
+  aspecto_a_mejorar: string;
+}
+
+export interface FeedbackEntrevista {
+  evaluacion_respuestas: EvaluacionItem[];
+  comentario_general: string;
+}
+
+export interface FeedbackEntrevistaResponse {
+  postulacion_id: number;
+  origen: "gemini" | "respaldo";
+  feedback: FeedbackEntrevista;
+}
+
+export interface RespuestasEntrevistaInput {
+  respuesta_1: string;
+  respuesta_2: string;
+  respuesta_3: string;
+}
+
+export async function apiGetPreguntasEntrevista(
+  postulacionId: number
+): Promise<PreguntasEntrevistaResponse> {
+  const res = await fetch(
+    `${API_URL}/postulaciones/${postulacionId}/entrevista-simulada/preguntas`,
+    {
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+    }
+  );
+  return handleResponse<PreguntasEntrevistaResponse>(res);
+}
+
+export async function apiPostFeedbackEntrevista(
+  postulacionId: number,
+  respuestas: RespuestasEntrevistaInput
+): Promise<FeedbackEntrevistaResponse> {
+  const res = await fetch(
+    `${API_URL}/postulaciones/${postulacionId}/entrevista-simulada/feedback`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify(respuestas),
+    }
+  );
+  return handleResponse<FeedbackEntrevistaResponse>(res);
+}

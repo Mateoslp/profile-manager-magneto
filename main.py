@@ -14,6 +14,8 @@ Flujo en /docs:
 import json
 import logging
 import os
+import time
+from collections import defaultdict, deque
 from contextlib import contextmanager
 from typing import Literal, Optional
 
@@ -28,7 +30,9 @@ from agents import (
     app_grafo,
     calcular_plan_b,
     calcular_recomendaciones,
+    evaluar_entrevista_simulada,
     generar_coaching,
+    generar_preguntas_entrevista,
     UMBRAL_POSTULACION,
 )
 from auth import (
@@ -115,6 +119,12 @@ class RecalcularRecomendacionesIn(BaseModel):
 
 class PlanBCoachingIn(BaseModel):
     perfil_id: Optional[int] = None
+
+
+class RespuestasEntrevistaIn(BaseModel):
+    respuesta_1: str = Field(min_length=5, max_length=1500)
+    respuesta_2: str = Field(min_length=5, max_length=1500)
+    respuesta_3: str = Field(min_length=5, max_length=1500)
 
 
 # ---------- Público ----------
@@ -546,6 +556,113 @@ def cambiar_estado(
         resultado = cur.fetchone()
     log.info("Postulación %s -> %s (por usuario %s)", postulacion_id, datos.estado, usuario["id"])
     return resultado
+
+
+# ---------- Simulador de entrevista (práctica) ----------
+MAX_SIMULACIONES_POR_HORA = 5
+_historial_simulaciones = defaultdict(deque)
+
+
+def _verificar_limite_simulaciones(usuario_id: int):
+    ahora = time.time()
+    cola = _historial_simulaciones[usuario_id]
+    while cola and ahora - cola[0] > 3600:
+        cola.popleft()
+    if len(cola) >= MAX_SIMULACIONES_POR_HORA:
+        raise HTTPException(
+            status_code=429,
+            detail="Demasiadas simulaciones en una hora, intenta de nuevo más tarde",
+        )
+    cola.append(ahora)
+
+
+def _obtener_postulacion_entrevista(conn, postulacion_id: int, usuario: dict):
+    cur = conn.cursor()
+    cur.execute(
+        """
+        SELECT p.id, p.estado, p.vacante_id, p.perfil_id,
+               pf.usuario_id, pf.nombre AS candidato_nombre,
+               v.titulo AS vacante_titulo, v.empresa, v.habilidades AS vacante_habilidades
+        FROM postulaciones p
+        JOIN perfiles pf ON pf.id = p.perfil_id
+        JOIN vacantes v ON v.id = p.vacante_id
+        WHERE p.id = %s;
+        """,
+        (postulacion_id,),
+    )
+    fila = cur.fetchone()
+    if not fila:
+        raise HTTPException(status_code=404, detail="Postulación no encontrada")
+
+    if usuario["rol"] != "admin" and fila["usuario_id"] != usuario["id"]:
+        raise HTTPException(
+            status_code=403,
+            detail="No tenés permiso para acceder a esta postulación",
+        )
+
+    if fila["estado"] != "entrevista":
+        raise HTTPException(
+            status_code=409,
+            detail=f"La postulación no se encuentra en estado 'entrevista' (estado actual: {fila['estado']})",
+        )
+
+    return fila
+
+
+@app.get("/postulaciones/{postulacion_id}/entrevista-simulada/preguntas")
+def obtener_preguntas_entrevista(
+    postulacion_id: int,
+    usuario: dict = Depends(usuario_actual),
+):
+    """Devuelve 3 preguntas deterministas para la vacante de la postulación."""
+    with conexion() as conn:
+        post = _obtener_postulacion_entrevista(conn, postulacion_id, usuario)
+
+    preguntas = generar_preguntas_entrevista(
+        vacante_titulo=post["vacante_titulo"],
+        vacante_empresa=post.get("empresa"),
+        vacante_habilidades=post.get("vacante_habilidades"),
+    )
+
+    return {
+        "postulacion_id": post["id"],
+        "vacante": post["vacante_titulo"],
+        "empresa": post.get("empresa"),
+        "preguntas": preguntas,
+    }
+
+
+@app.post("/postulaciones/{postulacion_id}/entrevista-simulada/feedback")
+def evaluar_respuestas_entrevista(
+    postulacion_id: int,
+    datos: RespuestasEntrevistaIn,
+    usuario: dict = Depends(usuario_actual),
+):
+    """Evalúa las 3 respuestas del candidato mediante Gemini (o respaldo determinista si falla).
+    NO guarda respuestas en base de datos ni en logs. Aplica límite de 5 simulaciones/hora."""
+    # Verificar límite antes de consultar o llamar a Gemini
+    _verificar_limite_simulaciones(usuario["id"])
+
+    with conexion() as conn:
+        post = _obtener_postulacion_entrevista(conn, postulacion_id, usuario)
+
+    respuestas_dict = {
+        "respuesta_1": datos.respuesta_1,
+        "respuesta_2": datos.respuesta_2,
+        "respuesta_3": datos.respuesta_3,
+    }
+
+    feedback, origen = evaluar_entrevista_simulada(
+        vacante_titulo=post["vacante_titulo"],
+        respuestas=respuestas_dict,
+        vacante_habilidades=post.get("vacante_habilidades"),
+    )
+
+    return {
+        "postulacion_id": post["id"],
+        "origen": origen,
+        "feedback": feedback,
+    }
 
 
 # ---------- CVs de demo para pruebas ----------

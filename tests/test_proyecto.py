@@ -1471,3 +1471,263 @@ def test_plan_b_sin_token_da_401():
     assert res.status_code == 401
 
 
+# ---------- Paquete G: Simulador de Entrevista ----------
+
+def _mock_db_simulador(
+    monkeypatch,
+    postulacion_id=1,
+    estado="entrevista",
+    dueno_id=10,
+    titulo="Desarrollador Backend",
+    empresa="TechNova SAS",
+    habilidades="Python, SQL, Docker",
+):
+    import main as main_mod
+    from contextlib import contextmanager
+
+    escrituras = []
+
+    @contextmanager
+    def fake_conexion():
+        class FakeCursor:
+            def __init__(self):
+                self._rows = []
+
+            def execute(self, sql, params=None):
+                sql_lower = sql.lower().strip()
+                if sql_lower.startswith("insert") or sql_lower.startswith("update"):
+                    escrituras.append((sql, params))
+
+                if "from postulaciones" in sql_lower:
+                    pid = params[0] if params else None
+                    if pid == postulacion_id:
+                        self._rows = [
+                            {
+                                "id": postulacion_id,
+                                "estado": estado,
+                                "vacante_id": 100,
+                                "perfil_id": 50,
+                                "usuario_id": dueno_id,
+                                "candidato_nombre": "Test Candidato",
+                                "vacante_titulo": titulo,
+                                "empresa": empresa,
+                                "vacante_habilidades": habilidades,
+                            }
+                        ]
+                    else:
+                        self._rows = []
+                else:
+                    self._rows = []
+
+            def fetchone(self):
+                return self._rows[0] if self._rows else None
+
+            def fetchall(self):
+                return list(self._rows)
+
+        class FakeConn:
+            def cursor(self): return FakeCursor()
+            def commit(self): pass
+            def rollback(self): pass
+            def close(self): pass
+
+        yield FakeConn()
+
+    monkeypatch.setattr(main_mod, "conexion", fake_conexion)
+    return TestClient(main_mod.app), escrituras
+
+
+def test_simulador_estado_distinto_a_entrevista_rechazado(monkeypatch):
+    """Si la postulación no está en estado 'entrevista', responde 409 Conflict."""
+    client, _ = _mock_db_simulador(monkeypatch, estado="postulado", dueno_id=10)
+    token = auth.crear_token(10, "candidato")
+
+    res = client.get(
+        "/postulaciones/1/entrevista-simulada/preguntas",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert res.status_code == 409
+    assert "entrevista" in res.json()["detail"].lower()
+
+
+def test_simulador_postulacion_ajena_rechazada(monkeypatch):
+    """Si la postulación pertenece a otro usuario, responde 403 Forbidden igual que el PATCH."""
+    client, _ = _mock_db_simulador(monkeypatch, dueno_id=99)
+    token = auth.crear_token(10, "candidato")  # Peticionario es usuario 10
+
+    res = client.get(
+        "/postulaciones/1/entrevista-simulada/preguntas",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert res.status_code == 403
+    assert "permiso" in res.json()["detail"].lower()
+
+
+def test_simulador_sin_token_da_401():
+    """Llamar a los endpoints del simulador sin token responde 401."""
+    import main as main_mod
+    client = TestClient(main_mod.app)
+
+    res_get = client.get("/postulaciones/1/entrevista-simulada/preguntas")
+    assert res_get.status_code == 401
+
+    res_post = client.post(
+        "/postulaciones/1/entrevista-simulada/feedback",
+        json={"respuesta_1": "hola", "respuesta_2": "mundo", "respuesta_3": "test"},
+    )
+    assert res_post.status_code == 401
+
+
+def test_simulador_preguntas_son_exactamente_tres(monkeypatch):
+    """El endpoint de preguntas genera exactamente 3 preguntas deterministas sin llamar a Gemini."""
+    client, _ = _mock_db_simulador(
+        monkeypatch,
+        estado="entrevista",
+        dueno_id=10,
+        titulo="Backend Developer",
+        empresa="Magneto",
+        habilidades="Python, SQL",
+    )
+    token = auth.crear_token(10, "candidato")
+
+    res = client.get(
+        "/postulaciones/1/entrevista-simulada/preguntas",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert res.status_code == 200
+    datos = res.json()
+    assert datos["postulacion_id"] == 1
+    assert len(datos["preguntas"]) == 3
+
+    tipos = [p["tipo"] for p in datos["preguntas"]]
+    assert tipos == ["motivacion", "tecnica", "situacion"]
+    # La técnica debe mencionar la primera habilidad (Python)
+    assert "python" in datos["preguntas"][1]["pregunta"].lower()
+
+
+def test_simulador_gemini_falla_devuelve_respaldo_marcado(monkeypatch):
+    """Si Gemini falla, se genera feedback básico por reglas marcado con origen 'respaldo'."""
+    import agents
+    monkeypatch.setattr(agents, "llm", FalloGeminiLLM())
+
+    client, _ = _mock_db_simulador(monkeypatch, estado="entrevista", dueno_id=10)
+    token = auth.crear_token(10, "candidato")
+
+    payload = {
+        "respuesta_1": "Me motiva mucho el impacto del proyecto y colaborar con el equipo técnico.",
+        "respuesta_2": "Trabajo con Python a diario creando APIs con FastAPI y modelos con SQL.",
+        "respuesta_3": "En mi proyecto anterior tuvimos una caída de servidor y lo resolvimos en equipo.",
+    }
+
+    res = client.post(
+        "/postulaciones/1/entrevista-simulada/feedback",
+        headers={"Authorization": f"Bearer {token}"},
+        json=payload,
+    )
+    assert res.status_code == 200
+    datos = res.json()
+    assert datos["origen"] == "respaldo"
+    assert len(datos["feedback"]["evaluacion_respuestas"]) == 3
+    assert "comentario_general" in datos["feedback"]
+
+
+def test_simulador_superar_limite_da_429_sin_llamar_gemini(monkeypatch):
+    """Superar el límite de simulaciones (5 por hora) responde 429 sin llamar a Gemini."""
+    import main as main_mod
+    import agents
+
+    main_mod._historial_simulaciones.clear()
+
+    llamadas_llm = []
+
+    class MockLLM:
+        def invoke(self, prompt):
+            llamadas_llm.append(prompt)
+            return FakeRespuesta(
+                '{"evaluacion_respuestas": ['
+                '{"id_pregunta": 1, "claridad": "Buena", "pertinencia": "Alta", "aspecto_a_mejorar": "Ninguno"},'
+                '{"id_pregunta": 2, "claridad": "Buena", "pertinencia": "Alta", "aspecto_a_mejorar": "Ninguno"},'
+                '{"id_pregunta": 3, "claridad": "Buena", "pertinencia": "Alta", "aspecto_a_mejorar": "Ninguno"}],'
+                '"comentario_general": "Buen trabajo."}'
+            )
+
+    monkeypatch.setattr(agents, "llm", MockLLM())
+
+    usuario_id_test = 777
+    client, _ = _mock_db_simulador(monkeypatch, estado="entrevista", dueno_id=usuario_id_test)
+    token = auth.crear_token(usuario_id_test, "candidato")
+
+    payload = {
+        "respuesta_1": "Respuesta motivacion valida para la prueba.",
+        "respuesta_2": "Respuesta tecnica valida con python y sql.",
+        "respuesta_3": "Respuesta situacion valida resolviendo un problema.",
+    }
+
+    # 5 llamadas exitosas
+    for _ in range(5):
+        r = client.post(
+            "/postulaciones/1/entrevista-simulada/feedback",
+            headers={"Authorization": f"Bearer {token}"},
+            json=payload,
+        )
+        assert r.status_code == 200
+
+    assert len(llamadas_llm) == 5
+
+    # La 6ta llamada debe dar 429 y NO invocar a Gemini
+    r6 = client.post(
+        "/postulaciones/1/entrevista-simulada/feedback",
+        headers={"Authorization": f"Bearer {token}"},
+        json=payload,
+    )
+    assert r6.status_code == 429
+    assert len(llamadas_llm) == 5  # No se llamó al LLM
+
+
+def test_simulador_respuestas_demasiado_largas_dan_422(monkeypatch):
+    """Respuestas que superan la longitud máxima de 1500 caracteres son rechazadas con 422."""
+    client, _ = _mock_db_simulador(monkeypatch, estado="entrevista", dueno_id=10)
+    token = auth.crear_token(10, "candidato")
+
+    payload = {
+        "respuesta_1": "x" * 1501,
+        "respuesta_2": "Respuesta normal",
+        "respuesta_3": "Respuesta normal",
+    }
+
+    res = client.post(
+        "/postulaciones/1/entrevista-simulada/feedback",
+        headers={"Authorization": f"Bearer {token}"},
+        json=payload,
+    )
+    assert res.status_code == 422
+
+
+def test_simulador_respuestas_no_se_escriben_en_bd(monkeypatch):
+    """Las respuestas del candidato NO se guardan en la base de datos (cero INSERT/UPDATE con el texto)."""
+    client, escrituras = _mock_db_simulador(monkeypatch, estado="entrevista", dueno_id=10)
+    token = auth.crear_token(10, "candidato")
+
+    secreto = "CADENA_CONFIDENCIAL_12345_XYZ"
+    payload = {
+        "respuesta_1": f"Esta es mi motivacion {secreto}",
+        "respuesta_2": f"Experiencia tecnica {secreto}",
+        "respuesta_3": f"Resolucion de problemas {secreto}",
+    }
+
+    res = client.post(
+        "/postulaciones/1/entrevista-simulada/feedback",
+        headers={"Authorization": f"Bearer {token}"},
+        json=payload,
+    )
+    assert res.status_code == 200
+
+    # Verificar que no hubo escrituras a la BD
+    assert len(escrituras) == 0
+    # Y que el secreto no está en ninguna consulta ejecutada
+    for sql, params in escrituras:
+        assert secreto not in str(sql)
+        assert secreto not in str(params)
+
+
+
