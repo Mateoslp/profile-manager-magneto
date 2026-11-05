@@ -897,3 +897,149 @@ def test_usuario_no_puede_consultar_bitacora_de_perfil_ajeno(monkeypatch):
     res = client.get("/bitacora/1", headers={"Authorization": f"Bearer {token}"})
     assert res.status_code == 403
     assert "acceso" in res.json()["detail"].lower()
+
+
+# ---------- Paquete D: Respaldo por reglas para Lexi ----------
+
+class FalloGeminiLLM:
+    """Simula una caída de Gemini lanzando una excepción."""
+    def invoke(self, prompt):
+        raise Exception("Gemini no disponible / cuota agotada")
+
+
+def test_lexi_respaldo_formato_rigido_cuando_gemini_falla(monkeypatch):
+    """Si Gemini falla pero el texto tiene formato rígido, Lexi extrae los datos por reglas."""
+    import agents
+    monkeypatch.setattr(agents, "llm", FalloGeminiLLM())
+
+    cv_rigido = (
+        "Nombre: Laura Martínez\n"
+        "Email: laura.martinez@test.com\n"
+        "Teléfono: 3009876543\n"
+        "Ubicación: Medellín\n"
+        "Modalidad preferida: remoto\n"
+        "Experiencia (años): 3\n"
+        "Educación: Ingeniera de Software\n"
+        "Disponibilidad: inmediata\n"
+        "Habilidades: Python, SQL, Docker\n"
+        "Aspiración salarial: 4500000 COP"
+    )
+
+    estado = {"cv_texto": cv_rigido, "expectativas": {}, "mensajes": []}
+    resultado = agents.agente_lexi(estado)
+
+    perfil = resultado["perfil_estructurado"]
+    assert perfil is not None
+    assert perfil["nombre"] == "Laura Martínez"
+    assert perfil["email"] == "laura.martinez@test.com"
+    assert perfil["telefono"] == "3009876543"
+    assert perfil["ubicacion"] == "Medellín"
+    assert perfil["modalidad_preferida"] == "remoto"
+    assert perfil["experiencia_anios"] == 3
+    assert perfil["educacion"] == "Ingeniera de Software"
+    assert perfil["disponibilidad"] == "inmediata"
+    assert perfil["habilidades"] == "Python, SQL, Docker"
+    assert perfil["aspiracion_salarial"] == 4_500_000
+
+    # Verifica que el mensaje emitido por Lexi indica origen respaldo
+    msg_info = [m for m in resultado["mensajes"] if m["agente"] == "Lexi" and m["tipo"] == "info"][0]
+    assert msg_info["datos"]["origen"] == "respaldo"
+
+
+def test_lexi_falla_con_texto_libre_si_gemini_no_responde(monkeypatch):
+    """Si Gemini falla y el texto es libre sin formato, Lexi propaga el error (502)."""
+    import agents
+    monkeypatch.setattr(agents, "llm", FalloGeminiLLM())
+
+    cv_libre = (
+        "Ingeniero de sistemas con 5 años de experiencia liderando proyectos web. "
+        "Apasionado por la tecnología, he trabajado en startups y empresas grandes. "
+        "Manejo Python, JavaScript y bases de datos relacionales y no relacionales."
+    )
+
+    estado = {"cv_texto": cv_libre, "expectativas": {}, "mensajes": []}
+    with pytest.raises(Exception) as exc:
+        agents.agente_lexi(estado)
+    assert "Gemini no disponible" in str(exc.value)
+
+
+def test_lexi_respaldo_primer_empleo_experiencia_cero(monkeypatch):
+    """En la rama de primer empleo, experiencia_anios queda en 0 sin inventar experiencia."""
+    import agents
+    monkeypatch.setattr(agents, "llm", FalloGeminiLLM())
+
+    cv_primer_empleo = (
+        "Nombre: Mateo Gómez\n"
+        "Email: mateo@test.com\n"
+        "Teléfono: 3123456789\n"
+        "Ubicación: Bogotá\n"
+        "Modalidad preferida: remoto\n"
+        "Experiencia (años): 0\n"
+        "Situación laboral: En búsqueda de primer empleo\n"
+        "Estudios en curso o recientes: 8vo semestre Ingeniería de Sistemas\n"
+        "Proyectos destacados: Bot de Discord y API con FastAPI\n"
+        "Educación: Estudiante universitario\n"
+        "Disponibilidad: inmediata\n"
+        "Habilidades: Python, Git, SQL\n"
+        "Aspiración salarial: 2000000 COP"
+    )
+
+    estado = {"cv_texto": cv_primer_empleo, "expectativas": {}, "mensajes": []}
+    resultado = agents.agente_lexi(estado)
+    perfil = resultado["perfil_estructurado"]
+
+    assert perfil["experiencia_anios"] == 0
+    assert perfil["nombre"] == "Mateo Gómez"
+    assert "primer empleo" in cv_primer_empleo.lower()
+
+
+def test_lexi_respaldo_salario_cop_a_entero(monkeypatch):
+    """El salario en formato '3500000 COP' queda parseado como entero 3500000."""
+    import agents
+    monkeypatch.setattr(agents, "llm", FalloGeminiLLM())
+
+    cv_salario = (
+        "Nombre: Sofía Morales\n"
+        "Email: sofia@test.com\n"
+        "Teléfono: 3105556677\n"
+        "Ubicación: Cali\n"
+        "Modalidad preferida: presencial\n"
+        "Experiencia (años): 1\n"
+        "Educación: Tecnóloga en Sistemas\n"
+        "Disponibilidad: inmediata\n"
+        "Habilidades: SQL, Excel avanzado\n"
+        "Aspiración salarial: 3500000 COP"
+    )
+
+    estado = {"cv_texto": cv_salario, "expectativas": {}, "mensajes": []}
+    resultado = agents.agente_lexi(estado)
+    perfil = resultado["perfil_estructurado"]
+
+    assert perfil["aspiracion_salarial"] == 3_500_000
+    assert isinstance(perfil["aspiracion_salarial"], int)
+
+
+def test_lexi_respaldo_correo_extraido_coincide(monkeypatch):
+    """El correo extraído por el lector de reglas coincide con el valor de la línea Email."""
+    import agents
+    monkeypatch.setattr(agents, "llm", FalloGeminiLLM())
+
+    correo_esperado = "candidato.verificado@magneto.com"
+    cv_correo = (
+        "Nombre: David Restrepo\n"
+        f"Email: {correo_esperado}\n"
+        "Teléfono: 3012223344\n"
+        "Ubicación: Barranquilla\n"
+        "Modalidad preferida: hibrido\n"
+        "Experiencia (años): 2\n"
+        "Educación: Profesional\n"
+        "Disponibilidad: en 15 días\n"
+        "Habilidades: React, TypeScript, APIs REST\n"
+        "Aspiración salarial: 4000000 COP"
+    )
+
+    estado = {"cv_texto": cv_correo, "expectativas": {}, "mensajes": []}
+    resultado = agents.agente_lexi(estado)
+    perfil = resultado["perfil_estructurado"]
+
+    assert perfil["email"] == correo_esperado

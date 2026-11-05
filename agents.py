@@ -1,6 +1,6 @@
 import re
 import json
-from perfil_utils import limpiar_perfil
+from perfil_utils import limpiar_perfil, parsear_perfil_rigido
 from typing import TypedDict, Optional
 from langgraph.graph import StateGraph, END
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -115,8 +115,18 @@ Expectativas adicionales:
 
 Responde UNICAMENTE con el JSON, sin texto adicional ni marcas de codigo.
 """
-    respuesta = llm.invoke(prompt)
-    perfil = limpiar_perfil(parsear_json(extraer_texto(respuesta)))
+    origen = "gemini"
+    try:
+        respuesta = llm.invoke(prompt)
+        perfil = limpiar_perfil(parsear_json(extraer_texto(respuesta)))
+    except Exception as exc:
+        perfil_reglas = parsear_perfil_rigido(estado.get("cv_texto", ""))
+        if perfil_reglas is not None:
+            perfil = perfil_reglas
+            origen = "respaldo"
+        else:
+            raise exc
+
     estado["perfil_estructurado"] = perfil
 
     # Clasificar todos los campos vacíos del perfil
@@ -146,7 +156,7 @@ Responde UNICAMENTE con el JSON, sin texto adicional ni marcas de codigo.
             estado, "Lexi", "Inari", "alerta",
             texto_alerta,
             {"vacios_match": vacios_match, "vacios_otros": vacios_otros,
-             "campos_presentes": presentes_match},
+             "campos_presentes": presentes_match, "origen": origen},
         )
 
     presentes_legibles = [NOMBRES_LEGIBLES.get(c, c) for c in presentes_match]
@@ -154,7 +164,7 @@ Responde UNICAMENTE con el JSON, sin texto adicional ni marcas de codigo.
         estado, "Lexi", "Inari", "info",
         f"Perfil estructurado listo. Campos disponibles para match: "
         f"{', '.join(presentes_legibles) if presentes_legibles else 'ninguno'}.",
-        {"perfil_nombre": perfil.get("nombre")},
+        {"perfil_nombre": perfil.get("nombre"), "origen": origen},
     )
 
     return estado
