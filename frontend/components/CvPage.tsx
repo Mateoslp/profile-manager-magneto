@@ -9,6 +9,7 @@ import {
 } from "@/lib/api";
 import AgenteSvg, { AGENTES_META, AgenteNombre } from "@/components/escenario/AgenteSvg";
 import { usePrefersReducedMotion } from "@/components/escenario/mensajesUtils";
+import EntrevistaLexi from "@/components/entrevista/EntrevistaLexi";
 
 const AGENTES_ESPERA: AgenteNombre[] = ["Lexi", "Inari", "Kenti", "Iris"];
 
@@ -19,6 +20,7 @@ interface CvPageProps {
 }
 
 export default function CvPage({ onResult }: CvPageProps) {
+  const [modo,     setModo]     = useState<"entrevista" | "pegar">("entrevista");
   const [cvTexto,  setCvTexto]  = useState("");
   const [demos,    setDemos]    = useState<CvDemo[]>([]);
   const [loading,  setLoading]  = useState(false);
@@ -47,13 +49,13 @@ export default function CvPage({ onResult }: CvPageProps) {
     return () => clearInterval(timer);
   }, [loading, reducedMotion]);
 
-  async function analizar() {
-    if (cvTexto.trim().length < MIN_CHARS || loading) return;
+  async function analizarTexto(textoAAnalizar: string) {
+    if (textoAAnalizar.trim().length < MIN_CHARS || loading) return;
     setLoading(true);
     setError(null);
     setIs502(false);
     try {
-      const resultado = await apiProcesarCandidato(cvTexto);
+      const resultado = await apiProcesarCandidato(textoAAnalizar);
       onResult(resultado);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error inesperado";
@@ -66,72 +68,124 @@ export default function CvPage({ onResult }: CvPageProps) {
     }
   }
 
+  async function analizar() {
+    await analizarTexto(cvTexto);
+  }
+
   const chars       = cvTexto.length;
   const faltanChars = Math.max(0, MIN_CHARS - chars);
   const canAnalyze  = chars >= MIN_CHARS && !loading;
 
   return (
-    <div className="animate-slide-up motion-reduce:animate-none mx-auto w-full max-w-3xl space-y-6">
+    <div
+      className={[
+        "animate-slide-up motion-reduce:animate-none mx-auto w-full space-y-6 transition-all duration-300",
+        modo === "entrevista" ? "max-w-5xl" : "max-w-3xl",
+      ].join(" ")}
+    >
       {/* Cabecera */}
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-text-primary">Analiza tu CV</h2>
+        <h2 className="text-2xl font-bold text-text-primary">Estructura y analiza tu perfil</h2>
         <p className="mt-1 text-sm text-text-secondary">
-          Pega el texto de tu hoja de vida y los agentes de IA lo procesarán.
+          Elige si prefieres responder las preguntas guiadas de Lexi o pegar el texto de tu hoja de vida.
         </p>
       </div>
 
-      {/* Área de texto */}
-      <div className="card p-6 space-y-3">
-        <label htmlFor="cv-input" className="label">Texto del CV</label>
-        <textarea
-          id="cv-input"
-          className="textarea min-h-[280px]"
-          placeholder="Pega aquí el contenido de tu hoja de vida (experiencia, habilidades, educación, etc.)..."
-          value={cvTexto}
-          onChange={(e) => setCvTexto(e.target.value)}
-          disabled={loading}
-        />
-        {/* Contador de caracteres */}
-        <div className="flex items-center justify-between text-xs">
-          <span className={chars < MIN_CHARS ? "text-status-warning" : "text-text-muted"}>
-            {chars < MIN_CHARS
-              ? `Faltan ${faltanChars} caracteres mínimos`
-              : `${chars.toLocaleString("es-CO")} caracteres`}
-          </span>
-          {chars > 0 && (
-            <button
-              type="button"
-              className="btn-ghost text-xs text-status-error"
-              onClick={() => setCvTexto("")}
-              disabled={loading}
-            >
-              Limpiar
-            </button>
-          )}
+      {/* Selector de modo: Entrevista guiada vs Pegar CV */}
+      {!loading && (
+        <div className="tab-list max-w-md mx-auto">
+          <button
+            type="button"
+            id="tab-entrevista"
+            className={`tab-btn ${modo === "entrevista" ? "active" : ""}`}
+            onClick={() => setModo("entrevista")}
+          >
+            💬 Entrevista con Lexi
+          </button>
+          <button
+            type="button"
+            id="tab-pegar-cv"
+            className={`tab-btn ${modo === "pegar" ? "active" : ""}`}
+            onClick={() => setModo("pegar")}
+          >
+            📄 Pegar CV
+          </button>
         </div>
-      </div>
+      )}
 
-      {/* CVs de ejemplo */}
-      {demos.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-xs font-medium uppercase tracking-wider text-text-muted">
-            Cargar CV de ejemplo
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {demos.map((demo) => (
-              <button
-                key={demo.id}
-                id={`demo-cv-${demo.id}`}
-                type="button"
-                className="btn-secondary text-xs"
-                onClick={() => setCvTexto(demo.cv_texto)}
-                disabled={loading}
-              >
-                {demo.etiqueta}
-              </button>
-            ))}
+      {/* Modo 1: Entrevista guiada con Lexi */}
+      {modo === "entrevista" && !loading && (
+        <EntrevistaLexi onFinalizar={analizarTexto} loading={loading} />
+      )}
+
+      {/* Modo 2: Pegar CV (formulario existente completo) */}
+      {modo === "pegar" && !loading && (
+        <>
+          {/* Área de texto */}
+          <div className="card p-6 space-y-3">
+            <label htmlFor="cv-input" className="label">Texto del CV</label>
+            <textarea
+              id="cv-input"
+              className="textarea min-h-[280px]"
+              placeholder="Pega aquí el contenido de tu hoja de vida (experiencia, habilidades, educación, etc.)..."
+              value={cvTexto}
+              onChange={(e) => setCvTexto(e.target.value)}
+              disabled={loading}
+            />
+            {/* Contador de caracteres */}
+            <div className="flex items-center justify-between text-xs">
+              <span className={chars < MIN_CHARS ? "text-status-warning" : "text-text-muted"}>
+                {chars < MIN_CHARS
+                  ? `Faltan ${faltanChars} caracteres mínimos`
+                  : `${chars.toLocaleString("es-CO")} caracteres`}
+              </span>
+              {chars > 0 && (
+                <button
+                  type="button"
+                  className="btn-ghost text-xs text-status-error"
+                  onClick={() => setCvTexto("")}
+                  disabled={loading}
+                >
+                  Limpiar
+                </button>
+              )}
+            </div>
           </div>
-        </div>
+
+          {/* CVs de ejemplo */}
+          {demos.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-medium uppercase tracking-wider text-text-muted">
+                Cargar CV de ejemplo
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {demos.map((demo) => (
+                  <button
+                    key={demo.id}
+                    id={`demo-cv-${demo.id}`}
+                    type="button"
+                    className="btn-secondary text-xs"
+                    onClick={() => setCvTexto(demo.cv_texto)}
+                    disabled={loading}
+                  >
+                    {demo.etiqueta}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Botón analizar tradicional */}
+          <button
+            id="btn-analizar"
+            type="button"
+            className="btn-primary w-full py-4 text-base"
+            onClick={analizar}
+            disabled={!canAnalyze}
+          >
+            ✨ Analizar con los agentes
+          </button>
+        </>
       )}
 
       {/* Error */}
@@ -217,19 +271,6 @@ export default function CvPage({ onResult }: CvPageProps) {
             })}
           </div>
         </div>
-      )}
-
-      {/* Botón analizar */}
-      {!loading && (
-        <button
-          id="btn-analizar"
-          type="button"
-          className="btn-primary w-full py-4 text-base"
-          onClick={analizar}
-          disabled={!canAnalyze}
-        >
-          ✨ Analizar con los agentes
-        </button>
       )}
 
       {/* Nota de tiempo */}
