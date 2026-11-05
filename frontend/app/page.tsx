@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { clearToken, getToken, ResultadoProcesar } from "@/lib/api";
-import Header from "@/components/Header";
+import Navbar from "@/components/Navbar";
 import StepIndicator, { Step } from "@/components/StepIndicator";
 import LoginPage from "@/components/LoginPage";
 import CvPage from "@/components/CvPage";
@@ -67,8 +67,14 @@ export default function HomePage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      {/* Header siempre visible */}
-      <Header email={email} onLogout={handleLogout} />
+      {/* Barra de navegación superior fija (sticky) */}
+      <Navbar
+        email={email}
+        currentStep={step}
+        hasResultado={Boolean(resultado)}
+        onNavigate={setStep}
+        onLogout={handleLogout}
+      />
 
       {/* Indicador de progreso (visible solo cuando hay sesión) */}
       {email && (
