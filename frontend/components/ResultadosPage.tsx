@@ -6,7 +6,9 @@ import {
   Perfil,
   PesosPrioridades,
   Recomendacion,
+  ResultadoPlanBCoaching,
   ResultadoProcesar,
+  apiGetPlanBCoaching,
   apiRecalcularRecomendaciones,
 } from "@/lib/api";
 import { AGENTES_META, AgenteNombre } from "@/components/escenario/AgenteSvg";
@@ -352,6 +354,11 @@ export default function ResultadosPage({
   const [error, setError] = useState<string | null>(null);
   const [primeraCarga, setPrimeraCarga] = useState(true);
 
+  // Estados para Plan B y Coaching de mejora
+  const [infoPlanB, setInfoPlanB] = useState<ResultadoPlanBCoaching | null>(null);
+  const [cargandoPlanB, setCargandoPlanB] = useState(false);
+  const [errorPlanB, setErrorPlanB] = useState<string | null>(null);
+
   // La vacante postulada inicialmente en base de datos (se mantiene fija como postulación oficial)
   const idVacantePostulada = postulacion_id !== null ? resultado.recomendaciones[0]?.id : null;
 
@@ -413,6 +420,36 @@ export default function ResultadosPage({
 
     return () => clearTimeout(timer);
   }, [pesos, perfil_id, resultado.recomendaciones, primeraCarga, sonPesosPorDefecto, todosEnCero]);
+
+  // Carga determinista de Plan B y coaching de mejora técnica
+  useEffect(() => {
+    let cancelado = false;
+    async function cargarPlanBCoaching() {
+      setCargandoPlanB(true);
+      setErrorPlanB(null);
+      try {
+        const datos = await apiGetPlanBCoaching(perfil_id);
+        if (!cancelado) {
+          setInfoPlanB(datos);
+        }
+      } catch (err) {
+        if (!cancelado) {
+          setErrorPlanB(
+            err instanceof Error ? err.message : "Error al cargar alternativas y plan de mejora"
+          );
+        }
+      } finally {
+        if (!cancelado) {
+          setCargandoPlanB(false);
+        }
+      }
+    }
+
+    cargarPlanBCoaching();
+    return () => {
+      cancelado = true;
+    };
+  }, [perfil_id]);
 
   const handleRestablecer = () => {
     setPesos(PESOS_DEFECTO);
@@ -651,6 +688,152 @@ export default function ResultadosPage({
               Recuerda que esta es una postulación simulada; no hay un proceso real de selección detrás.
             </p>
           )}
+        </div>
+      )}
+
+      {/* Estado de carga de Plan B y Coaching */}
+      {cargandoPlanB && !infoPlanB && (
+        <div className="card p-6 text-center space-y-2 border-surface-border/50">
+          <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" />
+          <p className="text-xs text-text-muted">Analizando alternativas de Plan B y plan de mejora...</p>
+        </div>
+      )}
+
+      {/* Error al cargar Plan B o Coaching */}
+      {errorPlanB && (
+        <div className="alert-error text-xs flex items-center gap-2">
+          <span>❌</span>
+          <p>{errorPlanB}</p>
+        </div>
+      )}
+
+      {/* Tarjeta Plan B (solo visible si plan_b.activo) */}
+      {infoPlanB?.plan_b.activo && infoPlanB.plan_b.grupos && Object.keys(infoPlanB.plan_b.grupos).length > 0 && (
+        <div
+          id="seccion-plan-b"
+          className="card p-6 space-y-6 border-status-warning/40 bg-gradient-to-br from-yellow-900/10 to-surface-card"
+        >
+          <div className="flex items-start gap-3">
+            <span className="text-2xl" aria-hidden="true">💡</span>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold text-text-primary text-lg">Plan B: Alternativas recomendadas</h3>
+                <span className="chip-yellow text-[10px]">Afinidad alternativa</span>
+              </div>
+              <p className="text-xs text-text-muted mt-1">
+                Dado que el puntaje de coincidencia no alcanzó el umbral mínimo para postulación, exploramos estas alternativas según tu perfil:
+              </p>
+            </div>
+          </div>
+
+          {/* Grupo 1: Ampliar modalidades */}
+          {infoPlanB.plan_b.grupos.ampliar_modalidades && infoPlanB.plan_b.grupos.ampliar_modalidades.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+                <span>🔄</span>
+                <h4>Ampliar modalidades</h4>
+                <span className="text-xs font-normal text-text-muted">
+                  (Opciones considerando otras modalidades de trabajo)
+                </span>
+              </div>
+              <div className="space-y-3">
+                {infoPlanB.plan_b.grupos.ampliar_modalidades.map((rec) => (
+                  <TarjetaVacante key={`planb-mod-${rec.id}`} rec={rec} esPostulada={false} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Grupo 2: Áreas afines y cercanas */}
+          {infoPlanB.plan_b.grupos.areas_cercanas && infoPlanB.plan_b.grupos.areas_cercanas.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+                <span>🎯</span>
+                <h4>Áreas afines y cercanas</h4>
+                <span className="text-xs font-normal text-text-muted">
+                  (Roles en otros campos que comparten tus habilidades técnicas)
+                </span>
+              </div>
+              <div className="space-y-3">
+                {infoPlanB.plan_b.grupos.areas_cercanas.map((rec) => (
+                  <TarjetaVacante key={`planb-area-${rec.id}`} rec={rec} esPostulada={false} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Grupo 3: Casi cumples */}
+          {infoPlanB.plan_b.grupos.casi_cumples && infoPlanB.plan_b.grupos.casi_cumples.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-sm font-semibold text-text-primary">
+                <span>⚡</span>
+                <h4>Casi cumples los requisitos</h4>
+                <span className="text-xs font-normal text-text-muted">
+                  (Vacantes donde solo te faltan 2 o menos habilidades)
+                </span>
+              </div>
+              <div className="space-y-3">
+                {infoPlanB.plan_b.grupos.casi_cumples.map((rec) => (
+                  <TarjetaVacante key={`planb-casi-${rec.id}`} rec={rec} esPostulada={false} />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Tarjeta Tu plan de mejora (Coaching con enlaces seguros) */}
+      {infoPlanB?.coaching && infoPlanB.coaching.length > 0 && (
+        <div
+          id="seccion-plan-mejora"
+          className="card p-6 space-y-4 border-surface-border bg-surface-card"
+        >
+          <div className="flex items-start gap-3">
+            <span className="text-2xl" aria-hidden="true">🚀</span>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold text-text-primary text-lg">Tu plan de mejora técnica</h3>
+                <span className="chip-violet text-[10px]">Coaching sugerido</span>
+              </div>
+              <p className="text-xs text-text-secondary mt-1">
+                Acciones basadas en las habilidades más pedidas en las vacantes analizadas para potenciar tu perfil:
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
+            {infoPlanB.coaching.map((item, idx) => (
+              <div
+                key={idx}
+                className="rounded-xl border border-surface-border bg-surface-elevated/70 p-4 flex flex-col justify-between space-y-3 transition-colors hover:border-accent/40"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="chip-violet text-[10px] font-bold uppercase tracking-wider">
+                      {item.habilidad}
+                    </span>
+                    <span className="text-[11px] font-mono text-text-muted">#{idx + 1}</span>
+                  </div>
+                  <p className="text-xs text-text-primary leading-relaxed">{item.accion}</p>
+                </div>
+
+                <a
+                  href={item.enlace}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-secondary text-xs w-full py-2 flex items-center justify-center gap-1.5 hover:text-accent-light focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  title={`Buscar cursos gratuitos de ${item.habilidad} en Google`}
+                >
+                  <span>Buscar curso gratis</span>
+                  <span aria-hidden="true" className="text-[11px]">↗</span>
+                </a>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-[11px] text-text-muted pt-2 border-t border-surface-border/60">
+            ℹ️ <em>Búsquedas seguras:</em> Los enlaces te dirigen a consultas preconfiguradas en Google para encontrar tutoriales y cursos gratuitos de cada habilidad.
+          </p>
         </div>
       )}
 

@@ -1,5 +1,7 @@
 import re
 import json
+import urllib.parse
+from collections import Counter
 from perfil_utils import limpiar_perfil, parsear_perfil_rigido
 from typing import TypedDict, Optional
 from langgraph.graph import StateGraph, END
@@ -248,6 +250,157 @@ def recomendador(estado: EstadoProceso) -> EstadoProceso:
         limite=5,
     )
     return estado
+
+
+def _extraer_area_vacante(titulo: str) -> str:
+    if not titulo:
+        return ""
+    t = titulo.lower()
+    if "backend" in t:
+        return "backend"
+    if "frontend" in t:
+        return "frontend"
+    if "fullstack" in t or "full stack" in t:
+        return "fullstack"
+    if "qa" in t or "calidad" in t or "testing" in t:
+        return "qa"
+    if "devops" in t or "sre" in t or "cloud" in t:
+        return "devops"
+    if "dato" in t or "data" in t or "analista" in t or "bi" in t:
+        return "datos"
+    if "mobile" in t or "android" in t or "ios" in t:
+        return "mobile"
+    if "ux" in t or "ui" in t or "diseño" in t or "diseñador" in t:
+        return "diseño"
+    if "soporte" in t or "helpdesk" in t:
+        return "soporte"
+    if "comercial" in t or "ventas" in t:
+        return "ventas"
+    palabras = t.split()
+    return palabras[0] if palabras else ""
+
+
+def calcular_plan_b(
+    perfil: dict,
+    vacantes: list[dict],
+    recomendaciones: list[dict],
+    umbral: int = UMBRAL_POSTULACION,
+) -> dict:
+    """Calcula las alternativas de Plan B cuando el mejor score no alcanza el umbral.
+    Devuelve hasta 3 grupos:
+    - ampliar_modalidades: vacantes ignorando la modalidad preferida (máx 3).
+    - areas_cercanas: vacantes de otro tipo/área que comparten >= 2 habilidades (máx 3).
+    - casi_cumples: vacantes donde faltan 2 habilidades o menos (máx 3).
+    Los grupos vacíos se omiten.
+    """
+    mejor_score = recomendaciones[0]["score"] if recomendaciones else 0
+    if mejor_score >= umbral:
+        return {"activo": False, "grupos": {}}
+
+    grupos = {}
+    mejor_rec = recomendaciones[0] if recomendaciones else None
+    mejor_id = mejor_rec.get("id") if mejor_rec else None
+
+    # a) "ampliar_modalidades": las mejores vacantes ignorando la modalidad preferida
+    mod_pref = perfil.get("modalidad_preferida")
+    if mod_pref:
+        vacs_otra_mod = [
+            v for v in vacantes if v.get("modalidad") and v.get("modalidad") != mod_pref
+        ]
+        if vacs_otra_mod:
+            recs_otra_mod = []
+            for v in vacs_otra_mod:
+                p_sim = {**perfil, "modalidad_preferida": v.get("modalidad")}
+                recs_sim = calcular_recomendaciones(p_sim, [v], limite=1)
+                if recs_sim:
+                    recs_otra_mod.append(recs_sim[0])
+            recs_otra_mod.sort(key=lambda x: x["score"], reverse=True)
+            if recs_otra_mod:
+                grupos["ampliar_modalidades"] = recs_otra_mod[:3]
+
+    # Evaluamos todas las vacantes para b y c
+    todas_puntuadas = calcular_recomendaciones(perfil, vacantes, limite=len(vacantes))
+
+    # b) "areas_cercanas": vacantes de otro tipo que comparten al menos 2 habilidades
+    areas_cercanas = []
+    mejor_area = _extraer_area_vacante(mejor_rec.get("titulo", "")) if mejor_rec else ""
+    for r in todas_puntuadas:
+        if r.get("id") == mejor_id:
+            continue
+        if len(r.get("habilidades_en_comun", [])) >= 2:
+            area_r = _extraer_area_vacante(r.get("titulo", ""))
+            if not mejor_area or area_r != mejor_area:
+                areas_cercanas.append(r)
+    if areas_cercanas:
+        areas_cercanas.sort(
+            key=lambda x: (len(x.get("habilidades_en_comun", [])), x.get("score", 0)),
+            reverse=True,
+        )
+        grupos["areas_cercanas"] = areas_cercanas[:3]
+
+    # c) "casi_cumples": vacantes donde faltan 2 habilidades o menos
+    casi_cumples = [
+        r for r in todas_puntuadas
+        if len(r.get("habilidades_faltantes", [])) <= 2
+    ]
+    if casi_cumples:
+        casi_cumples.sort(
+            key=lambda x: (x.get("score", 0), -len(x.get("habilidades_faltantes", []))),
+            reverse=True,
+        )
+        grupos["casi_cumples"] = casi_cumples[:3]
+
+    return {"activo": True, "grupos": grupos}
+
+
+PLANTILLAS_COACHING = [
+    "Aprende los fundamentos de {habilidad} para cumplir con los requisitos más solicitados en las vacantes.",
+    "Crea un proyecto práctico donde apliques {habilidad} para fortalecer tu portafolio.",
+    "Profundiza en conceptos y buenas prácticas de {habilidad} para destacar en tus entrevistas técnicas.",
+]
+
+
+def generar_coaching(perfil: dict, recomendaciones: list[dict]) -> list[dict]:
+    """Genera EXACTAMENTE 3 acciones de coaching deterministas basadas en brechas reales,
+    con enlaces seguros construidos exclusivamente con urllib.parse.quote_plus."""
+    faltantes = []
+    for r in recomendaciones:
+        faltantes.extend(r.get("habilidades_faltantes", []))
+
+    conteo = Counter(faltantes)
+    habilidades_top = [h for h, _ in conteo.most_common()]
+
+    # Si hay menos de 3 habilidades faltantes en las vacantes, complementar con habilidades técnicas estándar
+    # que el candidato no tenga aún en su perfil
+    habilidades_candidato = _habilidades(perfil.get("habilidades"))
+    suplementarias = ["git", "sql", "docker", "apis rest", "pruebas unitarias", "python", "javascript"]
+    for s in suplementarias:
+        if s not in habilidades_top and s not in habilidades_candidato:
+            habilidades_top.append(s)
+        if len(habilidades_top) >= 3:
+            break
+
+    # Si aún no alcanza 3 (caso extremo de perfil saturado), rellenar con las suplementarias disponibles
+    for s in suplementarias:
+        if s not in habilidades_top:
+            habilidades_top.append(s)
+        if len(habilidades_top) >= 3:
+            break
+
+    tres_habilidades = habilidades_top[:3]
+    acciones = []
+    for i, hab in enumerate(tres_habilidades):
+        query = f"curso gratis {hab}"
+        enlace = f"https://www.google.com/search?q={urllib.parse.quote_plus(query)}"
+        accion_texto = PLANTILLAS_COACHING[i % len(PLANTILLAS_COACHING)].format(
+            habilidad=hab.strip()
+        )
+        acciones.append({
+            "accion": accion_texto,
+            "habilidad": hab.strip(),
+            "enlace": enlace,
+        })
+    return acciones
 
 
 # --- Inari: normaliza vacantes + puntúa (fusiona vacantes y recomendador) ---

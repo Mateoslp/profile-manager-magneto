@@ -214,3 +214,37 @@ export async function apiRecalcularRecomendaciones(
   });
   return handleResponse<ResultadoRecalculo>(res);
 }
+
+export interface GruposPlanB {
+  ampliar_modalidades?: Recomendacion[];
+  areas_cercanas?: Recomendacion[];
+  casi_cumples?: Recomendacion[];
+}
+
+export interface PlanBInfo {
+  activo: boolean;
+  grupos: GruposPlanB;
+}
+
+export interface AccionCoaching {
+  accion: string;
+  habilidad: string;
+  enlace: string;
+}
+
+export interface ResultadoPlanBCoaching {
+  perfil_id: number;
+  plan_b: PlanBInfo;
+  coaching: AccionCoaching[];
+}
+
+export async function apiGetPlanBCoaching(
+  perfilId?: number | null
+): Promise<ResultadoPlanBCoaching> {
+  const res = await fetch(`${API_URL}/perfil/plan-b-coaching`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(perfilId != null ? { perfil_id: perfilId } : {}),
+  });
+  return handleResponse<ResultadoPlanBCoaching>(res);
+}

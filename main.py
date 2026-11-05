@@ -24,7 +24,13 @@ from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, model_validator
 
-from agents import app_grafo, calcular_recomendaciones
+from agents import (
+    app_grafo,
+    calcular_plan_b,
+    calcular_recomendaciones,
+    generar_coaching,
+    UMBRAL_POSTULACION,
+)
 from auth import (
     crear_token,
     hashear_password,
@@ -105,6 +111,10 @@ class RecalcularRecomendacionesIn(BaseModel):
         ):
             raise ValueError("Al menos un peso debe ser mayor que 0")
         return self
+
+
+class PlanBCoachingIn(BaseModel):
+    perfil_id: Optional[int] = None
 
 
 # ---------- Público ----------
@@ -353,6 +363,87 @@ def recalcular_recomendaciones(
             "peso_habilidad": datos.peso_habilidad,
         },
         "recomendaciones": recs,
+    }
+
+
+# ---------- Plan B y coaching de mejora ----------
+@app.post("/perfil/plan-b-coaching")
+def obtener_plan_b_coaching(
+    datos: PlanBCoachingIn = PlanBCoachingIn(),
+    usuario: dict = Depends(usuario_actual),
+):
+    """Calcula las alternativas de Plan B y 3 acciones de coaching deterministas con enlaces seguros."""
+    with conexion() as conn:
+        cur = conn.cursor()
+        if datos.perfil_id is not None:
+            if usuario["rol"] == "admin":
+                cur.execute(
+                    "SELECT * FROM perfiles WHERE id = %s;",
+                    (datos.perfil_id,),
+                )
+            else:
+                cur.execute(
+                    "SELECT * FROM perfiles WHERE id = %s AND usuario_id = %s;",
+                    (datos.perfil_id, usuario["id"]),
+                )
+            perfil = cur.fetchone()
+            if not perfil:
+                raise HTTPException(
+                    status_code=403,
+                    detail="No tenés acceso a este perfil",
+                )
+        else:
+            cur.execute(
+                "SELECT * FROM perfiles WHERE usuario_id = %s ORDER BY id DESC LIMIT 1;",
+                (usuario["id"],),
+            )
+            perfil = cur.fetchone()
+            if not perfil:
+                raise HTTPException(
+                    status_code=404,
+                    detail="El usuario no tiene ningún perfil registrado",
+                )
+
+        cur.execute("SELECT * FROM vacantes ORDER BY id;")
+        vacantes_raw = cur.fetchall()
+
+    perfil_dict = limpiar_perfil(perfil)
+    vacantes_normalizadas = [
+        {
+            "id": v.get("id"),
+            "titulo": v.get("titulo"),
+            "empresa": v.get("empresa"),
+            "ubicacion": v.get("ubicacion"),
+            "modalidad": v.get("modalidad"),
+            "salario_min": v.get("salario_min"),
+            "salario_max": v.get("salario_max"),
+            "habilidades": v.get("habilidades"),
+        }
+        for v in vacantes_raw
+    ]
+
+    recs = calcular_recomendaciones(
+        perfil=perfil_dict,
+        vacantes=vacantes_normalizadas,
+        limite=5,
+    )
+
+    plan_b = calcular_plan_b(
+        perfil=perfil_dict,
+        vacantes=vacantes_normalizadas,
+        recomendaciones=recs,
+        umbral=UMBRAL_POSTULACION,
+    )
+
+    coaching = generar_coaching(
+        perfil=perfil_dict,
+        recomendaciones=recs,
+    )
+
+    return {
+        "perfil_id": perfil["id"],
+        "plan_b": plan_b,
+        "coaching": coaching,
     }
 
 

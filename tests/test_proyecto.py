@@ -1274,3 +1274,200 @@ def test_recalcular_sin_token_da_401():
     res = client.post("/perfil/recalcular-recomendaciones", json={})
     assert res.status_code == 401
 
+
+# ---------- Paquete F: Etapas F3 + F4 (Plan B y Coaching Seguro) ----------
+
+def test_plan_b_activo_con_score_bajo(monkeypatch):
+    """Si el mejor score es menor que el umbral (4), plan_b.activo es True y genera grupos."""
+    perfil = {
+        "id": 1,
+        "usuario_id": 10,
+        "nombre": "Candidato Perfil Bajo",
+        "ubicacion": "Medellín",
+        "modalidad_preferida": "remoto",
+        "aspiracion_salarial": 10_000_000,
+        "habilidades": "Python",
+    }
+    vacantes = [
+        {
+            "id": 1,
+            "titulo": "Analista de Datos",
+            "empresa": "Data Co",
+            "ubicacion": "Cali",
+            "modalidad": "presencial",
+            "salario_min": 2_000_000,
+            "salario_max": 3_000_000,
+            "habilidades": "Python, Power BI, Excel",
+        }
+    ]
+    client = _mock_db_recalcular(monkeypatch, perfiles=[perfil], vacantes=vacantes)
+    token = auth.crear_token(10, "candidato")
+
+    res = client.post(
+        "/perfil/plan-b-coaching",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"perfil_id": 1},
+    )
+    assert res.status_code == 200
+    datos = res.json()
+    assert datos["plan_b"]["activo"] is True
+    assert isinstance(datos["plan_b"]["grupos"], dict)
+    assert "ampliar_modalidades" in datos["plan_b"]["grupos"]
+
+
+def test_plan_b_inactivo_con_score_alto(monkeypatch):
+    """Si el mejor score alcanza o supera el umbral (4), plan_b.activo es False, grupos es vacío y coaching se devuelve."""
+    perfil = {
+        "id": 1,
+        "usuario_id": 10,
+        "nombre": "Candidato Perfil Alto",
+        "ubicacion": "Medellín",
+        "modalidad_preferida": "remoto",
+        "aspiracion_salarial": 4_000_000,
+        "habilidades": "Python, Docker, SQL",
+    }
+    vacantes = [
+        {
+            "id": 1,
+            "titulo": "Backend Python",
+            "empresa": "Tech Co",
+            "ubicacion": "Medellín",
+            "modalidad": "remoto",
+            "salario_min": 3_000_000,
+            "salario_max": 5_000_000,
+            "habilidades": "Python, Docker, SQL",
+        }
+    ]
+    client = _mock_db_recalcular(monkeypatch, perfiles=[perfil], vacantes=vacantes)
+    token = auth.crear_token(10, "candidato")
+
+    res = client.post(
+        "/perfil/plan-b-coaching",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"perfil_id": 1},
+    )
+    assert res.status_code == 200
+    datos = res.json()
+    assert datos["plan_b"]["activo"] is False
+    assert datos["plan_b"]["grupos"] == {}
+    assert len(datos["coaching"]) == 3
+
+
+def test_plan_b_grupo_vacio_se_omite(monkeypatch):
+    """Si ningún elemento cumple los criterios de un grupo (por ejemplo ampliar_modalidades sin vacantes de otra modalidad), se omite."""
+    perfil = {
+        "id": 1,
+        "usuario_id": 10,
+        "nombre": "Candidato Sin Modalidad",
+        "ubicacion": "Pasto",
+        "modalidad_preferida": "remoto",
+        "aspiracion_salarial": 8_000_000,
+        "habilidades": "Fortran",
+    }
+    vacantes = [
+        {
+            "id": 1,
+            "titulo": "Desarrollador Fortran",
+            "empresa": "Legacy Co",
+            "ubicacion": "Bogotá",
+            "modalidad": "remoto",
+            "salario_min": 2_000_000,
+            "salario_max": 3_000_000,
+            "habilidades": "Fortran, COBOL, Assembly, Pascal, Ada",
+        }
+    ]
+    client = _mock_db_recalcular(monkeypatch, perfiles=[perfil], vacantes=vacantes)
+    token = auth.crear_token(10, "candidato")
+
+    res = client.post(
+        "/perfil/plan-b-coaching",
+        headers={"Authorization": f"Bearer {token}"},
+        json={},
+    )
+    assert res.status_code == 200
+    grupos = res.json()["plan_b"]["grupos"]
+    assert "ampliar_modalidades" not in grupos
+
+
+def test_coaching_devuelve_exactamente_tres_acciones(monkeypatch):
+    """El coaching genera exactamente 3 acciones estructuradas con texto, habilidad y enlace."""
+    perfil = {
+        "id": 1,
+        "usuario_id": 10,
+        "nombre": "Estudiante",
+        "ubicacion": "Medellín",
+        "modalidad_preferida": "remoto",
+        "aspiracion_salarial": 3_000_000,
+        "habilidades": "Python",
+    }
+    vacantes = [
+        {
+            "id": 1,
+            "titulo": "Desarrollador Junior",
+            "empresa": "Dev SAS",
+            "ubicacion": "Medellín",
+            "modalidad": "remoto",
+            "salario_min": 2_500_000,
+            "salario_max": 4_000_000,
+            "habilidades": "Python, Docker, SQL, Git",
+        }
+    ]
+    client = _mock_db_recalcular(monkeypatch, perfiles=[perfil], vacantes=vacantes)
+    token = auth.crear_token(10, "candidato")
+
+    res = client.post(
+        "/perfil/plan-b-coaching",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"perfil_id": 1},
+    )
+    assert res.status_code == 200
+    coaching = res.json()["coaching"]
+    assert len(coaching) == 3
+    for c in coaching:
+        assert "accion" in c and len(c["accion"]) > 10
+        assert "habilidad" in c and len(c["habilidad"]) > 0
+        assert "enlace" in c and c["enlace"].startswith("https://www.google.com/search?q=")
+
+
+def test_coaching_enlaces_seguros_y_codificacion_caracteres_especiales():
+    """Los enlaces de coaching usan urllib.parse.quote_plus y codifican bien espacios y símbolos como c++."""
+    import agents
+    perfil = {"habilidades": "HTML, CSS"}
+    recs = [
+        {
+            "habilidades_faltantes": ["c++", "apis rest", "node.js"],
+        }
+    ]
+    acciones = agents.generar_coaching(perfil, recs)
+    assert len(acciones) == 3
+
+    accion_cpp = next(a for a in acciones if a["habilidad"] == "c++")
+    assert "https://www.google.com/search?q=curso+gratis+c%2B%2B" == accion_cpp["enlace"]
+
+    accion_apis = next(a for a in acciones if a["habilidad"] == "apis rest")
+    assert "https://www.google.com/search?q=curso+gratis+apis+rest" == accion_apis["enlace"]
+
+
+def test_plan_b_perfil_ajeno_da_403(monkeypatch):
+    """Solicitar el plan B de un perfil_id que pertenece a otro usuario responde 403 Forbidden."""
+    perfil_ajeno = {"id": 88, "usuario_id": 999, "nombre": "Ajeno"}
+    client = _mock_db_recalcular(monkeypatch, perfiles=[perfil_ajeno], vacantes=[])
+    token = auth.crear_token(10, "candidato")
+
+    res = client.post(
+        "/perfil/plan-b-coaching",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"perfil_id": 88},
+    )
+    assert res.status_code == 403
+    assert "acceso" in res.json()["detail"].lower()
+
+
+def test_plan_b_sin_token_da_401():
+    """Llamar a /perfil/plan-b-coaching sin token responde 401."""
+    import main as main_mod
+    client = TestClient(main_mod.app)
+    res = client.post("/perfil/plan-b-coaching", json={})
+    assert res.status_code == 401
+
+
