@@ -10,7 +10,7 @@ export type NodoId = "tu" | "lexi" | "inari" | "kenti" | "iris";
 export const DESCRIPCIONES_AGENTES: Record<AgenteNombre, string> = {
   Lexi: "Estructura tu CV y detecta lo que falta.",
   Inari: "Normaliza vacantes y calcula la afinidad.",
-  Kenti: "Simula la postulación.",
+  Kenti: "Gestiona tu postulación.",
   Iris: "Te da el próximo paso.",
 };
 

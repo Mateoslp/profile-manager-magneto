@@ -8,7 +8,9 @@ import {
   Recomendacion,
   ResultadoPlanBCoaching,
   ResultadoProcesar,
+  apiCrearPostulacionManual,
   apiGetPlanBCoaching,
+  apiGetPostulaciones,
   apiRecalcularRecomendaciones,
 } from "@/lib/api";
 import { AGENTES_META, AgenteNombre } from "@/components/escenario/AgenteSvg";
@@ -227,9 +229,23 @@ function CirculoAfinidad({ pct }: { pct: number }) {
 function TarjetaVacante({
   rec,
   esPostulada,
+  esKenti,
+  onPostular,
+  cargando,
+  confirmandoBajaAfinidad,
+  onIniciarConfirmacion,
+  onCancelarConfirmacion,
+  errorMsg,
 }: {
   rec: Recomendacion;
   esPostulada: boolean;
+  esKenti?: boolean;
+  onPostular?: (id: number) => void;
+  cargando?: boolean;
+  confirmandoBajaAfinidad?: boolean;
+  onIniciarConfirmacion?: (id: number) => void;
+  onCancelarConfirmacion?: () => void;
+  errorMsg?: string | null;
 }) {
   return (
     <div
@@ -243,7 +259,9 @@ function TarjetaVacante({
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2 mb-1">
             {esPostulada && (
-              <span className="chip-violet text-[11px]">✓ Postulada (simulación)</span>
+              <span className="chip-violet text-[11px]">
+                ✓ Postulada
+              </span>
             )}
           </div>
           <h4 className="font-semibold text-text-primary truncate">{rec.titulo}</h4>
@@ -283,6 +301,78 @@ function TarjetaVacante({
           {rec.habilidades_faltantes.map((h) => (
             <span key={h} className="chip-gray">{h}</span>
           ))}
+        </div>
+      )}
+
+      {/* Acción de postulación manual (cuando aún no se ha postulado) */}
+      {!esPostulada && onPostular && (
+        <div className="pt-3 border-t border-surface-border/40 space-y-2">
+          {confirmandoBajaAfinidad ? (
+            <div className="rounded-xl border border-amber-500/40 bg-amber-950/20 p-3 space-y-2 text-xs">
+              <div className="flex items-center gap-2 text-amber-300 font-semibold">
+                <span>⚠️</span>
+                <span>Aviso de baja afinidad ({rec.afinidad}%)</span>
+              </div>
+              <p className="text-text-secondary">
+                Esta vacante tiene menor afinidad con tu perfil actual. ¿Deseas confirmar tu postulación de todos modos?
+              </p>
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  id={`btn-confirmar-postular-${rec.id}`}
+                  disabled={cargando}
+                  onClick={() => onPostular(rec.id)}
+                  className="btn-primary text-xs py-1.5 px-3"
+                >
+                  {cargando ? "Postulando..." : "Sí, confirmar postulación"}
+                </button>
+                <button
+                  type="button"
+                  id={`btn-cancelar-postular-${rec.id}`}
+                  disabled={cargando}
+                  onClick={onCancelarConfirmacion}
+                  className="btn-ghost text-xs py-1.5 px-3"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <span className="text-[11px] text-text-muted">
+                Postulación registrada en LIKAI
+              </span>
+              <button
+                type="button"
+                id={`btn-postular-${rec.id}`}
+                disabled={cargando}
+                onClick={() => {
+                  if (rec.afinidad < 36) {
+                    onIniciarConfirmacion?.(rec.id);
+                  } else {
+                    onPostular(rec.id);
+                  }
+                }}
+                className="btn-primary text-xs py-1.5 px-3.5 inline-flex items-center gap-1.5"
+              >
+                {cargando ? (
+                  <>
+                    <span className="animate-spin text-xs">⏳</span>
+                    <span>Postulando...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Postularme</span>
+                    <span>→</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+
+          {errorMsg && (
+            <p className="text-xs text-status-error font-medium">{errorMsg}</p>
+          )}
         </div>
       )}
     </div>
@@ -359,8 +449,49 @@ export default function ResultadosPage({
   const [cargandoPlanB, setCargandoPlanB] = useState(false);
   const [errorPlanB, setErrorPlanB] = useState<string | null>(null);
 
-  // La vacante postulada inicialmente en base de datos (se mantiene fija como postulación oficial)
-  const idVacantePostulada = postulacion_id !== null ? resultado.recomendaciones[0]?.id : null;
+  // Estados de postulaciones (automática de Kenti y manuales)
+  const idVacanteKenti = postulacion_id !== null ? resultado.recomendaciones[0]?.id : null;
+  const [postuladasIds, setPostuladasIds] = useState<Set<number>>(
+    new Set(idVacanteKenti ? [idVacanteKenti] : [])
+  );
+  const [cargandoPostulacionId, setCargandoPostulacionId] = useState<number | null>(null);
+  const [confirmandoBajaAfinidadId, setConfirmandoBajaAfinidadId] = useState<number | null>(null);
+  const [errorPostulacion, setErrorPostulacion] = useState<{ vacanteId: number; mensaje: string } | null>(null);
+
+  // Sincronizar con las postulaciones existentes en el backend
+  useEffect(() => {
+    apiGetPostulaciones()
+      .then((posts) => {
+        setPostuladasIds((prev) => {
+          const nuevo = new Set(prev);
+          posts.forEach((p) => {
+            if (perfil_id && p.perfil_id === perfil_id) {
+              nuevo.add(p.vacante_id);
+            } else if (!perfil_id) {
+              nuevo.add(p.vacante_id);
+            }
+          });
+          return nuevo;
+        });
+      })
+      .catch(() => {});
+  }, [perfil_id]);
+
+  async function handlePostular(vacanteId: number) {
+    if (!perfil_id) return;
+    setCargandoPostulacionId(vacanteId);
+    setErrorPostulacion(null);
+    try {
+      await apiCrearPostulacionManual(perfil_id, vacanteId);
+      setPostuladasIds((prev) => new Set([...prev, vacanteId]));
+      setConfirmandoBajaAfinidadId(null);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Error al postularse a la vacante";
+      setErrorPostulacion({ vacanteId, mensaje: msg });
+    } finally {
+      setCargandoPostulacionId(null);
+    }
+  }
 
   const todosEnCero =
     pesos.peso_ubicacion === 0 &&
@@ -459,6 +590,23 @@ export default function ResultadosPage({
 
   return (
     <div className="animate-slide-up motion-reduce:animate-none mx-auto w-full max-w-4xl space-y-8">
+      {/* Barra superior de resultados con acceso rápido al tablero */}
+      <div className="flex items-center justify-between flex-wrap gap-3 pb-3 border-b border-surface-border/50">
+        <div className="text-xs text-text-muted flex items-center gap-1.5">
+          <span>🎯</span>
+          <span>Recomendaciones personalizadas según tu perfil profesional.</span>
+        </div>
+        <button
+          id="btn-ir-tablero-superior"
+          type="button"
+          onClick={onVerTablero}
+          className="btn-secondary text-xs sm:text-sm py-1.5 px-3 flex items-center gap-1.5 font-medium"
+        >
+          <span>📋 Ir al tablero</span>
+          <span aria-hidden="true">→</span>
+        </button>
+      </div>
+
       <div className="text-center">
         <h2 className="text-2xl font-bold text-text-primary">Resultados del análisis</h2>
         <p className="mt-1 text-sm text-text-secondary">
@@ -617,11 +765,11 @@ export default function ResultadosPage({
               </div>
             )}
 
-            {/* Aviso fijo: es una simulación */}
+            {/* Ajuste de prioridades */}
             <div className="rounded-lg bg-surface-elevated/40 border border-surface-border/70 px-3.5 py-2.5 text-xs text-text-muted flex items-start gap-2 mt-2">
               <span className="text-sm select-none" aria-hidden="true">ℹ️</span>
               <p>
-                <strong>Simulación interactiva:</strong> Este recálculo reordena las recomendaciones en tiempo real sin llamar a modelos de IA. No modifica tu postulación original ni guarda cambios en tu perfil.
+                <strong>Ajuste de prioridades:</strong> Tus prioridades solo cambian el orden que ves, no tu postulación registrada.
               </p>
             </div>
           </div>
@@ -642,21 +790,27 @@ export default function ResultadosPage({
               <TarjetaVacante
                 key={rec.id}
                 rec={rec}
-                esPostulada={rec.id === idVacantePostulada}
+                esPostulada={postuladasIds.has(rec.id)}
+                esKenti={rec.id === idVacanteKenti}
+                onPostular={handlePostular}
+                cargando={cargandoPostulacionId === rec.id}
+                confirmandoBajaAfinidad={confirmandoBajaAfinidadId === rec.id}
+                onIniciarConfirmacion={(id) => setConfirmandoBajaAfinidadId(id)}
+                onCancelarConfirmacion={() => setConfirmandoBajaAfinidadId(null)}
+                errorMsg={errorPostulacion?.vacanteId === rec.id ? errorPostulacion.mensaje : null}
               />
             ))}
           </div>
         )}
 
-        {/* Aviso si no se postuló */}
+        {/* Aviso si no se postuló automáticamente */}
         {postulacion_id === null && (
           <div className="alert-warning">
-            <span>⚠️</span>
+            <span>ℹ️</span>
             <div>
-              <p className="font-medium">No se realizó ninguna postulación</p>
+              <p className="font-medium">Kenti no realizó postulación automática</p>
               <p className="text-xs mt-0.5 opacity-80">
-                El puntaje de coincidencia con las vacantes disponibles no alcanzó el umbral mínimo.
-                Iris evaluó los resultados y preparó una recomendación de mejora para tu perfil.
+                La afinidad no alcanzó el umbral automático de 4 puntos. Puedes revisar las vacantes recomendadas o el Plan B y pulsar &quot;Postularme&quot; en la que elijas para practicar tu proceso.
               </p>
             </div>
           </div>
@@ -677,17 +831,12 @@ export default function ResultadosPage({
               <p className="font-semibold text-blue-300">Iris — Seguimiento</p>
               <p className="text-xs text-text-muted">
                 {postulacion_id !== null
-                  ? "Orientación para la postulación (simulación)"
+                  ? "Orientación para tu postulación"
                   : "Recomendaciones de mejora"}
               </p>
             </div>
           </div>
           <p className="text-sm leading-relaxed text-text-primary">{mensaje_seguimiento}</p>
-          {postulacion_id !== null && (
-            <p className="mt-3 text-xs text-text-muted italic">
-              Recuerda que esta es una postulación simulada; no hay un proceso real de selección detrás.
-            </p>
-          )}
         </div>
       )}
 
@@ -738,7 +887,18 @@ export default function ResultadosPage({
               </div>
               <div className="space-y-3">
                 {infoPlanB.plan_b.grupos.ampliar_modalidades.map((rec) => (
-                  <TarjetaVacante key={`planb-mod-${rec.id}`} rec={rec} esPostulada={false} />
+                  <TarjetaVacante
+                    key={`planb-mod-${rec.id}`}
+                    rec={rec}
+                    esPostulada={postuladasIds.has(rec.id)}
+                    esKenti={rec.id === idVacanteKenti}
+                    onPostular={handlePostular}
+                    cargando={cargandoPostulacionId === rec.id}
+                    confirmandoBajaAfinidad={confirmandoBajaAfinidadId === rec.id}
+                    onIniciarConfirmacion={(id) => setConfirmandoBajaAfinidadId(id)}
+                    onCancelarConfirmacion={() => setConfirmandoBajaAfinidadId(null)}
+                    errorMsg={errorPostulacion?.vacanteId === rec.id ? errorPostulacion.mensaje : null}
+                  />
                 ))}
               </div>
             </div>
@@ -756,7 +916,18 @@ export default function ResultadosPage({
               </div>
               <div className="space-y-3">
                 {infoPlanB.plan_b.grupos.areas_cercanas.map((rec) => (
-                  <TarjetaVacante key={`planb-area-${rec.id}`} rec={rec} esPostulada={false} />
+                  <TarjetaVacante
+                    key={`planb-area-${rec.id}`}
+                    rec={rec}
+                    esPostulada={postuladasIds.has(rec.id)}
+                    esKenti={rec.id === idVacanteKenti}
+                    onPostular={handlePostular}
+                    cargando={cargandoPostulacionId === rec.id}
+                    confirmandoBajaAfinidad={confirmandoBajaAfinidadId === rec.id}
+                    onIniciarConfirmacion={(id) => setConfirmandoBajaAfinidadId(id)}
+                    onCancelarConfirmacion={() => setConfirmandoBajaAfinidadId(null)}
+                    errorMsg={errorPostulacion?.vacanteId === rec.id ? errorPostulacion.mensaje : null}
+                  />
                 ))}
               </div>
             </div>
@@ -774,7 +945,18 @@ export default function ResultadosPage({
               </div>
               <div className="space-y-3">
                 {infoPlanB.plan_b.grupos.casi_cumples.map((rec) => (
-                  <TarjetaVacante key={`planb-casi-${rec.id}`} rec={rec} esPostulada={false} />
+                  <TarjetaVacante
+                    key={`planb-casi-${rec.id}`}
+                    rec={rec}
+                    esPostulada={postuladasIds.has(rec.id)}
+                    esKenti={rec.id === idVacanteKenti}
+                    onPostular={handlePostular}
+                    cargando={cargandoPostulacionId === rec.id}
+                    confirmandoBajaAfinidad={confirmandoBajaAfinidadId === rec.id}
+                    onIniciarConfirmacion={(id) => setConfirmandoBajaAfinidadId(id)}
+                    onCancelarConfirmacion={() => setConfirmandoBajaAfinidadId(null)}
+                    errorMsg={errorPostulacion?.vacanteId === rec.id ? errorPostulacion.mensaje : null}
+                  />
                 ))}
               </div>
             </div>

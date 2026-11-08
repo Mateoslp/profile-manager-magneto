@@ -64,7 +64,7 @@ export const CASOS_DEMO_ESCENARIO: CasoDemoEscenario[] = [
         },
       ],
       mensaje_seguimiento:
-        "Tu postulación simulada a Desarrollador Backend Junior registró una alta coincidencia técnica en Python, SQL y APIs REST. Para prepararte ante una eventual entrevista, repasa flujos de trabajo con Git. Recuerda que esta postulación es una simulación.",
+        "Tu postulación a Desarrollador Backend Junior registró una alta coincidencia técnica en Python, SQL y APIs REST. Para prepararte ante una eventual entrevista, repasa flujos de trabajo con Git.",
       mensajes: [
         {
           agente: "Lexi",
@@ -124,7 +124,7 @@ export const CASOS_DEMO_ESCENARIO: CasoDemoEscenario[] = [
           para: "Iris",
           tipo: "info",
           texto:
-            "Postulación simulada a la vacante 'Desarrollador Backend Junior'.",
+            "Postulación registrada a la vacante 'Desarrollador Backend Junior'.",
           datos: {
             vacante_id: 1,
           },
@@ -134,7 +134,7 @@ export const CASOS_DEMO_ESCENARIO: CasoDemoEscenario[] = [
           para: "candidato",
           tipo: "info",
           texto:
-            "Tu postulación simulada a Desarrollador Backend Junior registró una alta coincidencia técnica en Python, SQL y APIs REST. Para prepararte ante una eventual entrevista, repasa flujos de trabajo con Git. Recuerda que esta postulación es una simulación.",
+            "Tu postulación a Desarrollador Backend Junior registró una alta coincidencia técnica en Python, SQL y APIs REST. Para prepararte ante una eventual entrevista, repasa flujos de trabajo con Git.",
           datos: {
             postulado: true,
             origen: "gemini",

@@ -110,7 +110,7 @@ function KanbanCard({
             type="button"
             onClick={() => onPracticarEntrevista?.(post)}
             className="btn-primary text-xs w-full py-1.5 flex items-center justify-center gap-1.5"
-            title="Iniciar simulación de entrevista técnica para esta vacante"
+            title="Iniciar práctica de entrevista con feedback de IA"
           >
             <span aria-hidden="true">🎤</span>
             <span>Practicar entrevista</span>
@@ -373,8 +373,7 @@ export default function KanbanPage({ onVolverResultados }: KanbanPageProps) {
           <div>
             <p className="text-lg font-semibold text-text-primary">Sin postulaciones aún</p>
             <p className="mt-1 text-sm text-text-secondary max-w-sm">
-              Analiza tu CV y si tu puntaje supera el umbral, Kenti registrará
-              una postulación simulada que aparecerá aquí.
+              Analiza tu perfil para recibir recomendaciones y registrar tus postulaciones en el tablero.
             </p>
           </div>
           <button
@@ -415,10 +414,9 @@ export default function KanbanPage({ onVolverResultados }: KanbanPageProps) {
         />
       )}
 
-      {/* Nota de simulación */}
+      {/* Nota informativa */}
       <p className="text-center text-xs text-text-muted pb-4">
-        Las postulaciones en este tablero son simulaciones de un proceso de selección.
-        Puedes mover las tarjetas para practicar cómo funcionaría el seguimiento.
+        La postulación queda registrada en LIKAI y no se envía a una empresa real en esta versión. Puedes mover las tarjetas para gestionar tu seguimiento.
       </p>
     </div>
   );

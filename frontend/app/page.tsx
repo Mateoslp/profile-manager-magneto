@@ -108,7 +108,7 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="border-t border-surface-border py-4 text-center text-xs text-text-muted">
-        LIKAI — Plataforma educativa de simulación de empleo con IA · Lexi · Inari · Kenti · Iris
+        LIKAI — Plataforma inteligente de empleo con IA · Lexi · Inari · Kenti · Iris
       </footer>
     </div>
   );

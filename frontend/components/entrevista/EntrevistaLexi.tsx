@@ -86,22 +86,27 @@ export default function EntrevistaLexi({
   const [mostrarResumenMovil, setMostrarResumenMovil] = useState<boolean>(false);
   const inputCiudadId = useId();
 
+  // Estados para rastrear interacción explícita del usuario
+  const [respondioPrimerEmpleo, setRespondioPrimerEmpleo] = useState<boolean>(false);
+  const [movioExperiencia, setMovioExperiencia] = useState<boolean>(false);
+  const [movioSalario, setMovioSalario] = useState<boolean>(false);
+
   const [respuestas, setRespuestas] = useState<RespuestasEntrevista>({
     nombre: "",
     email: "",
     telefono: "",
-    ubicacion: "Medellín",
-    modalidad: "remoto",
+    ubicacion: "",
+    modalidad: "",
     esPrimerEmpleo: false,
-    experienciaAnios: 1,
+    experienciaAnios: 0,
     cargoReciente: "",
     estudiosPrimerEmpleo: "",
     proyectosPrimerEmpleo: "",
     voluntariadoPrimerEmpleo: "",
-    educacion: "Pregrado / Profesional",
-    disponibilidad: "Inmediata",
-    habilidades: ["Python", "SQL"],
-    aspiracionSalarial: 3500000,
+    educacion: "",
+    disponibilidad: "",
+    habilidades: [],
+    aspiracionSalarial: 0,
   });
 
   /* Cargar el email de la sesión activa al montar */
@@ -131,23 +136,21 @@ export default function EntrevistaLexi({
     });
   }
 
-  /* Cálculo del porcentaje de completitud con campos reales */
+  /* Cálculo del porcentaje de completitud con campos reales (solo cuenta interacción real) */
   const camposEvaluados = [
     Boolean(respuestas.nombre.trim()),
     Boolean(respuestas.telefono.trim()),
     Boolean(respuestas.ubicacion.trim()),
     Boolean(respuestas.modalidad.trim()),
-    respuestas.esPrimerEmpleo
-      ? Boolean(
-          respuestas.estudiosPrimerEmpleo.trim() ||
-            respuestas.proyectosPrimerEmpleo.trim()
-        )
-      : respuestas.experienciaAnios >= 0 &&
-        Boolean(respuestas.cargoReciente.trim()),
+    respondioPrimerEmpleo
+      ? respuestas.esPrimerEmpleo
+        ? true
+        : movioExperiencia || Boolean(respuestas.cargoReciente.trim())
+      : false,
     Boolean(respuestas.educacion.trim()),
     Boolean(respuestas.disponibilidad.trim()),
     respuestas.habilidades.length > 0,
-    respuestas.aspiracionSalarial > 0,
+    movioSalario && respuestas.aspiracionSalarial > 0,
   ];
 
   const completados = camposEvaluados.filter(Boolean).length;
@@ -251,7 +254,7 @@ export default function EntrevistaLexi({
                 {paso === 4 &&
                   "Cuéntame cuál es tu nivel educativo actual y cuándo estarías disponible para comenzar."}
                 {paso === 5 &&
-                  "Selecciona las habilidades que dominas o estás practicando. Puedes marcar varias."}
+                  "Selecciona las habilidades que dominas o estás desarrollando. Puedes marcar varias."}
                 {paso === 6 &&
                   "¿Cuál es tu aspiración salarial mensual en pesos colombianos (COP)? Las vacantes en la plataforma van desde $1.500.000 hasta $8.500.000 COP."}
                 {paso === 7 &&
@@ -428,12 +431,13 @@ export default function EntrevistaLexi({
                     <button
                       type="button"
                       onClick={() => {
+                        setRespondioPrimerEmpleo(true);
                         actualizarCampo("esPrimerEmpleo", true);
                         actualizarCampo("experienciaAnios", 0);
                       }}
                       className={[
                         "flex flex-col items-center gap-1 rounded-2xl border p-4 text-center transition-all",
-                        respuestas.esPrimerEmpleo
+                        respondioPrimerEmpleo && respuestas.esPrimerEmpleo
                           ? "border-accent bg-accent/15 ring-2 ring-accent/30"
                           : "border-surface-border bg-surface-elevated hover:border-accent",
                       ].join(" ")}
@@ -450,6 +454,7 @@ export default function EntrevistaLexi({
                     <button
                       type="button"
                       onClick={() => {
+                        setRespondioPrimerEmpleo(true);
                         actualizarCampo("esPrimerEmpleo", false);
                         if (respuestas.experienciaAnios === 0) {
                           actualizarCampo("experienciaAnios", 1);
@@ -457,7 +462,7 @@ export default function EntrevistaLexi({
                       }}
                       className={[
                         "flex flex-col items-center gap-1 rounded-2xl border p-4 text-center transition-all",
-                        !respuestas.esPrimerEmpleo
+                        respondioPrimerEmpleo && !respuestas.esPrimerEmpleo
                           ? "border-accent bg-accent/15 ring-2 ring-accent/30"
                           : "border-surface-border bg-surface-elevated hover:border-accent",
                       ].join(" ")}
@@ -473,108 +478,120 @@ export default function EntrevistaLexi({
                   </div>
                 </div>
 
-                {/* Rama Primer Empleo */}
-                {respuestas.esPrimerEmpleo ? (
-                  <div className="space-y-4 rounded-2xl border border-surface-border bg-surface-elevated/40 p-4">
-                    <div className="flex items-center gap-2 text-xs font-semibold text-accent-light">
-                      <span>ℹ️</span>
-                      <span>Configuración de primer empleo (0 años de experiencia)</span>
-                    </div>
+                {/* Subformulario según la respuesta de trayectoria */}
+                {respondioPrimerEmpleo ? (
+                  respuestas.esPrimerEmpleo ? (
+                    <div className="space-y-4 rounded-2xl border border-surface-border bg-surface-elevated/40 p-4">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-accent-light">
+                        <span>ℹ️</span>
+                        <span>Configuración de primer empleo (0 años de experiencia)</span>
+                      </div>
 
-                    <div>
-                      <label htmlFor="pe-estudios" className="label">
-                        ¿Qué estás estudiando o acabas de estudiar?
-                      </label>
-                      <input
-                        id="pe-estudios"
-                        type="text"
-                        className="input"
-                        placeholder="Ej. Estudiante de 8vo semestre de Ingeniería de Sistemas"
-                        value={respuestas.estudiosPrimerEmpleo}
-                        onChange={(e) =>
-                          actualizarCampo("estudiosPrimerEmpleo", e.target.value)
-                        }
-                      />
-                    </div>
+                      <div>
+                        <label htmlFor="pe-estudios" className="label">
+                          ¿Qué estás estudiando o acabas de estudiar?
+                        </label>
+                        <input
+                          id="pe-estudios"
+                          type="text"
+                          className="input"
+                          placeholder="Ej. Estudiante de 8vo semestre de Ingeniería de Sistemas"
+                          value={respuestas.estudiosPrimerEmpleo}
+                          onChange={(e) =>
+                            actualizarCampo("estudiosPrimerEmpleo", e.target.value)
+                          }
+                        />
+                      </div>
 
-                    <div>
-                      <label htmlFor="pe-proyectos" className="label">
-                        Proyectos destacados (académicos o personales)
-                      </label>
-                      <textarea
-                        id="pe-proyectos"
-                        className="textarea min-h-[90px]"
-                        placeholder="Ej. Desarrollé una aplicación de gestión con Python y SQL para el curso de bases de datos."
-                        value={respuestas.proyectosPrimerEmpleo}
-                        onChange={(e) =>
-                          actualizarCampo("proyectosPrimerEmpleo", e.target.value)
-                        }
-                      />
-                    </div>
+                      <div>
+                        <label htmlFor="pe-proyectos" className="label">
+                          Proyectos destacados (académicos o personales)
+                        </label>
+                        <textarea
+                          id="pe-proyectos"
+                          className="textarea min-h-[90px]"
+                          placeholder="Ej. Desarrollé una aplicación de gestión con Python y SQL para el curso de bases de datos."
+                          value={respuestas.proyectosPrimerEmpleo}
+                          onChange={(e) =>
+                            actualizarCampo("proyectosPrimerEmpleo", e.target.value)
+                          }
+                        />
+                      </div>
 
-                    <div>
-                      <label htmlFor="pe-voluntariado" className="label">
-                        Voluntariado, semilleros o actividades extracurriculares
-                      </label>
-                      <textarea
-                        id="pe-voluntariado"
-                        className="textarea min-h-[80px]"
-                        placeholder="Ej. Monitor de algoritmos o voluntario en eventos de tecnología comunitaria."
-                        value={respuestas.voluntariadoPrimerEmpleo}
-                        onChange={(e) =>
-                          actualizarCampo(
-                            "voluntariadoPrimerEmpleo",
-                            e.target.value
-                          )
-                        }
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  /* Rama Con Experiencia */
-                  <div className="space-y-4 rounded-2xl border border-surface-border bg-surface-elevated/40 p-4">
-                    <div>
-                      <label htmlFor="exp-anios" className="label">
-                        Años de experiencia laboral aproximada:{" "}
-                        <span className="font-bold text-accent-light">
-                          {respuestas.experienciaAnios} {respuestas.experienciaAnios === 1 ? "año" : "años"}
-                        </span>
-                      </label>
-                      <input
-                        id="exp-anios"
-                        type="range"
-                        min="1"
-                        max="15"
-                        step="1"
-                        className="w-full accent-accent cursor-pointer"
-                        value={respuestas.experienciaAnios}
-                        onChange={(e) =>
-                          actualizarCampo("experienciaAnios", Number(e.target.value))
-                        }
-                      />
-                      <div className="flex justify-between text-[11px] text-text-muted mt-1">
-                        <span>1 año</span>
-                        <span>5 años</span>
-                        <span>10 años</span>
-                        <span>15+ años</span>
+                      <div>
+                        <label htmlFor="pe-voluntariado" className="label">
+                          Voluntariado, semilleros o actividades extracurriculares
+                        </label>
+                        <textarea
+                          id="pe-voluntariado"
+                          className="textarea min-h-[80px]"
+                          placeholder="Ej. Monitor de algoritmos o voluntario en eventos de tecnología comunitaria."
+                          value={respuestas.voluntariadoPrimerEmpleo}
+                          onChange={(e) =>
+                            actualizarCampo(
+                              "voluntariadoPrimerEmpleo",
+                              e.target.value
+                            )
+                          }
+                        />
                       </div>
                     </div>
+                  ) : (
+                    /* Rama Con Experiencia */
+                    <div className="space-y-4 rounded-2xl border border-surface-border bg-surface-elevated/40 p-4">
+                      <div>
+                        <label htmlFor="exp-anios" className="label">
+                          Años de experiencia laboral aproximada:{" "}
+                          <span className="font-bold text-accent-light">
+                            {movioExperiencia || respuestas.experienciaAnios > 0
+                              ? `${respuestas.experienciaAnios || 1} ${
+                                  (respuestas.experienciaAnios || 1) === 1 ? "año" : "años"
+                                }`
+                              : "1 año (desliza para ajustar)"}
+                          </span>
+                        </label>
+                        <input
+                          id="exp-anios"
+                          type="range"
+                          min="1"
+                          max="15"
+                          step="1"
+                          className="w-full accent-accent cursor-pointer"
+                          value={respuestas.experienciaAnios || 1}
+                          onChange={(e) => {
+                            setMovioExperiencia(true);
+                            actualizarCampo("experienciaAnios", Number(e.target.value));
+                          }}
+                        />
+                        <div className="flex justify-between text-[11px] text-text-muted mt-1">
+                          <span>1 año</span>
+                          <span>5 años</span>
+                          <span>10 años</span>
+                          <span>15+ años</span>
+                        </div>
+                      </div>
 
-                    <div>
-                      <label htmlFor="exp-cargo" className="label">
-                        Último cargo o rol desempeñado
-                      </label>
-                      <input
-                        id="exp-cargo"
-                        type="text"
-                        className="input"
-                        placeholder="Ej. Desarrollador Junior / Analista de Soporte"
-                        value={respuestas.cargoReciente}
-                        onChange={(e) =>
-                          actualizarCampo("cargoReciente", e.target.value)
-                        }
-                      />
+                      <div>
+                        <label htmlFor="exp-cargo" className="label">
+                          Último cargo o rol desempeñado
+                        </label>
+                        <input
+                          id="exp-cargo"
+                          type="text"
+                          className="input"
+                          placeholder="Ej. Desarrollador Junior / Analista de Soporte"
+                          value={respuestas.cargoReciente}
+                          onChange={(e) => {
+                            setMovioExperiencia(true);
+                            actualizarCampo("cargoReciente", e.target.value);
+                          }}
+                        />
+                      </div>
                     </div>
+                  )
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-surface-border p-4 text-center text-xs text-text-muted">
+                    Selecciona una de las dos opciones arriba para continuar.
                   </div>
                 )}
               </div>
@@ -687,10 +704,14 @@ export default function EntrevistaLexi({
 
                   <div className="flex items-center gap-3">
                     <span className="text-2xl font-bold text-accent-light">
-                      {formatearPesos(respuestas.aspiracionSalarial)}
+                      {movioSalario && respuestas.aspiracionSalarial > 0
+                        ? formatearPesos(respuestas.aspiracionSalarial)
+                        : "$3.500.000 COP"}
                     </span>
                     <span className="text-xs text-text-muted font-medium">
-                      / mes
+                      {movioSalario && respuestas.aspiracionSalarial > 0
+                        ? "/ mes"
+                        : "(mueve el deslizador o elige un monto para registrar)"}
                     </span>
                   </div>
 
@@ -702,13 +723,14 @@ export default function EntrevistaLexi({
                       max="10000000"
                       step="100000"
                       className="w-full accent-accent cursor-pointer"
-                      value={respuestas.aspiracionSalarial}
-                      onChange={(e) =>
+                      value={respuestas.aspiracionSalarial || 3500000}
+                      onChange={(e) => {
+                        setMovioSalario(true);
                         actualizarCampo(
                           "aspiracionSalarial",
                           Number(e.target.value)
-                        )
-                      }
+                        );
+                      }}
                     />
                     <div className="flex justify-between text-[11px] text-text-muted mt-1">
                       <span>$1.500.000 COP</span>
@@ -725,12 +747,16 @@ export default function EntrevistaLexi({
                   </span>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {SALARIOS_PRESET.map((monto) => {
-                      const activo = respuestas.aspiracionSalarial === monto;
+                      const activo =
+                        movioSalario && respuestas.aspiracionSalarial === monto;
                       return (
                         <button
                           key={monto}
                           type="button"
-                          onClick={() => actualizarCampo("aspiracionSalarial", monto)}
+                          onClick={() => {
+                            setMovioSalario(true);
+                            actualizarCampo("aspiracionSalarial", monto);
+                          }}
                           className={[
                             "rounded-xl px-3 py-2 text-xs font-semibold transition-all text-center",
                             activo
@@ -791,10 +817,10 @@ export default function EntrevistaLexi({
                       </button>
                     </div>
                     <p className="font-semibold text-text-primary capitalize">
-                      {respuestas.ubicacion}
+                      {respuestas.ubicacion || "Por definir"}
                     </p>
                     <p className="text-text-muted capitalize">
-                      Modalidad: {respuestas.modalidad}
+                      Modalidad: {respuestas.modalidad || "Por definir"}
                     </p>
                   </div>
 
@@ -812,7 +838,11 @@ export default function EntrevistaLexi({
                         Editar
                       </button>
                     </div>
-                    {respuestas.esPrimerEmpleo ? (
+                    {!respondioPrimerEmpleo ? (
+                      <p className="font-semibold text-text-primary">
+                        Por definir
+                      </p>
+                    ) : respuestas.esPrimerEmpleo ? (
                       <div>
                         <p className="font-semibold text-text-primary">
                           En búsqueda de primer empleo (0 años)
@@ -850,13 +880,16 @@ export default function EntrevistaLexi({
                       </button>
                     </div>
                     <p className="font-semibold text-text-primary">
-                      {respuestas.educacion}
+                      {respuestas.educacion || "Por definir"}
                     </p>
                     <p className="text-text-muted">
-                      Disponibilidad: {respuestas.disponibilidad}
+                      Disponibilidad: {respuestas.disponibilidad || "Por definir"}
                     </p>
                     <p className="text-text-muted font-medium">
-                      Aspiración: {formatearPesos(respuestas.aspiracionSalarial)}
+                      Aspiración:{" "}
+                      {movioSalario && respuestas.aspiracionSalarial > 0
+                        ? formatearPesos(respuestas.aspiracionSalarial)
+                        : "Por definir"}
                     </p>
                   </div>
                 </div>
@@ -876,14 +909,20 @@ export default function EntrevistaLexi({
                     </button>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
-                    {respuestas.habilidades.map((h) => (
-                      <span
-                        key={h}
-                        className="rounded-full bg-accent/20 border border-accent/30 px-2.5 py-0.5 text-[11px] text-accent-light font-medium"
-                      >
-                        {h}
+                    {respuestas.habilidades.length > 0 ? (
+                      respuestas.habilidades.map((h) => (
+                        <span
+                          key={h}
+                          className="rounded-full bg-accent/20 border border-accent/30 px-2.5 py-0.5 text-[11px] text-accent-light font-medium"
+                        >
+                          {h}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-text-muted italic">
+                        Sin habilidades seleccionadas
                       </span>
-                    ))}
+                    )}
                   </div>
                 </div>
               </div>
@@ -958,7 +997,11 @@ export default function EntrevistaLexi({
                 Ubicación y Modalidad
               </span>
               <span className="font-medium text-text-primary capitalize">
-                {respuestas.ubicacion} · {respuestas.modalidad}
+                {respuestas.ubicacion || respuestas.modalidad
+                  ? `${respuestas.ubicacion || "(Sin ciudad)"} · ${
+                      respuestas.modalidad || "(Sin modalidad)"
+                    }`
+                  : "(Por definir)"}
               </span>
             </div>
 
@@ -967,7 +1010,9 @@ export default function EntrevistaLexi({
                 Experiencia
               </span>
               <span className="font-medium text-text-primary">
-                {respuestas.esPrimerEmpleo
+                {!respondioPrimerEmpleo
+                  ? "(Por definir)"
+                  : respuestas.esPrimerEmpleo
                   ? "Primer empleo (0 años)"
                   : `${respuestas.experienciaAnios} ${
                       respuestas.experienciaAnios === 1 ? "año" : "años"
@@ -984,7 +1029,7 @@ export default function EntrevistaLexi({
                 Educación
               </span>
               <span className="font-medium text-text-primary">
-                {respuestas.educacion}
+                {respuestas.educacion || "(Por definir)"}
               </span>
             </div>
 
@@ -993,7 +1038,9 @@ export default function EntrevistaLexi({
                 Aspiración Salarial
               </span>
               <span className="font-medium text-accent-light">
-                {formatearPesos(respuestas.aspiracionSalarial)}
+                {movioSalario && respuestas.aspiracionSalarial > 0
+                  ? formatearPesos(respuestas.aspiracionSalarial)
+                  : "(Por definir)"}
               </span>
             </div>
 
@@ -1002,14 +1049,20 @@ export default function EntrevistaLexi({
                 Habilidades ({respuestas.habilidades.length})
               </span>
               <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto pr-1">
-                {respuestas.habilidades.map((h) => (
-                  <span
-                    key={h}
-                    className="rounded bg-surface-elevated px-2 py-0.5 text-[10px] text-text-secondary border border-surface-border"
-                  >
-                    {h}
+                {respuestas.habilidades.length > 0 ? (
+                  respuestas.habilidades.map((h) => (
+                    <span
+                      key={h}
+                      className="rounded bg-surface-elevated px-2 py-0.5 text-[10px] text-text-secondary border border-surface-border"
+                    >
+                      {h}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-text-muted text-[10px]">
+                    (Ninguna seleccionada)
                   </span>
-                ))}
+                )}
               </div>
             </div>
           </div>

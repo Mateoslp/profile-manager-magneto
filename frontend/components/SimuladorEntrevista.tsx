@@ -174,9 +174,9 @@ export default function SimuladorEntrevista({
             <div className="flex items-center gap-2">
               <span className="text-xl" aria-hidden="true">🎤</span>
               <h3 id="simulador-titulo" className="text-lg font-bold text-text-primary">
-                Simulador de entrevista técnica
+                Práctica de entrevista técnica
               </h3>
-              <span className="chip-violet text-[10px]">Práctica simulada</span>
+              <span className="chip-violet text-[10px]">Feedback con IA</span>
             </div>
             <p className="text-xs text-text-secondary mt-1">
               Vacante: <strong className="text-text-primary">{vacanteTitulo}</strong>
@@ -187,18 +187,18 @@ export default function SimuladorEntrevista({
             ref={cerrarBtnRef}
             type="button"
             onClick={onClose}
-            aria-label="Cerrar simulador"
+            aria-label="Cerrar práctica de entrevista"
             className="btn-ghost p-2 text-text-muted hover:text-text-primary"
           >
             ✕
           </button>
         </div>
 
-        {/* Banner fijo de práctica simulada */}
+        {/* Banner informativo */}
         <div className="px-5 py-2.5 bg-surface-elevated/60 border-b border-surface-border/60 text-[11px] text-text-muted flex items-center gap-2">
-          <span aria-hidden="true">ℹ️</span>
+          <span aria-hidden="true">💡</span>
           <span>
-            Este es un entorno de práctica formativa. Tus respuestas no se guardan en la base de datos ni prometen contratación.
+            Práctica de entrevista técnica con evaluación y feedback de IA en tiempo real.
           </span>
         </div>
 
@@ -349,7 +349,7 @@ export default function SimuladorEntrevista({
                   htmlFor={`textarea-pregunta-${pasoActual + 1}`}
                   className="text-xs font-medium text-text-secondary block"
                 >
-                  Tu respuesta simulada:
+                  Tu respuesta:
                 </label>
                 <textarea
                   id={`textarea-pregunta-${pasoActual + 1}`}
