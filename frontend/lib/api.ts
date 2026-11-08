@@ -17,9 +17,35 @@ export function setToken(token: string): void {
   sessionStorage.setItem("likai_token", token);
 }
 
+export function getRol(): "candidato" | "empresa" | "admin" | null {
+  if (typeof window === "undefined") return null;
+  const r = sessionStorage.getItem("likai_rol");
+  if (r === "empresa" || r === "admin" || r === "candidato") return r;
+  const token = getToken();
+  if (token) {
+    try {
+      const parts = token.split(".");
+      if (parts.length === 3) {
+        const payload = JSON.parse(atob(parts[1]));
+        if (payload.rol === "empresa" || payload.rol === "admin" || payload.rol === "candidato") {
+          return payload.rol;
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+  return null;
+}
+
+export function setRol(rol: string): void {
+  sessionStorage.setItem("likai_rol", rol);
+}
+
 export function clearToken(): void {
   sessionStorage.removeItem("likai_token");
   sessionStorage.removeItem("likai_user");
+  sessionStorage.removeItem("likai_rol");
 }
 
 function authHeaders(): HeadersInit {
@@ -106,10 +132,11 @@ export interface Postulacion {
   id: number;
   perfil_id: number;
   vacante_id: number;
-  estado: "postulado" | "en_revision" | "entrevista" | "descartado";
+  estado: "postulado" | "en_revision" | "entrevista" | "descartado" | "retirado";
   siguiente_paso: string | null;
   fecha_postulacion: string;
   afinidad: number | null;
+  nota_empresa?: string | null;
   candidato: string;
   vacante: string;
   empresa: string | null;
@@ -135,7 +162,7 @@ export async function apiLogin(email: string, password: string) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),
   });
-  return handleResponse<{ access_token: string; token_type: string }>(res);
+  return handleResponse<{ access_token: string; token_type: string; rol?: string }>(res);
 }
 
 export async function apiDemoCvs(): Promise<CvDemo[]> {
@@ -335,4 +362,74 @@ export async function apiPostFeedbackEntrevista(
     }
   );
   return handleResponse<FeedbackEntrevistaResponse>(res);
+}
+
+// ─── Paquete E: Rol empresa y notificaciones ─────────────────────────────────
+
+export interface PostulacionEmpresa {
+  id: number;
+  estado: "postulado" | "en_revision" | "entrevista" | "descartado" | "retirado";
+  afinidad: number | null;
+  nota_empresa: string | null;
+  fecha_postulacion: string | null;
+  vacante: {
+    id: number;
+    titulo: string;
+  };
+  candidato: {
+    nombre: string;
+    ubicacion: string | null;
+    experiencia_anios: number | null;
+    educacion: string | null;
+    habilidades: string | null;
+  };
+}
+
+export interface Notificacion {
+  id: number;
+  postulacion_id: number | null;
+  mensaje: string;
+  leida: boolean;
+  creado_en: string | null;
+}
+
+export interface NotificacionesResponse {
+  total_no_leidas: number;
+  notificaciones: Notificacion[];
+}
+
+export async function apiGetPostulacionesEmpresa(): Promise<PostulacionEmpresa[]> {
+  const res = await fetch(`${API_URL}/empresa/postulaciones`, {
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+  });
+  return handleResponse<PostulacionEmpresa[]>(res);
+}
+
+export async function apiPatchPostulacionEmpresa(
+  postulacionId: number,
+  datos: { estado?: "en_revision" | "entrevista" | "descartado"; nota?: string }
+): Promise<{ id: number; estado: string; nota_empresa: string | null }> {
+  const res = await fetch(`${API_URL}/empresa/postulaciones/${postulacionId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(datos),
+  });
+  return handleResponse<{ id: number; estado: string; nota_empresa: string | null }>(res);
+}
+
+export async function apiGetNotificaciones(): Promise<NotificacionesResponse> {
+  const res = await fetch(`${API_URL}/notificaciones`, {
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+  });
+  return handleResponse<NotificacionesResponse>(res);
+}
+
+export async function apiMarcarNotificacionLeida(
+  notificacionId: number
+): Promise<{ id: number; leida: boolean }> {
+  const res = await fetch(`${API_URL}/notificaciones/${notificacionId}/leida`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+  });
+  return handleResponse<{ id: number; leida: boolean }>(res);
 }

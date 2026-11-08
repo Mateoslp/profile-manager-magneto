@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS postulaciones (
     perfil_id INTEGER REFERENCES perfiles(id),
     vacante_id INTEGER REFERENCES vacantes(id),
     estado VARCHAR(30) DEFAULT 'postulado' CHECK (
-        estado IN ('postulado', 'en_revision', 'entrevista', 'descartado')
+        estado IN ('postulado', 'en_revision', 'entrevista', 'descartado', 'retirado')
     ),
     fecha_postulacion TIMESTAMP DEFAULT NOW()
 );
@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     id SERIAL PRIMARY KEY,
     email VARCHAR(100) UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
-    rol VARCHAR(20) NOT NULL DEFAULT 'candidato' CHECK (rol IN ('candidato', 'admin')),
+    rol VARCHAR(20) NOT NULL DEFAULT 'candidato' CHECK (rol IN ('candidato', 'admin', 'empresa')),
     creado_en TIMESTAMP DEFAULT NOW()
 );
 
@@ -79,3 +79,19 @@ CREATE TABLE IF NOT EXISTS bitacora_ia (
 
 CREATE INDEX IF NOT EXISTS idx_bitacora_perfil ON bitacora_ia(perfil_id);
 ALTER TABLE postulaciones ADD COLUMN IF NOT EXISTS afinidad INTEGER;
+
+-- Paquete E: Rol empresa y notificaciones
+ALTER TABLE vacantes ADD COLUMN IF NOT EXISTS usuario_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL;
+ALTER TABLE postulaciones ADD COLUMN IF NOT EXISTS nota_empresa TEXT;
+
+CREATE TABLE IF NOT EXISTS notificaciones (
+    id SERIAL PRIMARY KEY,
+    usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    postulacion_id INTEGER REFERENCES postulaciones(id) ON DELETE CASCADE,
+    mensaje TEXT NOT NULL,
+    leida BOOLEAN NOT NULL DEFAULT FALSE,
+    creado_en TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_notificaciones_usuario ON notificaciones(usuario_id);
+CREATE INDEX IF NOT EXISTS idx_vacantes_usuario ON vacantes(usuario_id);

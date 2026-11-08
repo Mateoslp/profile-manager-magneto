@@ -619,7 +619,8 @@ def test_inari_incluye_empresa_en_recomendaciones():
 # ---------- A3: PATCH /postulaciones/{id}/estado ----------
 
 def _patch_cliente_y_mock(monkeypatch, postulacion_usuario_id,
-                           rol_peticionario, usuario_id_peticionario):
+                           rol_peticionario, usuario_id_peticionario,
+                           estado_inicial="postulado"):
     """Configura TestClient con conexion() parcheada para no tocar la BD."""
     import main as main_mod
     from contextlib import contextmanager
@@ -633,7 +634,7 @@ def _patch_cliente_y_mock(monkeypatch, postulacion_usuario_id,
             def execute(self, sql, params=None):
                 sql_lower = sql.lower().strip()
                 if sql_lower.startswith("select"):
-                    self._rows = [{"id": 1, "estado": "postulado",
+                    self._rows = [{"id": 1, "estado": estado_inicial,
                                    "usuario_id": postulacion_usuario_id}]
                 elif sql_lower.startswith("update"):
                     estado_nuevo = params[0] if params else "postulado"
@@ -658,8 +659,8 @@ def _patch_cliente_y_mock(monkeypatch, postulacion_usuario_id,
     return client, token
 
 
-def test_patch_estado_candidato_dueno_puede_mover(monkeypatch):
-    """El candidato dueno de la postulacion puede cambiar su estado."""
+def test_patch_estado_candidato_dueno_no_puede_mover_a_en_revision(monkeypatch):
+    """El candidato dueño NO puede mover su postulación a 'en_revision' (da 403, solo empresa/admin pueden)."""
     client, token = _patch_cliente_y_mock(
         monkeypatch,
         postulacion_usuario_id=42,
@@ -671,8 +672,8 @@ def test_patch_estado_candidato_dueno_puede_mover(monkeypatch):
         json={"estado": "en_revision"},
         headers={"Authorization": f"Bearer {token}"},
     )
-    assert res.status_code == 200
-    assert res.json()["estado"] == "en_revision"
+    assert res.status_code == 403
+    assert "solo pueden retirar" in res.json()["detail"].lower()
 
 
 def test_patch_estado_candidato_ajeno_da_403(monkeypatch):
@@ -706,6 +707,75 @@ def test_patch_estado_admin_puede_mover_cualquiera(monkeypatch):
     )
     assert res.status_code == 200
     assert res.json()["estado"] == "descartado"
+
+
+def test_patch_estado_dueno_puede_retirar(monkeypatch):
+    """El dueño de la postulación puede retirarla (pasa a 'retirado')."""
+    client, token = _patch_cliente_y_mock(
+        monkeypatch,
+        postulacion_usuario_id=42,
+        rol_peticionario="candidato",
+        usuario_id_peticionario=42,
+        estado_inicial="postulado",
+    )
+    res = client.patch(
+        "/postulaciones/1/estado",
+        json={"estado": "retirado"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert res.status_code == 200
+    assert res.json()["estado"] == "retirado"
+
+
+def test_patch_estado_ajeno_no_puede_retirar(monkeypatch):
+    """Un candidato no puede retirar la postulación de otro (403)."""
+    client, token = _patch_cliente_y_mock(
+        monkeypatch,
+        postulacion_usuario_id=99,
+        rol_peticionario="candidato",
+        usuario_id_peticionario=42,
+    )
+    res = client.patch(
+        "/postulaciones/1/estado",
+        json={"estado": "retirado"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert res.status_code == 403
+
+
+def test_patch_estado_retirada_no_puede_cambiar_da_409(monkeypatch):
+    """Una postulación retirada no puede volver a cambiar de estado (409 Conflict)."""
+    client, token = _patch_cliente_y_mock(
+        monkeypatch,
+        postulacion_usuario_id=42,
+        rol_peticionario="candidato",
+        usuario_id_peticionario=42,
+        estado_inicial="retirado",
+    )
+    res = client.patch(
+        "/postulaciones/1/estado",
+        json={"estado": "en_revision"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert res.status_code == 409
+    assert "retirada" in res.json()["detail"].lower()
+
+
+def test_patch_estado_admin_tampoco_puede_cambiar_retirada(monkeypatch):
+    """Tampoco un admin puede reactivar una postulación ya retirada (409 Conflict)."""
+    client, token = _patch_cliente_y_mock(
+        monkeypatch,
+        postulacion_usuario_id=42,
+        rol_peticionario="admin",
+        usuario_id_peticionario=1,
+        estado_inicial="retirado",
+    )
+    res = client.patch(
+        "/postulaciones/1/estado",
+        json={"estado": "postulado"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert res.status_code == 409
 
 
 def test_patch_estado_invalido_da_422():
@@ -1916,6 +1986,429 @@ def test_postulacion_manual_crea_con_afinidad_baja(monkeypatch):
     assert datos["afinidad"] == 0
     assert "manual" in datos["siguiente_paso"].lower()
     assert len(insertadas) == 1
+
+
+# ---------- Paquete E: Rol empresa y notificaciones ----------
+
+def _mock_db_empresa_y_notificaciones(
+    monkeypatch,
+    postulaciones_db=None,
+    notificaciones_db=None,
+):
+    """Mock de base de datos para endpoints de empresa y notificaciones."""
+    import main as main_mod
+    from contextlib import contextmanager
+
+    if postulaciones_db is None:
+        postulaciones_db = []
+    if notificaciones_db is None:
+        notificaciones_db = []
+
+    insertadas_notificaciones = []
+
+    @contextmanager
+    def fake_conexion():
+        class FakeCursor:
+            def __init__(self):
+                self._rows = []
+
+            def execute(self, sql, params=None):
+                sql_lower = sql.lower().strip()
+
+                # GET /empresa/postulaciones
+                if "from postulaciones p" in sql_lower and "where v.usuario_id = %s" in sql_lower:
+                    empresa_id = params[0]
+                    self._rows = [
+                        p for p in postulaciones_db if p.get("vacante_usuario_id") == empresa_id
+                    ]
+
+                # SELECT para PATCH /empresa/postulaciones/{id}
+                elif "from postulaciones p" in sql_lower and "where p.id = %s" in sql_lower:
+                    post_id = params[0]
+                    self._rows = [p for p in postulaciones_db if p["id"] == post_id]
+
+                # UPDATE postulaciones
+                elif sql_lower.startswith("update postulaciones"):
+                    nuevo_estado, nueva_nota, post_id = params[0], params[1], params[2]
+                    for p in postulaciones_db:
+                        if p["id"] == post_id:
+                            p["estado"] = nuevo_estado
+                            p["nota_empresa"] = nueva_nota
+                            self._rows = [{"id": post_id, "estado": nuevo_estado, "nota_empresa": nueva_nota}]
+                            break
+
+                # INSERT INTO notificaciones
+                elif sql_lower.startswith("insert into notificaciones"):
+                    candidato_uid, post_id, msg = params[0], params[1], params[2]
+                    notif = {
+                        "id": len(notificaciones_db) + 1,
+                        "usuario_id": candidato_uid,
+                        "postulacion_id": post_id,
+                        "mensaje": msg,
+                        "leida": False,
+                        "creado_en": "2026-11-07 10:00:00",
+                    }
+                    notificaciones_db.append(notif)
+                    insertadas_notificaciones.append(notif)
+                    self._rows = [notif]
+
+                # GET /notificaciones: listado
+                elif "from notificaciones" in sql_lower and "order by creado_en desc" in sql_lower:
+                    uid = params[0]
+                    self._rows = [n for n in notificaciones_db if n["usuario_id"] == uid][:30]
+
+                # GET /notificaciones: conteo
+                elif "count(*) as total" in sql_lower and "from notificaciones" in sql_lower:
+                    uid = params[0]
+                    total = sum(1 for n in notificaciones_db if n["usuario_id"] == uid and not n["leida"])
+                    self._rows = [{"total": total}]
+
+                # SELECT para PATCH /notificaciones/{id}/leida
+                elif "select id, usuario_id, leida from notificaciones where id = %s" in sql_lower:
+                    nid = params[0]
+                    self._rows = [n for n in notificaciones_db if n["id"] == nid]
+
+                # UPDATE notificaciones SET leida = TRUE
+                elif sql_lower.startswith("update notificaciones set leida = true"):
+                    nid = params[0]
+                    for n in notificaciones_db:
+                        if n["id"] == nid:
+                            n["leida"] = True
+                            self._rows = [{"id": nid, "leida": True}]
+                            break
+                else:
+                    self._rows = []
+
+            def fetchone(self):
+                return self._rows[0] if self._rows else None
+
+            def fetchall(self):
+                return list(self._rows)
+
+        class FakeConn:
+            def cursor(self): return FakeCursor()
+            def commit(self): pass
+            def rollback(self): pass
+            def close(self): pass
+
+        yield FakeConn()
+
+    monkeypatch.setattr(main_mod, "conexion", fake_conexion)
+    client = TestClient(main_mod.app)
+    return client, insertadas_notificaciones
+
+
+def test_empresa_ve_solo_sus_vacantes(monkeypatch):
+    """La empresa A solo ve las postulaciones de sus propias vacantes y sin datos sensibles de contacto."""
+    post_a = {
+        "id": 1,
+        "estado": "postulado",
+        "afinidad": 85,
+        "nota_empresa": None,
+        "fecha_postulacion": "2026-11-07 10:00:00",
+        "vacante_id": 101,
+        "vacante_titulo": "Backend Python",
+        "vacante_usuario_id": 10,  # Empresa A
+        "candidato_nombre": "Carlos Gómez",
+        "candidato_ubicacion": "Medellín",
+        "candidato_experiencia_anios": 3,
+        "candidato_educacion": "Ingeniería de Sistemas",
+        "candidato_habilidades": "Python, SQL, FastAPI",
+    }
+    post_b = {
+        "id": 2,
+        "estado": "en_revision",
+        "afinidad": 70,
+        "nota_empresa": None,
+        "fecha_postulacion": "2026-11-07 11:00:00",
+        "vacante_id": 202,
+        "vacante_titulo": "Frontend React",
+        "vacante_usuario_id": 20,  # Empresa B
+        "candidato_nombre": "Laura Martínez",
+        "candidato_ubicacion": "Bogotá",
+        "candidato_experiencia_anios": 2,
+        "candidato_educacion": "Diseño",
+        "candidato_habilidades": "React, TypeScript",
+    }
+
+    client, _ = _mock_db_empresa_y_notificaciones(
+        monkeypatch,
+        postulaciones_db=[post_a, post_b],
+    )
+    token_empresa_a = auth.crear_token(10, "empresa")
+
+    res = client.get(
+        "/empresa/postulaciones",
+        headers={"Authorization": f"Bearer {token_empresa_a}"},
+    )
+    assert res.status_code == 200
+    datos = res.json()
+    assert len(datos) == 1
+    assert datos[0]["id"] == 1
+    assert datos[0]["vacante"]["titulo"] == "Backend Python"
+    assert datos[0]["candidato"]["nombre"] == "Carlos Gómez"
+    # Sin email ni teléfono
+    assert "email" not in datos[0]["candidato"]
+    assert "telefono" not in datos[0]["candidato"]
+
+
+def test_empresa_no_puede_modificar_postulacion_ajena(monkeypatch):
+    """Una empresa no puede modificar una postulación perteneciente a la vacante de otra empresa (403)."""
+    post_b = {
+        "id": 2,
+        "estado": "postulado",
+        "nota_empresa": None,
+        "vacante_id": 202,
+        "vacante_empresa_id": 20,  # Empresa B
+        "vacante_titulo": "Frontend React",
+        "candidato_usuario_id": 99,
+    }
+
+    client, _ = _mock_db_empresa_y_notificaciones(
+        monkeypatch,
+        postulaciones_db=[post_b],
+    )
+    token_empresa_a = auth.crear_token(10, "empresa")
+
+    res = client.patch(
+        "/empresa/postulaciones/2",
+        headers={"Authorization": f"Bearer {token_empresa_a}"},
+        json={"estado": "entrevista"},
+    )
+    assert res.status_code == 403
+
+
+def test_candidato_llamando_endpoints_empresa_da_403(monkeypatch):
+    """Un usuario con rol candidato no puede acceder a los endpoints del panel de empresa (403)."""
+    client, _ = _mock_db_empresa_y_notificaciones(monkeypatch)
+    token_candidato = auth.crear_token(42, "candidato")
+
+    res_get = client.get(
+        "/empresa/postulaciones",
+        headers={"Authorization": f"Bearer {token_candidato}"},
+    )
+    assert res_get.status_code == 403
+
+    res_patch = client.patch(
+        "/empresa/postulaciones/1",
+        headers={"Authorization": f"Bearer {token_candidato}"},
+        json={"estado": "entrevista"},
+    )
+    assert res_patch.status_code == 403
+
+
+def test_registro_no_permite_crear_rol_empresa(monkeypatch):
+    """El endpoint /auth/registro nunca asigna rol empresa aunque se incluya en el payload."""
+    import main as main_mod
+    from contextlib import contextmanager
+
+    insertados = []
+
+    @contextmanager
+    def fake_conexion():
+        class FakeCursor:
+            def __init__(self):
+                self._last_sql = ""
+
+            def execute(self, sql, params=None):
+                self._last_sql = sql.lower()
+                if "insert into usuarios" in self._last_sql:
+                    insertados.append(params)
+
+            def fetchone(self):
+                if "select" in self._last_sql:
+                    return None
+                return {"id": 100}
+
+        class FakeConn:
+            def cursor(self): return FakeCursor()
+            def commit(self): pass
+            def rollback(self): pass
+            def close(self): pass
+
+        yield FakeConn()
+
+    monkeypatch.setattr(main_mod, "conexion", fake_conexion)
+    client = TestClient(main_mod.app)
+
+    res = client.post(
+        "/auth/registro",
+        json={"email": "hacker@empresa.com", "password": "passwordSeguro123", "rol": "empresa"},
+    )
+    assert res.status_code == 201
+    assert len(insertados) == 1
+    # Solo insertó email y password_hash (2 parámetros), el default de la BD manda 'candidato'
+    assert len(insertados[0]) == 2
+
+
+def test_cambio_estado_empresa_crea_notificacion_candidato(monkeypatch):
+    """Cuando una empresa cambia el estado o nota, se crea una notificación para el candidato."""
+    post = {
+        "id": 1,
+        "estado": "postulado",
+        "nota_empresa": None,
+        "vacante_id": 10,
+        "vacante_empresa_id": 10,
+        "vacante_titulo": "Ingeniero Cloud",
+        "candidato_usuario_id": 42,
+    }
+
+    client, insertadas_notificaciones = _mock_db_empresa_y_notificaciones(
+        monkeypatch,
+        postulaciones_db=[post],
+    )
+    token_empresa = auth.crear_token(10, "empresa")
+
+    res = client.patch(
+        "/empresa/postulaciones/1",
+        headers={"Authorization": f"Bearer {token_empresa}"},
+        json={"estado": "entrevista", "nota": "Excelente perfil, agendamos entrevista"},
+    )
+    assert res.status_code == 200
+    assert res.json()["estado"] == "entrevista"
+    assert res.json()["nota_empresa"] == "Excelente perfil, agendamos entrevista"
+    assert len(insertadas_notificaciones) == 1
+    assert insertadas_notificaciones[0]["usuario_id"] == 42
+    assert "Ingeniero Cloud" in insertadas_notificaciones[0]["mensaje"]
+    assert "entrevista" in insertadas_notificaciones[0]["mensaje"]
+
+
+def test_candidato_solo_puede_retirar_otros_estados_dan_403(monkeypatch):
+    """El candidato solo puede pasar su postulación a 'retirado'; cualquier otro estado da 403."""
+    client, token = _patch_cliente_y_mock(
+        monkeypatch,
+        postulacion_usuario_id=42,
+        rol_peticionario="candidato",
+        usuario_id_peticionario=42,
+    )
+    # Intento a descartado -> 403
+    res_desc = client.patch(
+        "/postulaciones/1/estado",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"estado": "descartado"},
+    )
+    assert res_desc.status_code == 403
+
+    # Intento a retirado -> 200
+    res_ret = client.patch(
+        "/postulaciones/1/estado",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"estado": "retirado"},
+    )
+    assert res_ret.status_code == 200
+    assert res_ret.json()["estado"] == "retirado"
+
+
+def test_empresa_postulacion_retirada_no_se_modifica_da_409(monkeypatch):
+    """Una empresa no puede modificar una postulación retirada por el candidato (409 Conflict)."""
+    post = {
+        "id": 1,
+        "estado": "retirado",
+        "nota_empresa": None,
+        "vacante_id": 10,
+        "vacante_empresa_id": 10,
+        "vacante_titulo": "Ingeniero Cloud",
+        "candidato_usuario_id": 42,
+    }
+
+    client, _ = _mock_db_empresa_y_notificaciones(
+        monkeypatch,
+        postulaciones_db=[post],
+    )
+    token_empresa = auth.crear_token(10, "empresa")
+
+    res = client.patch(
+        "/empresa/postulaciones/1",
+        headers={"Authorization": f"Bearer {token_empresa}"},
+        json={"estado": "en_revision"},
+    )
+    assert res.status_code == 409
+    assert "retirada" in res.json()["detail"].lower()
+
+
+def test_notificacion_ajena_da_404(monkeypatch):
+    """Intentar marcar como leída una notificación ajena o inexistente devuelve 404."""
+    notif = {
+        "id": 5,
+        "usuario_id": 99,  # pertenece a otro usuario
+        "postulacion_id": 1,
+        "mensaje": "Aviso ajeno",
+        "leida": False,
+    }
+    client, _ = _mock_db_empresa_y_notificaciones(
+        monkeypatch,
+        notificaciones_db=[notif],
+    )
+    token_usuario = auth.crear_token(42, "candidato")
+
+    res = client.patch(
+        "/notificaciones/5/leida",
+        headers={"Authorization": f"Bearer {token_usuario}"},
+    )
+    assert res.status_code == 404
+
+
+def test_marcar_notificacion_leida_propia_funciona(monkeypatch):
+    """Marcar como leída una notificación propia actualiza leida a True."""
+    notif = {
+        "id": 8,
+        "usuario_id": 42,
+        "postulacion_id": 1,
+        "mensaje": "Aviso propio",
+        "leida": False,
+    }
+    client, _ = _mock_db_empresa_y_notificaciones(
+        monkeypatch,
+        notificaciones_db=[notif],
+    )
+    token_usuario = auth.crear_token(42, "candidato")
+
+    res = client.patch(
+        "/notificaciones/8/leida",
+        headers={"Authorization": f"Bearer {token_usuario}"},
+    )
+    assert res.status_code == 200
+    assert res.json()["leida"] is True
+
+
+def test_empresa_y_notificaciones_sin_token_da_401():
+    """Endpoints de empresa y notificaciones sin token devuelven 401/403."""
+    from main import app as main_app
+    client = TestClient(main_app)
+
+    assert client.get("/empresa/postulaciones").status_code in (401, 403)
+    assert client.patch("/empresa/postulaciones/1", json={"estado": "entrevista"}).status_code in (401, 403)
+    assert client.get("/notificaciones").status_code in (401, 403)
+    assert client.patch("/notificaciones/1/leida").status_code in (401, 403)
+
+
+def test_patch_empresa_nota_mas_de_1000_caracteres_da_422():
+    """Una nota de empresa de más de 1000 caracteres es rechazada con 422."""
+    from main import app as main_app
+    token_empresa = auth.crear_token(10, "empresa")
+    client = TestClient(main_app)
+
+    res = client.patch(
+        "/empresa/postulaciones/1",
+        headers={"Authorization": f"Bearer {token_empresa}"},
+        json={"nota": "a" * 1001},
+    )
+    assert res.status_code == 422
+
+
+def test_patch_empresa_estado_invalido_da_422():
+    """Un estado no permitido en PATCH /empresa/postulaciones es rechazado con 422."""
+    from main import app as main_app
+    token_empresa = auth.crear_token(10, "empresa")
+    client = TestClient(main_app)
+
+    res = client.patch(
+        "/empresa/postulaciones/1",
+        headers={"Authorization": f"Bearer {token_empresa}"},
+        json={"estado": "invalido_total"},
+    )
+    assert res.status_code == 422
+
 
 
 

@@ -1,25 +1,29 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { clearToken, getToken, ResultadoProcesar } from "@/lib/api";
+import { clearToken, getRol, getToken, ResultadoProcesar } from "@/lib/api";
 import Navbar from "@/components/Navbar";
 import StepIndicator, { Step } from "@/components/StepIndicator";
 import LoginPage from "@/components/LoginPage";
 import CvPage from "@/components/CvPage";
 import ResultadosPage from "@/components/ResultadosPage";
 import KanbanPage from "@/components/KanbanPage";
+import EmpresaPage from "@/components/EmpresaPage";
 
 export default function HomePage() {
   const [step,      setStep]      = useState<Step>(1);
   const [email,     setEmail]     = useState<string | null>(null);
+  const [rol,       setRolState]  = useState<"candidato" | "empresa" | "admin" | null>(null);
   const [resultado, setResultado] = useState<ResultadoProcesar | null>(null);
 
   /* Restaurar sesión de sessionStorage al montar */
   useEffect(() => {
     const token = getToken();
     const user  = sessionStorage.getItem("likai_user");
+    const r     = getRol();
     if (token && user) {
       setEmail(user);
+      setRolState(r);
       setStep(2);
     }
   }, []);
@@ -29,6 +33,7 @@ export default function HomePage() {
     function handleUnauthorized() {
       clearToken();
       setEmail(null);
+      setRolState(null);
       setStep(1);
     }
     window.addEventListener("likai:unauthorized", handleUnauthorized);
@@ -37,11 +42,14 @@ export default function HomePage() {
 
   function handleLoginSuccess(userEmail: string) {
     setEmail(userEmail);
+    const r = getRol();
+    setRolState(r);
     setStep(2);
   }
 
   function handleLogout() {
     setEmail(null);
+    setRolState(null);
     setResultado(null);
     setStep(1);
   }
@@ -65,19 +73,22 @@ export default function HomePage() {
     else setStep(2);
   }
 
+  const esEmpresa = rol === "empresa";
+
   return (
     <div className="flex min-h-screen flex-col">
       {/* Barra de navegación superior fija (sticky) */}
       <Navbar
         email={email}
+        rol={rol}
         currentStep={step}
         hasResultado={Boolean(resultado)}
         onNavigate={setStep}
         onLogout={handleLogout}
       />
 
-      {/* Indicador de progreso (visible solo cuando hay sesión) */}
-      {email && (
+      {/* Indicador de progreso (visible solo para candidatos con sesión) */}
+      {email && !esEmpresa && (
         <div className="border-b border-surface-border bg-surface-card/60 backdrop-blur-sm">
           <StepIndicator current={step} />
         </div>
@@ -89,11 +100,15 @@ export default function HomePage() {
           <LoginPage onSuccess={handleLoginSuccess} />
         )}
 
-        {step === 2 && email && (
+        {step > 1 && email && esEmpresa && (
+          <EmpresaPage />
+        )}
+
+        {step === 2 && email && !esEmpresa && (
           <CvPage onResult={handleResult} />
         )}
 
-        {step === 3 && resultado && (
+        {step === 3 && resultado && !esEmpresa && (
           <ResultadosPage
             resultado={resultado}
             onOtroCv={handleOtroCv}
@@ -101,7 +116,7 @@ export default function HomePage() {
           />
         )}
 
-        {step === 4 && (
+        {step === 4 && !esEmpresa && (
           <KanbanPage onVolverResultados={handleVolverResultados} />
         )}
       </main>

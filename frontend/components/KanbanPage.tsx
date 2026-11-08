@@ -15,8 +15,6 @@ const COLUMNAS: Array<{ id: Estado; label: string; emoji: string; color: string 
   { id: "descartado",  label: "Descartado",  emoji: "❌", color: "border-red-700/40"    },
 ];
 
-const ORDEN_ESTADOS = COLUMNAS.map((c) => c.id);
-
 function formatSalario(n: number | null) {
   if (!n) return null;
   return new Intl.NumberFormat("es-CO", {
@@ -24,38 +22,24 @@ function formatSalario(n: number | null) {
   }).format(n);
 }
 
-// ─── Tarjeta Kanban ───────────────────────────────────────────────────────
+// ─── Tarjeta Kanban Activa ────────────────────────────────────────────────
 
 function KanbanCard({
   post,
-  onMover,
-  isDragging,
-  onDragStart,
-  onDragEnd,
+  onRetirar,
   onPracticarEntrevista,
 }: {
   post: Postulacion;
-  onMover: (id: number, estado: Estado) => void;
-  isDragging: boolean;
-  onDragStart: (id: number) => void;
-  onDragEnd: () => void;
+  onRetirar: (id: number) => Promise<void> | void;
   onPracticarEntrevista?: (post: Postulacion) => void;
 }) {
-  const idx    = ORDEN_ESTADOS.indexOf(post.estado as Estado);
-  const puedePrev = idx > 0;
-  const puedeNext = idx < ORDEN_ESTADOS.length - 1;
+  const [confirmandoRetiro, setConfirmandoRetiro] = useState(false);
+  const [retirando, setRetirando] = useState(false);
 
   return (
     <div
       id={`card-post-${post.id}`}
-      className={`kanban-card ${isDragging ? "dragging" : ""}`}
-      draggable
-      onDragStart={(e) => {
-        e.dataTransfer.setData("postulacion_id", String(post.id));
-        e.dataTransfer.effectAllowed = "move";
-        onDragStart(post.id);
-      }}
-      onDragEnd={onDragEnd}
+      className="kanban-card cursor-default"
     >
       {/* Vacante y empresa */}
       <div className="mb-3">
@@ -103,7 +87,15 @@ function KanbanCard({
         </div>
       )}
 
-      {/* Botón para practicar entrevista simulada (solo en estado 'entrevista') */}
+      {/* Nota de la empresa si existe */}
+      {post.nota_empresa && (
+        <div className="mb-3 rounded-lg border border-accent/40 bg-accent/10 px-3 py-2 text-xs text-text-primary">
+          <span className="font-semibold text-accent-light">Nota de la empresa: </span>
+          <span>{post.nota_empresa}</span>
+        </div>
+      )}
+
+      {/* Botón para practicar entrevista (solo en estado 'entrevista') */}
       {post.estado === "entrevista" && (
         <div className="mb-3">
           <button
@@ -118,27 +110,109 @@ function KanbanCard({
         </div>
       )}
 
-      {/* Botones de movimiento (accesibilidad y mobile) */}
-      <div className="flex gap-2 mt-1">
-        <button
-          type="button"
-          aria-label="Mover al estado anterior"
-          className="btn-ghost text-xs px-2 py-1 flex-1"
-          disabled={!puedePrev}
-          onClick={() => onMover(post.id, ORDEN_ESTADOS[idx - 1])}
-        >
-          ← Anterior
-        </button>
-        <button
-          type="button"
-          aria-label="Mover al siguiente estado"
-          className="btn-ghost text-xs px-2 py-1 flex-1"
-          disabled={!puedeNext}
-          onClick={() => onMover(post.id, ORDEN_ESTADOS[idx + 1])}
-        >
-          Siguiente →
-        </button>
+      {/* Retirar postulación con confirmación */}
+      <div className="mt-2 pt-2 border-t border-surface-border/50">
+        {confirmandoRetiro ? (
+          <div
+            role="alert"
+            className="rounded-lg border border-status-warning/40 bg-surface-elevated p-2 text-xs space-y-2 animate-fade-in"
+          >
+            <p className="text-text-primary font-medium">
+              ¿Seguro que deseas retirar esta postulación?
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                id={`btn-confirmar-retirar-${post.id}`}
+                className="btn-ghost text-xs px-2 py-1 text-status-error hover:bg-status-error/10 font-semibold"
+                disabled={retirando}
+                onClick={async () => {
+                  setRetirando(true);
+                  try {
+                    await onRetirar(post.id);
+                  } finally {
+                    setRetirando(false);
+                    setConfirmandoRetiro(false);
+                  }
+                }}
+              >
+                {retirando ? "Retirando…" : "Sí, retirar"}
+              </button>
+              <button
+                type="button"
+                id={`btn-cancelar-retirar-${post.id}`}
+                className="btn-ghost text-xs px-2 py-1 text-text-secondary"
+                disabled={retirando}
+                onClick={() => setConfirmandoRetiro(false)}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button
+            type="button"
+            id={`btn-iniciar-retirar-${post.id}`}
+            onClick={() => setConfirmandoRetiro(true)}
+            className="btn-ghost text-xs text-text-muted hover:text-status-error w-full py-1 text-center transition-colors"
+            title="Retirar esta postulación"
+          >
+            Retirar postulación
+          </button>
+        )}
       </div>
+    </div>
+  );
+}
+
+// ─── Tarjeta Archivada / Retirada ─────────────────────────────────────────
+
+function TarjetaArchivada({ post }: { post: Postulacion }) {
+  return (
+    <div
+      id={`card-archivada-${post.id}`}
+      className="rounded-xl border border-surface-border bg-surface/50 p-4 shadow-sm"
+    >
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <div>
+          <p className="font-semibold text-sm text-text-primary leading-snug">{post.vacante}</p>
+          {post.empresa && (
+            <p className="text-xs text-text-secondary mt-0.5">{post.empresa}</p>
+          )}
+        </div>
+        <span className="inline-flex items-center gap-1 rounded-full bg-surface-elevated border border-surface-border px-2.5 py-0.5 text-[11px] font-semibold text-text-muted">
+          📁 Retirada
+        </span>
+      </div>
+
+      <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-text-secondary mb-2">
+        {post.modalidad && <span className="capitalize">🏠 {post.modalidad}</span>}
+        {(post.salario_min || post.salario_max) && (
+          <span>
+            💰{" "}
+            {[formatSalario(post.salario_min), formatSalario(post.salario_max)]
+              .filter(Boolean)
+              .join("–")}
+          </span>
+        )}
+        {post.afinidad != null && (
+          <span className="text-text-muted">⭐ {post.afinidad}% afinidad</span>
+        )}
+      </div>
+
+      {post.nota_empresa && (
+        <div className="mb-2 rounded-lg border border-surface-border bg-surface/30 px-2.5 py-1.5 text-xs text-text-muted truncate">
+          <span>Nota empresa: </span>
+          <span>{post.nota_empresa}</span>
+        </div>
+      )}
+
+      {post.siguiente_paso && (
+        <div className="rounded-lg border border-surface-border bg-surface/30 px-2.5 py-1.5 text-xs text-text-muted truncate">
+          <span>Último paso registrado: </span>
+          <span>{post.siguiente_paso}</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -148,42 +222,18 @@ function KanbanCard({
 function KanbanColumna({
   col,
   postulaciones,
-  onMover,
-  draggingId,
-  onDragStart,
-  onDragEnd,
+  onRetirar,
   onPracticarEntrevista,
 }: {
   col: (typeof COLUMNAS)[0];
   postulaciones: Postulacion[];
-  onMover: (id: number, estado: Estado) => void;
-  draggingId: number | null;
-  onDragStart: (id: number) => void;
-  onDragEnd: () => void;
+  onRetirar: (id: number) => Promise<void> | void;
   onPracticarEntrevista?: (post: Postulacion) => void;
 }) {
-  const [dragOver, setDragOver] = useState(false);
-
-  function handleDragOver(e: React.DragEvent) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-    setDragOver(true);
-  }
-
-  function handleDrop(e: React.DragEvent) {
-    e.preventDefault();
-    setDragOver(false);
-    const id = Number(e.dataTransfer.getData("postulacion_id"));
-    if (id) onMover(id, col.id);
-  }
-
   return (
     <div
       id={`col-${col.id}`}
-      className={`kanban-col ${col.color} ${dragOver ? "drag-over" : ""} flex-1 min-w-[220px]`}
-      onDragOver={handleDragOver}
-      onDragLeave={() => setDragOver(false)}
-      onDrop={handleDrop}
+      className={`kanban-col ${col.color} flex-1 min-w-[220px]`}
     >
       {/* Encabezado */}
       <div className="flex items-center justify-between mb-2">
@@ -207,10 +257,7 @@ function KanbanColumna({
             <KanbanCard
               key={p.id}
               post={p}
-              onMover={onMover}
-              isDragging={draggingId === p.id}
-              onDragStart={onDragStart}
-              onDragEnd={onDragEnd}
+              onRetirar={onRetirar}
               onPracticarEntrevista={onPracticarEntrevista}
             />
           ))}
@@ -232,9 +279,16 @@ export default function KanbanPage({ onVolverResultados }: KanbanPageProps) {
   const [error,   setError]   = useState<string | null>(null);
   const [aviso,   setAviso]   = useState<string | null>(null);
   const [filtro,  setFiltro]  = useState("");
-  const [dragging, setDragging] = useState<number | null>(null);
+  const [verArchivadas, setVerArchivadas] = useState(false);
   const [postulacionSimulando, setPostulacionSimulando] = useState<Postulacion | null>(null);
   const avisoClearRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const seccionArchivadasRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (verArchivadas && seccionArchivadasRef.current) {
+      seccionArchivadasRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [verArchivadas]);
 
   function mostrarAviso(msg: string) {
     setAviso(msg);
@@ -260,31 +314,34 @@ export default function KanbanPage({ onVolverResultados }: KanbanPageProps) {
     return () => { if (avisoClearRef.current) clearTimeout(avisoClearRef.current); };
   }, [cargar]);
 
-  async function moverPostulacion(id: number, nuevoEstado: Estado) {
+  async function retirarPostulacion(id: number) {
     const original = postulaciones.find((p) => p.id === id);
-    if (!original || original.estado === nuevoEstado) return;
+    if (!original || original.estado === "retirado") return;
 
     /* Actualización optimista */
     setPostulaciones((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, estado: nuevoEstado } : p))
+      prev.map((p) => (p.id === id ? { ...p, estado: "retirado" } : p))
     );
 
     try {
-      await apiPatchEstado(id, nuevoEstado);
-      mostrarAviso(`Postulación movida a "${COLUMNAS.find(c => c.id === nuevoEstado)?.label}"`);
+      await apiPatchEstado(id, "retirado");
+      mostrarAviso(`Postulación a "${original.vacante}" retirada con éxito.`);
     } catch (err: unknown) {
       /* Revertir */
       setPostulaciones((prev) =>
         prev.map((p) => (p.id === id ? { ...p, estado: original.estado } : p))
       );
       mostrarAviso(
-        `⚠️ No se pudo mover: ${err instanceof Error ? err.message : "error"}`
+        `⚠️ No se pudo retirar: ${err instanceof Error ? err.message : "error"}`
       );
     }
   }
 
+  const activas = postulaciones.filter((p) => p.estado !== "retirado");
+  const archivadas = postulaciones.filter((p) => p.estado === "retirado");
+
   /* Filtrado por texto */
-  const filtradas = postulaciones.filter((p) => {
+  const activasFiltradas = activas.filter((p) => {
     if (!filtro.trim()) return true;
     const q = filtro.toLowerCase();
     return (
@@ -294,8 +351,18 @@ export default function KanbanPage({ onVolverResultados }: KanbanPageProps) {
     );
   });
 
-  /* Agrupadas por columna */
-  const porColumna = (id: Estado) => filtradas.filter((p) => p.estado === id);
+  const archivadasFiltradas = archivadas.filter((p) => {
+    if (!filtro.trim()) return true;
+    const q = filtro.toLowerCase();
+    return (
+      p.vacante?.toLowerCase().includes(q) ||
+      p.empresa?.toLowerCase().includes(q) ||
+      p.modalidad?.toLowerCase().includes(q)
+    );
+  });
+
+  /* Agrupadas por columna (solo activas) */
+  const porColumna = (id: Estado) => activasFiltradas.filter((p) => p.estado === id);
 
   return (
     <div className="animate-slide-up mx-auto w-full max-w-7xl space-y-6">
@@ -304,7 +371,7 @@ export default function KanbanPage({ onVolverResultados }: KanbanPageProps) {
         <div>
           <h2 className="text-2xl font-bold text-text-primary">Tablero de postulaciones</h2>
           <p className="mt-0.5 text-sm text-text-secondary">
-            Arrastra las tarjetas entre columnas para actualizar el estado.
+            Consulta el avance de tus postulaciones y los comentarios de las empresas.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -328,15 +395,74 @@ export default function KanbanPage({ onVolverResultados }: KanbanPageProps) {
         </div>
       </div>
 
-      {/* Buscador */}
-      <input
-        id="tablero-buscar"
-        type="search"
-        className="input max-w-sm"
-        placeholder="Buscar por vacante, empresa o modalidad…"
-        value={filtro}
-        onChange={(e) => setFiltro(e.target.value)}
-      />
+      {/* Buscador y switch de archivadas */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <input
+          id="tablero-buscar"
+          type="search"
+          className="input max-w-sm"
+          placeholder="Buscar por vacante, empresa o modalidad…"
+          value={filtro}
+          onChange={(e) => setFiltro(e.target.value)}
+        />
+
+        <button
+          id="btn-toggle-archivadas"
+          type="button"
+          onClick={() => setVerArchivadas((v) => !v)}
+          aria-pressed={verArchivadas}
+          className={`btn-ghost text-xs flex items-center gap-2 px-3 py-2 border rounded-lg transition-colors ${
+            verArchivadas
+              ? "border-accent text-accent-light bg-accent/10"
+              : "border-surface-border text-text-secondary hover:text-text-primary"
+          }`}
+          title={verArchivadas ? "Ocultar sección de archivadas" : "Mostrar postulaciones retiradas"}
+        >
+          <span>{verArchivadas ? "👁️ Ocultar archivadas" : "📁 Ver archivadas"}</span>
+          <span className="rounded-full bg-surface-elevated px-2 py-0.5 text-[11px] font-bold text-text-muted">
+            {archivadas.length}
+          </span>
+        </button>
+      </div>
+
+      {/* Sección de archivadas / retiradas */}
+      {verArchivadas && (
+        <section
+          ref={seccionArchivadasRef}
+          id="seccion-postulaciones-archivadas"
+          aria-label="Postulaciones archivadas"
+          className="rounded-2xl border border-surface-border bg-surface-elevated/40 p-5 space-y-4 animate-fade-in"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">📁</span>
+              <h3 className="text-base font-semibold text-text-primary">
+                Postulaciones archivadas
+              </h3>
+              <span className="rounded-full bg-surface-border/50 px-2.5 py-0.5 text-xs font-semibold text-text-secondary">
+                {archivadas.length}
+              </span>
+            </div>
+            <p className="text-xs text-text-muted hidden sm:block">
+              Postulaciones retiradas. Ya no pueden reactivarse.
+            </p>
+          </div>
+
+          {archivadasFiltradas.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-surface-border p-6 text-center text-xs text-text-muted">
+              {archivadas.length === 0
+                ? "No tienes ninguna postulación archivada."
+                : "No hay postulaciones archivadas que coincidan con la búsqueda."}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {archivadasFiltradas.map((p) => (
+                <TarjetaArchivada key={p.id} post={p} />
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Aviso temporal */}
       {aviso && (
@@ -386,7 +512,7 @@ export default function KanbanPage({ onVolverResultados }: KanbanPageProps) {
         </div>
       )}
 
-      {/* Tablero */}
+      {/* Tablero (columnas activas) */}
       {!loading && postulaciones.length > 0 && (
         <div className="flex gap-4 overflow-x-auto pb-4">
           {COLUMNAS.map((col) => (
@@ -394,10 +520,7 @@ export default function KanbanPage({ onVolverResultados }: KanbanPageProps) {
               key={col.id}
               col={col}
               postulaciones={porColumna(col.id)}
-              onMover={moverPostulacion}
-              draggingId={dragging}
-              onDragStart={setDragging}
-              onDragEnd={() => setDragging(null)}
+              onRetirar={retirarPostulacion}
               onPracticarEntrevista={(post) => setPostulacionSimulando(post)}
             />
           ))}
@@ -416,7 +539,7 @@ export default function KanbanPage({ onVolverResultados }: KanbanPageProps) {
 
       {/* Nota informativa */}
       <p className="text-center text-xs text-text-muted pb-4">
-        La postulación queda registrada en LIKAI y no se envía a una empresa real en esta versión. Puedes mover las tarjetas para gestionar tu seguimiento.
+        Las empresas actualizan el estado de tus postulaciones. Puedes retirar cualquier postulación si ya no deseas continuar en el proceso.
       </p>
     </div>
   );

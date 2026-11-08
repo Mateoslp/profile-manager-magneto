@@ -73,6 +73,12 @@ def solo_admin(usuario: dict = Depends(usuario_actual)) -> dict:
     return usuario
 
 
+def solo_empresa(usuario: dict = Depends(usuario_actual)) -> dict:
+    if usuario["rol"] != "empresa":
+        raise HTTPException(status_code=403, detail="Requiere rol empresa")
+    return usuario
+
+
 # ---------- Rate limiting ----------
 _historial = defaultdict(deque)
 

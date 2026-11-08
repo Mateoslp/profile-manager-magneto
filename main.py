@@ -40,6 +40,7 @@ from auth import (
     hashear_password,
     limitar_llamadas,
     solo_admin,
+    solo_empresa,
     usuario_actual,
     verificar_password,
 )
@@ -95,7 +96,12 @@ class CandidatoIn(BaseModel):
 
 
 class EstadoIn(BaseModel):
-    estado: Literal["postulado", "en_revision", "entrevista", "descartado"]
+    estado: Literal["postulado", "en_revision", "entrevista", "descartado", "retirado"]
+
+
+class PatchEmpresaPostulacionIn(BaseModel):
+    estado: Optional[Literal["en_revision", "entrevista", "descartado"]] = None
+    nota: Optional[str] = Field(default=None, max_length=1000)
 
 
 class RecalcularRecomendacionesIn(BaseModel):
@@ -187,6 +193,7 @@ def login(datos: Credenciales):
     return {
         "access_token": crear_token(usuario["id"], usuario["rol"]),
         "token_type": "bearer",
+        "rol": usuario["rol"],
     }
 
 
@@ -595,6 +602,7 @@ def listar_postulaciones(usuario: dict = Depends(usuario_actual)):
     consulta = """
         SELECT p.id, p.perfil_id, p.vacante_id,
                p.estado, p.siguiente_paso, p.fecha_postulacion, p.afinidad,
+               p.nota_empresa,
                pf.nombre AS candidato,
                v.titulo AS vacante, v.empresa, v.modalidad,
                v.salario_min, v.salario_max
@@ -646,6 +654,20 @@ def cambiar_estado(
                 raise HTTPException(
                     status_code=403,
                     detail="No tenés permiso para modificar esta postulación",
+                )
+
+        if fila["estado"] == "retirado":
+            raise HTTPException(
+                status_code=409,
+                detail="Una postulación retirada no puede cambiar de estado",
+            )
+
+        # Candidato solo puede pasarla a 'retirado'
+        if usuario["rol"] != "admin":
+            if datos.estado != "retirado":
+                raise HTTPException(
+                    status_code=403,
+                    detail="Los candidatos solo pueden retirar su postulación",
                 )
 
         cur.execute(
@@ -875,3 +897,201 @@ def obtener_cvs_demo(carpeta: str = "casos_prueba", limite: int = 6) -> list:
 def listar_cvs_demo(usuario: dict = Depends(usuario_actual)):
     """Devuelve hasta 6 CVs de ejemplo variados para probar el sistema."""
     return obtener_cvs_demo()
+
+
+# ---------- Paquete E: Rol empresa y notificaciones ----------
+
+@app.get("/empresa/postulaciones")
+def listar_postulaciones_empresa(usuario: dict = Depends(solo_empresa)):
+    """Solo postulaciones a vacantes de la empresa autenticada.
+    Excluye estrictamente datos de contacto del candidato (email, teléfono).
+    """
+    consulta = """
+        SELECT p.id, p.estado, p.afinidad, p.nota_empresa, p.fecha_postulacion,
+               v.id AS vacante_id, v.titulo AS vacante_titulo,
+               pf.nombre AS candidato_nombre,
+               pf.ubicacion AS candidato_ubicacion,
+               pf.experiencia_anios AS candidato_experiencia_anios,
+               pf.educacion AS candidato_educacion,
+               pf.habilidades AS candidato_habilidades
+        FROM postulaciones p
+        JOIN vacantes v ON v.id = p.vacante_id
+        JOIN perfiles pf ON pf.id = p.perfil_id
+        WHERE v.usuario_id = %s
+        ORDER BY p.fecha_postulacion DESC;
+    """
+    with conexion() as conn:
+        cur = conn.cursor()
+        cur.execute(consulta, (usuario["id"],))
+        filas = cur.fetchall()
+
+    resultado = []
+    for f in filas:
+        fecha_str = str(f["fecha_postulacion"]) if f.get("fecha_postulacion") else None
+        resultado.append({
+            "id": f["id"],
+            "estado": f["estado"],
+            "afinidad": f["afinidad"],
+            "nota_empresa": f["nota_empresa"],
+            "fecha_postulacion": fecha_str,
+            "vacante": {
+                "id": f["vacante_id"],
+                "titulo": f["vacante_titulo"],
+            },
+            "candidato": {
+                "nombre": f["candidato_nombre"],
+                "ubicacion": f["candidato_ubicacion"],
+                "experiencia_anios": f["candidato_experiencia_anios"],
+                "educacion": f["candidato_educacion"],
+                "habilidades": f["candidato_habilidades"],
+            },
+        })
+    return resultado
+
+
+@app.patch("/empresa/postulaciones/{postulacion_id}")
+def actualizar_postulacion_empresa(
+    postulacion_id: int,
+    datos: PatchEmpresaPostulacionIn,
+    usuario: dict = Depends(solo_empresa),
+):
+    """Permite a la empresa actualizar el estado o nota de una postulación a su vacante.
+    Crea una notificación para el candidato en la misma transacción.
+    """
+    with conexion() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT p.id, p.estado, p.nota_empresa, v.usuario_id AS vacante_empresa_id,
+                   v.titulo AS vacante_titulo, pf.usuario_id AS candidato_usuario_id
+            FROM postulaciones p
+            JOIN vacantes v ON v.id = p.vacante_id
+            JOIN perfiles pf ON pf.id = p.perfil_id
+            WHERE p.id = %s;
+            """,
+            (postulacion_id,),
+        )
+        fila = cur.fetchone()
+        if not fila:
+            raise HTTPException(status_code=404, detail="Postulación no encontrada")
+
+        if fila["vacante_empresa_id"] != usuario["id"]:
+            raise HTTPException(
+                status_code=403,
+                detail="No tenés permiso para modificar esta postulación",
+            )
+
+        if fila["estado"] == "retirado":
+            raise HTTPException(
+                status_code=409,
+                detail="Una postulación retirada no puede cambiar de estado",
+            )
+
+        cambio_estado = datos.estado is not None and datos.estado != fila["estado"]
+        cambio_nota = datos.nota is not None and datos.nota != fila["nota_empresa"]
+
+        nuevo_estado = datos.estado if datos.estado is not None else fila["estado"]
+        nueva_nota = datos.nota if datos.nota is not None else fila["nota_empresa"]
+
+        cur.execute(
+            """
+            UPDATE postulaciones
+            SET estado = %s, nota_empresa = %s
+            WHERE id = %s
+            RETURNING id, estado, nota_empresa;
+            """,
+            (nuevo_estado, nueva_nota, postulacion_id),
+        )
+        actualizado = cur.fetchone()
+
+        # Notificación para el candidato si hubo cambio
+        if (cambio_estado or cambio_nota) and fila["candidato_usuario_id"]:
+            if cambio_estado and cambio_nota:
+                msg = f"Tu postulación a {fila['vacante_titulo']} pasó a '{nuevo_estado}' y la empresa dejó una nota"
+            elif cambio_estado:
+                msg = f"Tu postulación a {fila['vacante_titulo']} pasó a '{nuevo_estado}'"
+            else:
+                msg = f"La empresa dejó una nota en tu postulación a {fila['vacante_titulo']}"
+
+            cur.execute(
+                """
+                INSERT INTO notificaciones (usuario_id, postulacion_id, mensaje)
+                VALUES (%s, %s, %s);
+                """,
+                (fila["candidato_usuario_id"], postulacion_id, msg),
+            )
+
+    log.info("Empresa %s actualizó postulación %s (estado=%s)", usuario["id"], postulacion_id, nuevo_estado)
+    return {
+        "id": actualizado["id"],
+        "estado": actualizado["estado"],
+        "nota_empresa": actualizado["nota_empresa"],
+    }
+
+
+@app.get("/notificaciones")
+def listar_notificaciones(usuario: dict = Depends(limitar_llamadas)):
+    """Devuelve las 30 notificaciones más recientes y el total de no leídas."""
+    with conexion() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            SELECT id, postulacion_id, mensaje, leida, creado_en
+            FROM notificaciones
+            WHERE usuario_id = %s
+            ORDER BY creado_en DESC
+            LIMIT 30;
+            """,
+            (usuario["id"],),
+        )
+        filas = cur.fetchall()
+
+        cur.execute(
+            """
+            SELECT COUNT(*) AS total
+            FROM notificaciones
+            WHERE usuario_id = %s AND leida = FALSE;
+            """,
+            (usuario["id"],),
+        )
+        res_conteo = cur.fetchone()
+        total_no_leidas = res_conteo["total"] if res_conteo else 0
+
+    return {
+        "total_no_leidas": total_no_leidas,
+        "notificaciones": [
+            {
+                "id": n["id"],
+                "postulacion_id": n["postulacion_id"],
+                "mensaje": n["mensaje"],
+                "leida": n["leida"],
+                "creado_en": str(n["creado_en"]) if n.get("creado_en") else None,
+            }
+            for n in filas
+        ],
+    }
+
+
+@app.patch("/notificaciones/{notificacion_id}/leida")
+def marcar_notificacion_leida(
+    notificacion_id: int,
+    usuario: dict = Depends(limitar_llamadas),
+):
+    """Marca como leída una notificación propia. Devuelve 404 si es ajena o no existe."""
+    with conexion() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT id, usuario_id, leida FROM notificaciones WHERE id = %s;",
+            (notificacion_id,),
+        )
+        fila = cur.fetchone()
+        if not fila or fila["usuario_id"] != usuario["id"]:
+            raise HTTPException(status_code=404, detail="Notificación no encontrada")
+
+        cur.execute(
+            "UPDATE notificaciones SET leida = TRUE WHERE id = %s RETURNING id, leida;",
+            (notificacion_id,),
+        )
+        res = cur.fetchone()
+
+    return {"id": res["id"], "leida": res["leida"]}
