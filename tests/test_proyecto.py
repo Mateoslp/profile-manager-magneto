@@ -1730,4 +1730,193 @@ def test_simulador_respuestas_no_se_escriben_en_bd(monkeypatch):
         assert secreto not in str(params)
 
 
+# ---------- Función Nueva: Postulación Manual ----------
+
+def _mock_db_postulacion_manual(
+    monkeypatch,
+    perfiles=None,
+    vacantes=None,
+    postulaciones_existentes=None,
+):
+    import main as main_mod
+    from contextlib import contextmanager
+
+    perfiles_map = {p["id"]: p for p in (perfiles or [])}
+    vacantes_map = {v["id"]: v for v in (vacantes or [])}
+    postulaciones_list = list(postulaciones_existentes or [])
+    insertadas = []
+
+    @contextmanager
+    def fake_conexion():
+        class FakeCursor:
+            def __init__(self):
+                self._rows = []
+
+            def execute(self, sql, params=None):
+                sql_lower = sql.lower().strip()
+                if "from perfiles" in sql_lower:
+                    pid = params[0] if params else None
+                    p = perfiles_map.get(pid)
+                    self._rows = [p] if p else []
+                elif "from vacantes" in sql_lower:
+                    vid = params[0] if params else None
+                    v = vacantes_map.get(vid)
+                    self._rows = [v] if v else []
+                elif "from postulaciones" in sql_lower:
+                    pid, vid = params if params and len(params) == 2 else (None, None)
+                    matching = [
+                        post
+                        for post in postulaciones_list
+                        if post.get("perfil_id") == pid and post.get("vacante_id") == vid
+                    ]
+                    self._rows = matching
+                elif "insert into postulaciones" in sql_lower:
+                    new_id = len(postulaciones_list) + len(insertadas) + 1
+                    nueva = {
+                        "id": new_id,
+                        "perfil_id": params[0],
+                        "vacante_id": params[1],
+                        "estado": params[2],
+                        "siguiente_paso": params[3],
+                        "afinidad": params[4],
+                        "fecha_postulacion": "2026-11-05T12:00:00",
+                    }
+                    insertadas.append(nueva)
+                    self._rows = [nueva]
+                else:
+                    self._rows = []
+
+            def fetchone(self):
+                return self._rows[0] if self._rows else None
+
+            def fetchall(self):
+                return list(self._rows)
+
+        class FakeConn:
+            def cursor(self):
+                return FakeCursor()
+
+            def commit(self):
+                pass
+
+            def rollback(self):
+                pass
+
+            def close(self):
+                pass
+
+        yield FakeConn()
+
+    monkeypatch.setattr(main_mod, "conexion", fake_conexion)
+    return TestClient(main_mod.app), insertadas
+
+
+def test_postulacion_manual_sin_token_da_401():
+    """Llamar a POST /postulaciones sin cabecera de autorización devuelve 401."""
+    import main as main_mod
+    client = TestClient(main_mod.app)
+    res = client.post("/postulaciones", json={"perfil_id": 1, "vacante_id": 1})
+    assert res.status_code == 401
+
+
+def test_postulacion_manual_perfil_ajeno_da_403(monkeypatch):
+    """Intentar postular un perfil que no pertenece al usuario autenticado devuelve 403 Forbidden."""
+    perfil_ajeno = {"id": 10, "usuario_id": 999, "nombre": "Ajeno"}
+    client, _ = _mock_db_postulacion_manual(monkeypatch, perfiles=[perfil_ajeno])
+    token = auth.crear_token(42, "candidato")
+
+    res = client.post(
+        "/postulaciones",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"perfil_id": 10, "vacante_id": 1},
+    )
+    assert res.status_code == 403
+    assert "acceso" in res.json()["detail"].lower()
+
+
+def test_postulacion_manual_vacante_inexistente_da_404(monkeypatch):
+    """Si la vacante no existe en la base de datos, devuelve 404 Not Found."""
+    perfil = {"id": 1, "usuario_id": 42, "nombre": "Propio"}
+    client, _ = _mock_db_postulacion_manual(monkeypatch, perfiles=[perfil], vacantes=[])
+    token = auth.crear_token(42, "candidato")
+
+    res = client.post(
+        "/postulaciones",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"perfil_id": 1, "vacante_id": 999},
+    )
+    assert res.status_code == 404
+    assert "no encontrada" in res.json()["detail"].lower()
+
+
+def test_postulacion_manual_duplicada_da_409(monkeypatch):
+    """Si el perfil ya se postuló previamente a esa misma vacante, responde 409 Conflict."""
+    perfil = {"id": 1, "usuario_id": 42, "nombre": "Propio"}
+    vacante = {"id": 10, "titulo": "Desarrollador Junior", "empresa": "Dev Corp"}
+    postulacion_previa = {"id": 100, "perfil_id": 1, "vacante_id": 10}
+
+    client, _ = _mock_db_postulacion_manual(
+        monkeypatch,
+        perfiles=[perfil],
+        vacantes=[vacante],
+        postulaciones_existentes=[postulacion_previa],
+    )
+    token = auth.crear_token(42, "candidato")
+
+    res = client.post(
+        "/postulaciones",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"perfil_id": 1, "vacante_id": 10},
+    )
+    assert res.status_code == 409
+    assert "existe" in res.json()["detail"].lower()
+
+
+def test_postulacion_manual_crea_con_afinidad_baja(monkeypatch):
+    """Permite postularse exitosamente incluso si la afinidad es muy baja (sin rechazo por umbral)."""
+    perfil = {
+        "id": 1,
+        "usuario_id": 42,
+        "nombre": "Candidato Creativo",
+        "habilidades": "Fotografía, Ilustración",
+        "ubicacion": "Cali",
+        "modalidad_preferida": "presencial",
+        "aspiracion_salarial": 10_000_000,
+    }
+    vacante = {
+        "id": 10,
+        "titulo": "Desarrollador Backend Senior",
+        "empresa": "Tech SAS",
+        "ubicacion": "Medellín",
+        "modalidad": "remoto",
+        "salario_min": 3_000_000,
+        "salario_max": 4_000_000,
+        "habilidades": "Python, Docker, SQL, Kubernetes",
+    }
+
+    client, insertadas = _mock_db_postulacion_manual(
+        monkeypatch,
+        perfiles=[perfil],
+        vacantes=[vacante],
+        postulaciones_existentes=[],
+    )
+    token = auth.crear_token(42, "candidato")
+
+    res = client.post(
+        "/postulaciones",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"perfil_id": 1, "vacante_id": 10},
+    )
+    assert res.status_code == 201
+    datos = res.json()
+    assert datos["perfil_id"] == 1
+    assert datos["vacante_id"] == 10
+    assert datos["estado"] == "postulado"
+    # Afinidad calculada determinísticamente sin Gemini (debe ser muy baja / 0)
+    assert datos["afinidad"] == 0
+    assert "manual" in datos["siguiente_paso"].lower()
+    assert len(insertadas) == 1
+
+
+
 

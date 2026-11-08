@@ -483,7 +483,106 @@ def ver_bitacora(perfil_id: int, usuario: dict = Depends(usuario_actual)):
         return cur.fetchall()
 
 
-# ---------- Tablero de trazabilidad ----------
+# ---------- Tablero de trazabilidad y postulaciones ----------
+class PostulacionManualIn(BaseModel):
+    perfil_id: int
+    vacante_id: int
+
+
+@app.post("/postulaciones", status_code=201)
+def crear_postulacion_manual(
+    datos: PostulacionManualIn,
+    usuario: dict = Depends(limitar_llamadas),
+):
+    """Permite al candidato postularse manualmente a cualquier vacante recomendada.
+    Valida pertenencia del perfil, existencia de la vacante, evita duplicados y
+    calcula la afinidad determinista con pesos por defecto.
+    """
+    with conexion() as conn:
+        cur = conn.cursor()
+
+        # 1. Verificar existencia y pertenencia del perfil
+        cur.execute("SELECT * FROM perfiles WHERE id = %s;", (datos.perfil_id,))
+        perfil = cur.fetchone()
+        if not perfil:
+            raise HTTPException(status_code=404, detail="Perfil no encontrado")
+
+        if usuario["rol"] != "admin" and perfil.get("usuario_id") != usuario["id"]:
+            raise HTTPException(status_code=403, detail="No tenés acceso a este perfil")
+
+        # 2. Verificar existencia de la vacante
+        cur.execute("SELECT * FROM vacantes WHERE id = %s;", (datos.vacante_id,))
+        vacante = cur.fetchone()
+        if not vacante:
+            raise HTTPException(status_code=404, detail="Vacante no encontrada")
+
+        # 3. Evitar duplicados (409)
+        cur.execute(
+            "SELECT id FROM postulaciones WHERE perfil_id = %s AND vacante_id = %s LIMIT 1;",
+            (datos.perfil_id, datos.vacante_id),
+        )
+        if cur.fetchone():
+            raise HTTPException(
+                status_code=409,
+                detail="Ya existe una postulación de este perfil para esta vacante",
+            )
+
+        # 4. Calcular afinidad determinista con pesos por defecto (sin Gemini)
+        perfil_dict = limpiar_perfil(dict(perfil))
+        vacante_norm = {
+            "id": vacante["id"],
+            "titulo": vacante["titulo"],
+            "empresa": vacante["empresa"],
+            "ubicacion": vacante.get("ubicacion"),
+            "modalidad": vacante.get("modalidad"),
+            "salario_min": vacante.get("salario_min"),
+            "salario_max": vacante.get("salario_max"),
+            "habilidades": vacante.get("habilidades"),
+        }
+        recs = calcular_recomendaciones(perfil=perfil_dict, vacantes=[vacante_norm])
+        afinidad_valor = recs[0]["afinidad"] if recs else 0
+
+        # 5. Insertar postulación
+        cur.execute(
+            """
+            INSERT INTO postulaciones (perfil_id, vacante_id, estado, siguiente_paso, afinidad)
+            VALUES (%s, %s, %s, %s, %s)
+            RETURNING id, fecha_postulacion;
+            """,
+            (
+                datos.perfil_id,
+                datos.vacante_id,
+                "postulado",
+                "Postulación manual realizada por el candidato.",
+                afinidad_valor,
+            ),
+        )
+        fila = cur.fetchone()
+        postulacion_id = (
+            fila["id"]
+            if isinstance(fila, dict) and "id" in fila
+            else (fila[0] if isinstance(fila, (list, tuple)) else None)
+        )
+        fecha_post = fila.get("fecha_postulacion") if isinstance(fila, dict) else None
+
+    log.info(
+        "Postulación manual creada id=%s perfil=%s vacante=%s afinidad=%s",
+        postulacion_id,
+        datos.perfil_id,
+        datos.vacante_id,
+        afinidad_valor,
+    )
+    return {
+        "id": postulacion_id,
+        "perfil_id": datos.perfil_id,
+        "vacante_id": datos.vacante_id,
+        "estado": "postulado",
+        "afinidad": afinidad_valor,
+        "siguiente_paso": "Postulación manual realizada por el candidato.",
+        "fecha_postulacion": str(fecha_post) if fecha_post else None,
+    }
+
+
 @app.get("/postulaciones")
 def listar_postulaciones(usuario: dict = Depends(usuario_actual)):
     """Un candidato ve solo lo suyo; un admin ve todo.

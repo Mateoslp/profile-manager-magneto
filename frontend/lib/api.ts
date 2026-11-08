@@ -164,6 +164,28 @@ export async function apiGetPostulaciones(): Promise<Postulacion[]> {
   return handleResponse<Postulacion[]>(res);
 }
 
+export interface PostulacionManualResponse {
+  id: number;
+  perfil_id: number;
+  vacante_id: number;
+  estado: string;
+  afinidad: number;
+  siguiente_paso: string | null;
+  fecha_postulacion: string | null;
+}
+
+export async function apiCrearPostulacionManual(
+  perfilId: number,
+  vacanteId: number
+): Promise<PostulacionManualResponse> {
+  const res = await fetch(`${API_URL}/postulaciones`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ perfil_id: perfilId, vacante_id: vacanteId }),
+  });
+  return handleResponse<PostulacionManualResponse>(res);
+}
+
 export async function apiPatchEstado(
   postulacionId: number,
   estado: string
