@@ -136,6 +136,10 @@ class ExplicacionesIn(BaseModel):
     perfil_id: Optional[int] = None
 
 
+class PrimerEmpleoIn(BaseModel):
+    texto: str = Field(min_length=10, max_length=1500)
+
+
 class RespuestasEntrevistaIn(BaseModel):
     respuesta_1: str = Field(min_length=5, max_length=1500)
     respuesta_2: str = Field(min_length=5, max_length=1500)
@@ -527,6 +531,43 @@ def obtener_explicaciones(
         "perfil_id": perfil["id"],
         "origen": origen,
         "explicaciones": explicaciones,
+    }
+
+
+# ---------- Estructuración de primer empleo con Gemini ----------
+MAX_ESTRUCTURAR_PE_POR_HORA = 10
+_historial_estructurar_pe = defaultdict(deque)
+
+
+def _verificar_limite_estructurar_pe(usuario_id: int):
+    ahora = time.time()
+    cola = _historial_estructurar_pe[usuario_id]
+    while cola and ahora - cola[0] > 3600:
+        cola.popleft()
+    if len(cola) >= MAX_ESTRUCTURAR_PE_POR_HORA:
+        raise HTTPException(
+            status_code=429,
+            detail="Demasiadas solicitudes en una hora, intenta de nuevo más tarde",
+        )
+    cola.append(ahora)
+
+
+@app.post("/perfil/estructurar-primer-empleo")
+def estructurar_primer_empleo_endpoint(
+    datos: PrimerEmpleoIn,
+    usuario: dict = Depends(usuario_actual),
+):
+    """Clasifica un texto libre de primer empleo en estudios, proyectos y voluntariado usando Gemini (con respaldo)."""
+    _verificar_limite_estructurar_pe(usuario["id"])
+
+    from agents import estructurar_primer_empleo
+    resultado, origen = estructurar_primer_empleo(datos.texto)
+
+    return {
+        "origen": origen,
+        "estudios": resultado["estudios"],
+        "proyectos": resultado["proyectos"],
+        "voluntariado": resultado["voluntariado"],
     }
 
 

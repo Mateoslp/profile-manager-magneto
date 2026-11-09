@@ -2738,6 +2738,197 @@ def test_explicaciones_json_invalido_de_gemini_da_respaldo(monkeypatch):
     assert datos["explicaciones"][0]["vacante_id"] == 5
 
 
+# ==============================================================================
+# MEJORA 1: Pruebas de estructuración de primer empleo con Gemini
+# ==============================================================================
+
+def test_estructurar_primer_empleo_exito_con_gemini_simulado(monkeypatch):
+    """POST /perfil/estructurar-primer-empleo estructura texto libre con origen 'gemini'."""
+    import main as main_mod
+    import agents
+    from main import app as main_app
+
+    main_mod._historial_estructurar_pe.clear()
+    token = auth.crear_token(10, "candidato")
+    client = TestClient(main_app)
+
+    class MockLLM:
+        def invoke(self, prompt):
+            return FakeRespuesta(
+                '{"estudios": "Ingeniería de Sistemas 8vo semestre", '
+                '"proyectos": "Portal web con FastAPI y PostgreSQL", '
+                '"voluntariado": "Monitor académico de algoritmos"}'
+            )
+
+    monkeypatch.setattr(agents, "llm", MockLLM())
+
+    res = client.post(
+        "/perfil/estructurar-primer-empleo",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"texto": "Estudio ingeniería de sistemas en 8vo semestre, hice un portal con fastapi y fui monitor."},
+    )
+    assert res.status_code == 200
+    datos = res.json()
+    assert datos["origen"] == "gemini"
+    assert datos["estudios"] == "Ingeniería de Sistemas 8vo semestre"
+    assert datos["proyectos"] == "Portal web con FastAPI y PostgreSQL"
+    assert datos["voluntariado"] == "Monitor académico de algoritmos"
+
+
+def test_estructurar_primer_empleo_fallo_gemini_devuelve_respaldo(monkeypatch):
+    """Si Gemini falla, responde con origen 'respaldo' y pone el texto original en proyectos."""
+    import main as main_mod
+    import agents
+    from main import app as main_app
+
+    main_mod._historial_estructurar_pe.clear()
+    token = auth.crear_token(10, "candidato")
+    client = TestClient(main_app)
+
+    class FalloLLM:
+        def invoke(self, prompt):
+            raise RuntimeError("Error de conexión con Gemini")
+
+    monkeypatch.setattr(agents, "llm", FalloLLM())
+
+    texto_original = "Desarrollé una tienda virtual en React para un proyecto universitario."
+    res = client.post(
+        "/perfil/estructurar-primer-empleo",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"texto": texto_original},
+    )
+    assert res.status_code == 200
+    datos = res.json()
+    assert datos["origen"] == "respaldo"
+    assert datos["proyectos"] == texto_original
+    assert datos["estudios"] == ""
+    assert datos["voluntariado"] == ""
+
+
+def test_estructurar_primer_empleo_json_invalido_devuelve_respaldo(monkeypatch):
+    """Si Gemini devuelve una estructura no JSON, responde con respaldo."""
+    import main as main_mod
+    import agents
+    from main import app as main_app
+
+    main_mod._historial_estructurar_pe.clear()
+    token = auth.crear_token(10, "candidato")
+    client = TestClient(main_app)
+
+    class InvalidoLLM:
+        def invoke(self, prompt):
+            return FakeRespuesta("Respuesta que no es JSON válido { error")
+
+    monkeypatch.setattr(agents, "llm", InvalidoLLM())
+
+    texto_original = "Hice cursos de Python y creé varios scripts de automatización."
+    res = client.post(
+        "/perfil/estructurar-primer-empleo",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"texto": texto_original},
+    )
+    assert res.status_code == 200
+    datos = res.json()
+    assert datos["origen"] == "respaldo"
+    assert datos["proyectos"] == texto_original
+
+
+def test_estructurar_primer_empleo_superar_limite_da_429_sin_llamar_gemini(monkeypatch):
+    """Superar el límite de 10 solicitudes por hora responde 429 sin invocar al LLM."""
+    import main as main_mod
+    import agents
+    from main import app as main_app
+
+    main_mod._historial_estructurar_pe.clear()
+    token = auth.crear_token(77, "candidato")
+    client = TestClient(main_app)
+
+    ahora = time.time()
+    for _ in range(10):
+        main_mod._historial_estructurar_pe[77].append(ahora)
+
+    llamadas_llm = []
+    class MockLLM:
+        def invoke(self, prompt):
+            llamadas_llm.append(prompt)
+            return FakeRespuesta('{"estudios": "", "proyectos": "", "voluntariado": ""}')
+
+    monkeypatch.setattr(agents, "llm", MockLLM())
+
+    res = client.post(
+        "/perfil/estructurar-primer-empleo",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"texto": "Texto suficiente para pasar validacion previa."},
+    )
+    assert res.status_code == 429
+    assert len(llamadas_llm) == 0
+
+
+def test_estructurar_primer_empleo_longitud_invalida_da_422():
+    """Textos menores a 10 caracteres o mayores a 1500 son rechazados con 422."""
+    from main import app as main_app
+    token = auth.crear_token(10, "candidato")
+    client = TestClient(main_app)
+
+    # Menor a 10
+    res_corto = client.post(
+        "/perfil/estructurar-primer-empleo",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"texto": "Corto"},
+    )
+    assert res_corto.status_code == 422
+
+    # Mayor a 1500
+    res_largo = client.post(
+        "/perfil/estructurar-primer-empleo",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"texto": "a" * 1501},
+    )
+    assert res_largo.status_code == 422
+
+
+def test_estructurar_primer_empleo_sin_token_da_401():
+    """Llamar a /perfil/estructurar-primer-empleo sin token devuelve 401."""
+    from main import app as main_app
+    client = TestClient(main_app)
+    res = client.post("/perfil/estructurar-primer-empleo", json={"texto": "Texto válido sin token"})
+    assert res.status_code == 401
+
+
+def test_estructurar_primer_empleo_no_escribe_en_base(monkeypatch):
+    """El endpoint no realiza ninguna operación de escritura en base de datos."""
+    import main as main_mod
+    import agents
+    from main import app as main_app
+
+    main_mod._historial_estructurar_pe.clear()
+    token = auth.crear_token(10, "candidato")
+    client = TestClient(main_app)
+
+    db_llamada = False
+    def fake_conexion():
+        nonlocal db_llamada
+        db_llamada = True
+        raise AssertionError("No debe llamarse a la base de datos")
+
+    monkeypatch.setattr(main_mod, "conexion", fake_conexion)
+
+    class MockLLM:
+        def invoke(self, prompt):
+            return FakeRespuesta('{"estudios": "Uni", "proyectos": "App", "voluntariado": ""}')
+
+    monkeypatch.setattr(agents, "llm", MockLLM())
+
+    res = client.post(
+        "/perfil/estructurar-primer-empleo",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"texto": "Estudio sistemas y desarrollé una aplicación móvil."},
+    )
+    assert res.status_code == 200
+    assert db_llamada is False
+
+
+
 
 
 

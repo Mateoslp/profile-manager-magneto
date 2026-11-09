@@ -307,6 +307,24 @@ export interface ExplicacionesResponse {
   explicaciones: ItemExplicacion[];
 }
 
+export interface ResultadoEstructurarPrimerEmpleo {
+  origen: "gemini" | "respaldo";
+  estudios: string;
+  proyectos: string;
+  voluntariado: string;
+}
+
+export async function apiEstructurarPrimerEmpleo(
+  texto: string
+): Promise<ResultadoEstructurarPrimerEmpleo> {
+  const res = await fetch(`${API_URL}/perfil/estructurar-primer-empleo`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ texto }),
+  });
+  return handleResponse<ResultadoEstructurarPrimerEmpleo>(res);
+}
+
 export async function apiGetExplicaciones(
   perfilId?: number | null
 ): Promise<ExplicacionesResponse> {

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import BotonDictado from "./BotonDictado";
 import {
   FeedbackEntrevistaResponse,
   PreguntaEntrevista,
@@ -345,12 +346,21 @@ export default function SimuladorEntrevista({
 
               {/* Textarea de respuesta */}
               <div className="space-y-1.5">
-                <label
-                  htmlFor={`textarea-pregunta-${pasoActual + 1}`}
-                  className="text-xs font-medium text-text-secondary block"
-                >
-                  Tu respuesta:
-                </label>
+                <div className="flex items-center justify-between gap-2">
+                  <label
+                    htmlFor={`textarea-pregunta-${pasoActual + 1}`}
+                    className="text-xs font-medium text-text-secondary block"
+                  >
+                    Tu respuesta:
+                  </label>
+                  <BotonDictado
+                    onTextoReconocido={(t) => {
+                      const nuevo = valorActual ? `${valorActual} ${t}` : t;
+                      handleCambioTexto(nuevo.slice(0, 1500));
+                    }}
+                    label="Dictar"
+                  />
+                </div>
                 <textarea
                   id={`textarea-pregunta-${pasoActual + 1}`}
                   ref={textareaRef}

@@ -801,3 +801,51 @@ Responde ÚNICAMENTE con un JSON válido con esta estructura exacta, sin texto a
     except Exception:
         origen = "respaldo"
         return _generar_explicaciones_respaldo(recs), origen
+
+
+# --- Estructuración de primer empleo con Gemini ---
+def estructurar_primer_empleo(texto: str) -> tuple[dict, str]:
+    """Clasifica un texto libre de primer empleo en estudios, proyectos y voluntariado usando Gemini.
+    Si falla o devuelve JSON inválido, devuelve el texto en proyectos con origen='respaldo'."""
+    prompt = f"""Eres Lexi, especialista en estructurar perfiles profesionales en Colombia.
+Un candidato en búsqueda de su primer empleo te describe con sus propias palabras lo que ha estudiado o hecho:
+
+"{texto}"
+
+Tu tarea es clasificar y ordenar esta información ÚNICAMENTE en estos 3 campos:
+- estudios: formación académica en curso o completada, cursos o certificaciones mencionadas.
+- proyectos: proyectos académicos, aplicaciones, iniciativas o desarrollos mencionados.
+- voluntariado: actividades extracurriculares, voluntariado, semilleros o comunidades mencionadas.
+
+REGLAS ESTRICTAS:
+- Extrae SOLO lo que está explícitamente en el texto del candidato.
+- NO inventes datos, tecnologías, instituciones ni supuestos que no estén en el texto.
+- Si una categoría no fue mencionada, déjala como cadena vacía "".
+- Sé conciso y redacta en estilo directo y profesional.
+
+Responde ÚNICAMENTE con un JSON válido con esta estructura exacta, sin texto adicional ni marcas de código:
+{{
+  "estudios": "...",
+  "proyectos": "...",
+  "voluntariado": "..."
+}}
+"""
+    origen = "gemini"
+    try:
+        respuesta = llm.invoke(prompt)
+        parsed = parsear_json(extraer_texto(respuesta))
+        if not isinstance(parsed, dict):
+            raise ValueError("Respuesta no es un diccionario")
+        return {
+            "estudios": str(parsed.get("estudios") or "").strip(),
+            "proyectos": str(parsed.get("proyectos") or "").strip(),
+            "voluntariado": str(parsed.get("voluntariado") or "").strip(),
+        }, origen
+    except Exception:
+        origen = "respaldo"
+        return {
+            "estudios": "",
+            "proyectos": texto.strip(),
+            "voluntariado": "",
+        }, origen
+

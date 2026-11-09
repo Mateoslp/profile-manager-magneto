@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useId } from "react";
 import AgenteSvg from "@/components/escenario/AgenteSvg";
+import BotonDictado from "@/components/BotonDictado";
+import { apiEstructurarPrimerEmpleo } from "@/lib/api";
 import { generarCvDesdeEntrevista, RespuestasEntrevista } from "./generarCv";
 
 interface EntrevistaLexiProps {
@@ -81,6 +83,12 @@ export default function EntrevistaLexi({
   const [respondioPrimerEmpleo, setRespondioPrimerEmpleo] = useState<boolean>(false);
   const [movioExperiencia, setMovioExperiencia] = useState<boolean>(false);
 
+  // Estados para estructuración de primer empleo con Gemini (Mejora 1)
+  const [textoPrimerEmpleo, setTextoPrimerEmpleo] = useState<string>("");
+  const [estructurandoPE, setEstructurandoPE] = useState<boolean>(false);
+  const [peEstructurado, setPeEstructurado] = useState<boolean>(false);
+  const [errorEstructurarPE, setErrorEstructurarPE] = useState<string | null>(null);
+
   const [respuestas, setRespuestas] = useState<RespuestasEntrevista>({
     nombre: "",
     email: "",
@@ -115,6 +123,35 @@ export default function EntrevistaLexi({
     setRespuestas((prev) => ({ ...prev, [campo]: valor }));
   }
 
+  async function handleOrdenarConLexi() {
+    if (!textoPrimerEmpleo.trim() || textoPrimerEmpleo.trim().length < 10) return;
+    setEstructurandoPE(true);
+    setErrorEstructurarPE(null);
+    try {
+      const res = await apiEstructurarPrimerEmpleo(textoPrimerEmpleo.trim());
+      setRespuestas((prev) => ({
+        ...prev,
+        estudiosPrimerEmpleo: res.estudios || "",
+        proyectosPrimerEmpleo: res.proyectos || "",
+        voluntariadoPrimerEmpleo: res.voluntariado || "",
+      }));
+      setPeEstructurado(true);
+    } catch (err: unknown) {
+      setErrorEstructurarPE(
+        err instanceof Error
+          ? err.message
+          : "No se pudo ordenar automáticamente, pero puedes editar los campos abajo."
+      );
+      setRespuestas((prev) => ({
+        ...prev,
+        proyectosPrimerEmpleo: prev.proyectosPrimerEmpleo || textoPrimerEmpleo,
+      }));
+      setPeEstructurado(true);
+    } finally {
+      setEstructurandoPE(false);
+    }
+  }
+
   function toggleHabilidad(hab: string) {
     setRespuestas((prev) => {
       const existe = prev.habilidades.includes(hab);
@@ -125,6 +162,11 @@ export default function EntrevistaLexi({
     });
   }
 
+  const tieneDatosPrimerEmpleo =
+    Boolean(respuestas.estudiosPrimerEmpleo.trim()) ||
+    Boolean(respuestas.proyectosPrimerEmpleo.trim()) ||
+    Boolean(respuestas.voluntariadoPrimerEmpleo.trim());
+
   /* Cálculo del porcentaje de completitud con campos reales (arranca en 0%) */
   const camposEvaluados = [
     Boolean(respuestas.nombre.trim()),
@@ -133,7 +175,7 @@ export default function EntrevistaLexi({
     Boolean(respuestas.modalidad.trim()),
     respondioPrimerEmpleo
       ? respuestas.esPrimerEmpleo
-        ? true
+        ? tieneDatosPrimerEmpleo || textoPrimerEmpleo.trim().length >= 10
         : movioExperiencia || Boolean(respuestas.cargoReciente.trim())
       : false,
     Boolean(respuestas.educacion.trim()),
@@ -291,9 +333,20 @@ export default function EntrevistaLexi({
             {paso === 1 && (
               <div className="space-y-4">
                 <div>
-                  <label htmlFor="contacto-nombre" className="label">
-                    Nombre completo <span className="text-status-error">*</span>
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label htmlFor="contacto-nombre" className="label mb-0">
+                      Nombre completo <span className="text-status-error">*</span>
+                    </label>
+                    <BotonDictado
+                      onTextoReconocido={(t) =>
+                        actualizarCampo(
+                          "nombre",
+                          respuestas.nombre ? `${respuestas.nombre} ${t}` : t
+                        )
+                      }
+                      label="Dictar"
+                    />
+                  </div>
                   <input
                     id="contacto-nombre"
                     type="text"
@@ -508,60 +561,142 @@ export default function EntrevistaLexi({
                 {/* Subformulario según la respuesta de trayectoria */}
                 {respondioPrimerEmpleo ? (
                   respuestas.esPrimerEmpleo ? (
-                    <div className="space-y-4 rounded-2xl border border-surface-border bg-surface-elevated/40 p-4 animate-fade-in motion-reduce:animate-none">
-                      <div className="flex items-center gap-2 text-xs font-semibold text-accent-light">
-                        <span>ℹ️</span>
-                        <span>Configuración de primer empleo (0 años de experiencia)</span>
+                    <div className="space-y-4 rounded-2xl border border-surface-border bg-surface-elevated/40 p-5 animate-fade-in motion-reduce:animate-none">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-2 text-xs font-semibold text-accent-light">
+                          <span aria-hidden="true">ℹ️</span>
+                          <span>Configuración de primer empleo (0 años de experiencia)</span>
+                        </div>
+                        {peEstructurado && (
+                          <button
+                            type="button"
+                            onClick={() => setPeEstructurado(false)}
+                            className="text-[11px] text-accent hover:underline font-semibold"
+                          >
+                            ✏️ Redactar con tus palabras de nuevo
+                          </button>
+                        )}
                       </div>
 
-                      <div>
-                        <label htmlFor="pe-estudios" className="label">
-                          ¿Qué estás estudiando o acabas de estudiar?
-                        </label>
-                        <input
-                          id="pe-estudios"
-                          type="text"
-                          className="input"
-                          placeholder="Ej. Estudiante de 8vo semestre de Ingeniería de Sistemas"
-                          value={respuestas.estudiosPrimerEmpleo}
-                          onChange={(e) =>
-                            actualizarCampo("estudiosPrimerEmpleo", e.target.value)
-                          }
-                        />
-                      </div>
+                      {!peEstructurado ? (
+                        /* Caja única: Cuéntame con tus palabras qué has estudiado o hecho */
+                        <div className="space-y-3">
+                          <div>
+                            <div className="flex items-center justify-between gap-2 mb-1.5">
+                              <label htmlFor="pe-texto-libre" className="label mb-0">
+                                Cuéntame con tus palabras qué has estudiado o hecho <span className="text-status-error">*</span>
+                              </label>
+                              <BotonDictado
+                                onTextoReconocido={(t) =>
+                                  setTextoPrimerEmpleo((prev) => (prev ? `${prev} ${t}` : t))
+                                }
+                                label="Dictar"
+                              />
+                            </div>
+                            <textarea
+                              id="pe-texto-libre"
+                              rows={5}
+                              className="textarea w-full text-xs"
+                              placeholder="Ejemplo: Estudio 8vo semestre de Ingeniería de Sistemas. En clase desarrollé una aplicación de gestión con Python y SQL, y en mi tiempo libre ayudé a construir una página web para un negocio familiar. También participo en el semillero de desarrollo web de mi universidad."
+                              value={textoPrimerEmpleo}
+                              onChange={(e) => setTextoPrimerEmpleo(e.target.value)}
+                              maxLength={1500}
+                            />
+                            <div className="flex justify-between text-[11px] text-text-muted mt-1">
+                              <span>Mínimo 10 caracteres · Cuéntanos tus estudios, proyectos o voluntariado</span>
+                              <span>{textoPrimerEmpleo.length} / 1500</span>
+                            </div>
+                          </div>
 
-                      <div>
-                        <label htmlFor="pe-proyectos" className="label">
-                          Proyectos destacados (académicos o personales)
-                        </label>
-                        <textarea
-                          id="pe-proyectos"
-                          className="textarea min-h-[90px]"
-                          placeholder="Ej. Desarrollé una aplicación con Python y SQL para el curso de bases de datos."
-                          value={respuestas.proyectosPrimerEmpleo}
-                          onChange={(e) =>
-                            actualizarCampo("proyectosPrimerEmpleo", e.target.value)
-                          }
-                        />
-                      </div>
+                          {errorEstructurarPE && (
+                            <div className="alert-warning text-xs flex items-center gap-2">
+                              <span>⚠️</span>
+                              <p>{errorEstructurarPE}</p>
+                            </div>
+                          )}
 
-                      <div>
-                        <label htmlFor="pe-voluntariado" className="label">
-                          Voluntariado, semilleros o actividades extracurriculares
-                        </label>
-                        <textarea
-                          id="pe-voluntariado"
-                          className="textarea min-h-[80px]"
-                          placeholder="Ej. Monitor de algoritmos o voluntario en comunidades tecnológicas."
-                          value={respuestas.voluntariadoPrimerEmpleo}
-                          onChange={(e) =>
-                            actualizarCampo(
-                              "voluntariadoPrimerEmpleo",
-                              e.target.value
-                            )
-                          }
-                        />
-                      </div>
+                          <div className="flex justify-end pt-1">
+                            <button
+                              type="button"
+                              id="btn-ordenar-con-lexi"
+                              onClick={handleOrdenarConLexi}
+                              disabled={textoPrimerEmpleo.trim().length < 10 || estructurandoPE}
+                              className="btn-primary text-xs py-2 px-4 inline-flex items-center gap-2 active:scale-95 transition-transform"
+                            >
+                              {estructurandoPE ? (
+                                <>
+                                  <span className="animate-spin text-xs">⏳</span>
+                                  <span>Lexi está ordenando tus experiencias...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <span>✨ Ordenar con Lexi</span>
+                                  <span aria-hidden="true">→</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        /* Los tres campos rellenados y EDITABLES */
+                        <div className="space-y-4 animate-fade-in motion-reduce:animate-none">
+                          <div className="rounded-xl bg-accent/10 border border-accent/30 p-3 text-xs text-text-primary flex items-start gap-2.5">
+                            <span className="text-base" aria-hidden="true">✨</span>
+                            <p>
+                              <strong>Lexi organizó tu información:</strong> Revisa y edita los campos si lo deseas antes de continuar con la entrevista.
+                            </p>
+                          </div>
+
+                          <div>
+                            <label htmlFor="pe-estudios" className="label">
+                              Estudios en curso o recientes
+                            </label>
+                            <input
+                              id="pe-estudios"
+                              type="text"
+                              className="input text-xs"
+                              placeholder="Ej. Estudiante de 8vo semestre de Ingeniería de Sistemas"
+                              value={respuestas.estudiosPrimerEmpleo}
+                              onChange={(e) =>
+                                actualizarCampo("estudiosPrimerEmpleo", e.target.value)
+                              }
+                            />
+                          </div>
+
+                          <div>
+                            <label htmlFor="pe-proyectos" className="label">
+                              Proyectos destacados (académicos o personales)
+                            </label>
+                            <textarea
+                              id="pe-proyectos"
+                              className="textarea min-h-[80px] text-xs"
+                              placeholder="Ej. Desarrollé una aplicación con Python y SQL para el curso de bases de datos."
+                              value={respuestas.proyectosPrimerEmpleo}
+                              onChange={(e) =>
+                                actualizarCampo("proyectosPrimerEmpleo", e.target.value)
+                              }
+                            />
+                          </div>
+
+                          <div>
+                            <label htmlFor="pe-voluntariado" className="label">
+                              Voluntariado, semilleros o actividades extracurriculares
+                            </label>
+                            <textarea
+                              id="pe-voluntariado"
+                              className="textarea min-h-[70px] text-xs"
+                              placeholder="Ej. Monitor de algoritmos o voluntario en comunidades tecnológicas."
+                              value={respuestas.voluntariadoPrimerEmpleo}
+                              onChange={(e) =>
+                                actualizarCampo(
+                                  "voluntariadoPrimerEmpleo",
+                                  e.target.value
+                                )
+                              }
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     /* Rama Con Experiencia */
@@ -599,9 +734,23 @@ export default function EntrevistaLexi({
                       </div>
 
                       <div>
-                        <label htmlFor="exp-cargo" className="label">
-                          Último cargo o rol desempeñado
-                        </label>
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <label htmlFor="exp-cargo" className="label mb-0">
+                            Último cargo o rol desempeñado
+                          </label>
+                          <BotonDictado
+                            onTextoReconocido={(t) => {
+                              setMovioExperiencia(true);
+                              actualizarCampo(
+                                "cargoReciente",
+                                respuestas.cargoReciente
+                                  ? `${respuestas.cargoReciente} ${t}`
+                                  : t
+                              );
+                            }}
+                            label="Dictar"
+                          />
+                        </div>
                         <input
                           id="exp-cargo"
                           type="text"
