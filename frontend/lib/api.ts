@@ -239,7 +239,14 @@ export interface PesosPrioridades {
   peso_modalidad: number;
   peso_salario: number;
   peso_habilidad: number;
+  salario_minimo?: number | null;
+  salario_maximo?: number | null;
   perfil_id?: number | null;
+}
+
+export interface RangoMercado {
+  minimo: number;
+  maximo: number;
 }
 
 export interface ResultadoRecalculo {
@@ -251,6 +258,8 @@ export interface ResultadoRecalculo {
     peso_habilidad: number;
   };
   recomendaciones: Recomendacion[];
+  rango_mercado?: RangoMercado | null;
+  filtradas_por_salario?: number;
 }
 
 export async function apiRecalcularRecomendaciones(
@@ -285,6 +294,28 @@ export interface ResultadoPlanBCoaching {
   perfil_id: number;
   plan_b: PlanBInfo;
   coaching: AccionCoaching[];
+}
+
+export interface ItemExplicacion {
+  vacante_id: number;
+  explicacion: string;
+}
+
+export interface ExplicacionesResponse {
+  perfil_id: number;
+  origen: "gemini" | "respaldo";
+  explicaciones: ItemExplicacion[];
+}
+
+export async function apiGetExplicaciones(
+  perfilId?: number | null
+): Promise<ExplicacionesResponse> {
+  const res = await fetch(`${API_URL}/perfil/explicaciones`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify(perfilId != null ? { perfil_id: perfilId } : {}),
+  });
+  return handleResponse<ExplicacionesResponse>(res);
 }
 
 export async function apiGetPlanBCoaching(

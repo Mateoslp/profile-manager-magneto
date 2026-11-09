@@ -203,10 +203,12 @@ def calcular_recomendaciones(
     """Calcula el score y afinidad de cada vacante respecto al perfil según pesos configurables.
     Devuelve las vacantes ordenadas de mayor a menor score (hasta `limite` vacantes).
     """
+    aspiracion = perfil.get("aspiracion_salarial")
+    tiene_aspiracion = bool(aspiracion and aspiracion > 0)
     puntaje_maximo = (
         peso_ubicacion
         + peso_modalidad
-        + peso_salario
+        + (peso_salario if tiene_aspiracion else 0)
         + (peso_habilidad * MAX_HABILIDADES_MATCH)
     )
     habilidades_candidato = _habilidades(perfil.get("habilidades"))
@@ -217,8 +219,7 @@ def calcular_recomendaciones(
             score += peso_ubicacion
         if perfil.get("modalidad_preferida") and v.get("modalidad") == perfil["modalidad_preferida"]:
             score += peso_modalidad
-        aspiracion = perfil.get("aspiracion_salarial")
-        if aspiracion and v.get("salario_max"):
+        if tiene_aspiracion and v.get("salario_max"):
             if v["salario_max"] >= aspiracion:
                 score += peso_salario
         habilidades_vacante = _habilidades(v.get("habilidades"))
@@ -701,3 +702,102 @@ Devuelve UNICAMENTE un JSON válido con esta estructura exacta, sin texto adicio
     except Exception:
         origen = "respaldo"
         return _generar_feedback_respaldo(respuestas, vacante_habilidades), origen
+
+
+# --- Explicaciones de vacantes por Inari ---
+def _generar_explicaciones_respaldo(recs: list[dict]) -> list[dict]:
+    """Genera frases de recomendación deterministas basadas estrictamente en datos reales."""
+    explicaciones = []
+    for r in recs:
+        v_id = r["id"]
+        titulo = r.get("titulo", "esta posición")
+        afinidad = r.get("afinidad", 0)
+        comunes = r.get("habilidades_en_comun", [])
+        faltantes = r.get("habilidades_faltantes", [])
+        modalidad = r.get("modalidad", "remoto")
+        empresa = r.get("empresa") or "la empresa"
+
+        if comunes:
+            habs_str = ", ".join(comunes[:2])
+            frase = f"Te recomiendo esta vacante de {titulo} en {empresa} porque tus conocimientos en {habs_str} coinciden directamente con su búsqueda (afinidad del {afinidad}%)."
+        elif afinidad >= 50:
+            frase = f"Excelente opción como {titulo} en {empresa} en modalidad {modalidad}, alineada con tus preferencias principales."
+        else:
+            if faltantes:
+                falt_str = faltantes[0]
+                frase = f"Una oportunidad para proyectarte como {titulo} en {empresa}; fortalecer {falt_str} te dará ventaja competitiva."
+            else:
+                frase = f"Oportunidad como {titulo} en {empresa} en modalidad {modalidad} para expandir tu perfil profesional."
+        explicaciones.append({"vacante_id": v_id, "explicacion": frase})
+    return explicaciones
+
+
+def generar_explicaciones_vacantes(recs: list[dict]) -> tuple[list[dict], str]:
+    """Genera frases explicativas para cada vacante recomendada en una sola llamada a Gemini.
+    Devuelve (lista_explicaciones, origen) donde origen es 'gemini' o 'respaldo'."""
+    if not recs:
+        return [], "respaldo"
+
+    datos_vacantes = [
+        {
+            "vacante_id": r["id"],
+            "titulo": r.get("titulo"),
+            "empresa": r.get("empresa"),
+            "afinidad": r.get("afinidad"),
+            "ubicacion": r.get("ubicacion"),
+            "modalidad": r.get("modalidad"),
+            "habilidades_en_comun": r.get("habilidades_en_comun", []),
+            "habilidades_faltantes": r.get("habilidades_faltantes", []),
+        }
+        for r in recs
+    ]
+
+    prompt = f"""Eres Inari, el agente especialista en vacantes y afinidad de LIKAI.
+Tu rol es presentar a un candidato por qué le recomiendas cada una de las siguientes vacantes recomendadas.
+Escribe para cada vacante una frase corta, cálida y profesional (máximo 2 oraciones) explicando por qué es una buena opción para su perfil.
+
+REGLAS ESTRICTAS:
+- Basa tu explicación ÚNICAMENTE en los datos reales proporcionados (título, empresa, afinidad, modalidad, ubicación, habilidades en común y habilidades faltantes).
+- NO inventes beneficios, salarios, tecnologías ni datos que no estén en la lista.
+- Si tiene habilidades en común, menciónalas. Si la afinidad es alta, destácalo con entusiasmo.
+
+DATOS REALES DE LAS VACANTES:
+{json.dumps(datos_vacantes, ensure_ascii=False, indent=2)}
+
+Responde ÚNICAMENTE con un JSON válido con esta estructura exacta, sin texto adicional ni marcas de código:
+{{
+  "explicaciones": [
+    {{
+      "vacante_id": 1,
+      "explicacion": "Frase corta y cercana de Inari..."
+    }}
+  ]
+}}
+"""
+    origen = "gemini"
+    try:
+        respuesta = llm.invoke(prompt)
+        parsed = parsear_json(extraer_texto(respuesta))
+        if not isinstance(parsed, dict) or "explicaciones" not in parsed:
+            raise ValueError("Estructura de JSON inválida")
+        items = parsed["explicaciones"]
+        if not isinstance(items, list):
+            raise ValueError("explicaciones debe ser una lista")
+
+        mapa_exp = {}
+        for it in items:
+            if isinstance(it, dict) and "vacante_id" in it and "explicacion" in it:
+                mapa_exp[it["vacante_id"]] = str(it["explicacion"]).strip()
+
+        resultado = []
+        for r in recs:
+            v_id = r["id"]
+            if v_id in mapa_exp and mapa_exp[v_id]:
+                resultado.append({"vacante_id": v_id, "explicacion": mapa_exp[v_id]})
+            else:
+                resp = _generar_explicaciones_respaldo([r])
+                resultado.append(resp[0])
+        return resultado, origen
+    except Exception:
+        origen = "respaldo"
+        return _generar_explicaciones_respaldo(recs), origen

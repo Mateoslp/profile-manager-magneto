@@ -26,10 +26,12 @@ function formatSalario(n: number | null) {
 
 function KanbanCard({
   post,
+  index = 0,
   onRetirar,
   onPracticarEntrevista,
 }: {
   post: Postulacion;
+  index?: number;
   onRetirar: (id: number) => Promise<void> | void;
   onPracticarEntrevista?: (post: Postulacion) => void;
 }) {
@@ -39,7 +41,11 @@ function KanbanCard({
   return (
     <div
       id={`card-post-${post.id}`}
-      className="kanban-card cursor-default"
+      style={{ animationDelay: `${index * 60}ms` }}
+      className={[
+        "kanban-card cursor-default animate-slide-up motion-reduce:animate-none transition-all duration-300",
+        retirando ? "opacity-40 scale-95" : "opacity-100 scale-100",
+      ].join(" ")}
     >
       {/* Vacante y empresa */}
       <div className="mb-3">
@@ -253,10 +259,11 @@ function KanbanColumna({
         </div>
       ) : (
         <div className="space-y-3">
-          {postulaciones.map((p) => (
+          {postulaciones.map((p, idx) => (
             <KanbanCard
               key={p.id}
               post={p}
+              index={idx}
               onRetirar={onRetirar}
               onPracticarEntrevista={onPracticarEntrevista}
             />

@@ -2410,6 +2410,336 @@ def test_patch_empresa_estado_invalido_da_422():
     assert res.status_code == 422
 
 
+# ==============================================================================
+# BLOQUE A: Pruebas de salario como filtro opcional
+# ==============================================================================
+
+def test_sin_aspiracion_no_suma_ni_cuenta_en_el_maximo():
+    """Si el perfil no tiene aspiración salarial, el criterio no suma y su peso no entra al máximo."""
+    import agents
+    perfil = {
+        "ubicacion": "Bogotá",
+        "modalidad_preferida": "remoto",
+        "habilidades": "Python",
+        "aspiracion_salarial": None,
+    }
+    vacantes = [
+        {
+            "id": 1,
+            "titulo": "Backend Dev",
+            "ubicacion": "Bogotá",
+            "modalidad": "remoto",
+            "habilidades": "Python",
+            "salario_min": 3_000_000,
+            "salario_max": 5_000_000,
+        }
+    ]
+    recs = agents.calcular_recomendaciones(perfil, vacantes)
+    assert len(recs) == 1
+    # Score: ubicacion(2) + modalidad(2) + salario(0) + habilidad(2*1) = 6
+    # Maximo: 2 + 2 + 0 + (2*3) = 10
+    # Afinidad: round(6 / 10 * 100) = 60
+    assert recs[0]["score"] == 6
+    assert recs[0]["afinidad"] == 60
+
+
+def test_con_aspiracion_y_pesos_por_defecto_identico_a_hoy():
+    """Con aspiración salarial y pesos por defecto, el puntaje y afinidad son idénticos a los originales."""
+    import agents
+    perfil = {
+        "ubicacion": "Bogotá",
+        "modalidad_preferida": "remoto",
+        "habilidades": "Python",
+        "aspiracion_salarial": 4_000_000,
+    }
+    vacantes = [
+        {
+            "id": 1,
+            "titulo": "Backend Dev",
+            "ubicacion": "Bogotá",
+            "modalidad": "remoto",
+            "habilidades": "Python",
+            "salario_min": 3_000_000,
+            "salario_max": 5_000_000,
+        }
+    ]
+    recs = agents.calcular_recomendaciones(perfil, vacantes)
+    assert len(recs) == 1
+    # Score: ubicacion(2) + modalidad(2) + salario(1) + habilidad(2*1) = 7
+    # Maximo: 2 + 2 + 1 + (2*3) = 11
+    # Afinidad: round(7 / 11 * 100) = 64
+    assert recs[0]["score"] == 7
+    assert recs[0]["afinidad"] == 64
+
+
+def test_recalcular_filtro_por_minimo(monkeypatch):
+    """Filtrar por salario mínimo excluye vacantes cuyo salario_max sea inferior al mínimo pedido."""
+    perfil = {"id": 1, "usuario_id": 10, "nombre": "Dev", "aspiracion_salarial": None}
+    vacantes = [
+        {"id": 1, "titulo": "Junior", "salario_min": 1_000_000, "salario_max": 2_500_000, "ubicacion": "X", "modalidad": "remoto", "habilidades": "Git"},
+        {"id": 2, "titulo": "Senior", "salario_min": 4_000_000, "salario_max": 7_000_000, "ubicacion": "X", "modalidad": "remoto", "habilidades": "Git"},
+    ]
+    client = _mock_db_recalcular(monkeypatch, perfiles=[perfil], vacantes=vacantes)
+    token = auth.crear_token(10, "candidato")
+
+    res = client.post(
+        "/perfil/recalcular-recomendaciones",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"salario_minimo": 3_000_000},
+    )
+    assert res.status_code == 200
+    datos = res.json()
+    assert datos["filtradas_por_salario"] == 1
+    assert len(datos["recomendaciones"]) == 1
+    assert datos["recomendaciones"][0]["id"] == 2
+
+
+def test_recalcular_filtro_por_maximo(monkeypatch):
+    """Filtrar por salario máximo excluye vacantes cuyo salario_min sea superior al máximo pedido."""
+    perfil = {"id": 1, "usuario_id": 10, "nombre": "Dev", "aspiracion_salarial": None}
+    vacantes = [
+        {"id": 1, "titulo": "Junior", "salario_min": 1_000_000, "salario_max": 2_500_000, "ubicacion": "X", "modalidad": "remoto", "habilidades": "Git"},
+        {"id": 2, "titulo": "Senior", "salario_min": 4_000_000, "salario_max": 7_000_000, "ubicacion": "X", "modalidad": "remoto", "habilidades": "Git"},
+    ]
+    client = _mock_db_recalcular(monkeypatch, perfiles=[perfil], vacantes=vacantes)
+    token = auth.crear_token(10, "candidato")
+
+    res = client.post(
+        "/perfil/recalcular-recomendaciones",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"salario_maximo": 3_000_000},
+    )
+    assert res.status_code == 200
+    datos = res.json()
+    assert datos["filtradas_por_salario"] == 1
+    assert len(datos["recomendaciones"]) == 1
+    assert datos["recomendaciones"][0]["id"] == 1
+
+
+def test_recalcular_minimo_mayor_que_maximo_da_422(monkeypatch):
+    """Enviar salario_minimo mayor que salario_maximo responde 422 Unprocessable Entity."""
+    client = _mock_db_recalcular(monkeypatch, perfiles=[], vacantes=[])
+    token = auth.crear_token(10, "candidato")
+
+    res = client.post(
+        "/perfil/recalcular-recomendaciones",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"salario_minimo": 6_000_000, "salario_maximo": 4_000_000},
+    )
+    assert res.status_code == 422
+
+
+def test_recalcular_salario_negativo_o_mayor_a_50m_da_422(monkeypatch):
+    """Valores de salario negativos o superiores a 50.000.000 responden 422."""
+    client = _mock_db_recalcular(monkeypatch, perfiles=[], vacantes=[])
+    token = auth.crear_token(10, "candidato")
+
+    res_neg = client.post(
+        "/perfil/recalcular-recomendaciones",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"salario_minimo": -1},
+    )
+    assert res_neg.status_code == 422
+
+    res_max = client.post(
+        "/perfil/recalcular-recomendaciones",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"salario_maximo": 50_000_001},
+    )
+    assert res_max.status_code == 422
+
+
+def test_recalcular_rango_mercado_correcto(monkeypatch):
+    """rango_mercado contiene el mínimo y máximo de las vacantes recomendadas base."""
+    perfil = {"id": 1, "usuario_id": 10, "nombre": "Dev", "aspiracion_salarial": None}
+    vacantes = [
+        {"id": 1, "titulo": "A", "salario_min": 2_000_000, "salario_max": 3_500_000, "ubicacion": "X", "modalidad": "remoto", "habilidades": "Git"},
+        {"id": 2, "titulo": "B", "salario_min": 4_000_000, "salario_max": 6_000_000, "ubicacion": "X", "modalidad": "remoto", "habilidades": "Git"},
+    ]
+    client = _mock_db_recalcular(monkeypatch, perfiles=[perfil], vacantes=vacantes)
+    token = auth.crear_token(10, "candidato")
+
+    res = client.post(
+        "/perfil/recalcular-recomendaciones",
+        headers={"Authorization": f"Bearer {token}"},
+        json={},
+    )
+    assert res.status_code == 200
+    datos = res.json()
+    assert datos["rango_mercado"] == {"minimo": 2_000_000, "maximo": 6_000_000}
+
+
+def test_lexi_respaldo_sin_linea_de_salario():
+    """parsear_perfil_rigido parsea exitosamente un CV que no incluye línea de aspiración salarial."""
+    import perfil_utils
+    cv = (
+        "Nombre: Laura Martínez\n"
+        "Email: laura@ejemplo.com\n"
+        "Teléfono: 3001234567\n"
+        "Ubicación: Medellín\n"
+        "Modalidad preferida: remoto\n"
+        "Habilidades: Python, SQL\n"
+        "Educación: Pregrado\n"
+        "Disponibilidad: inmediata\n"
+    )
+    perfil = perfil_utils.parsear_perfil_rigido(cv)
+    assert perfil is not None
+    assert perfil["nombre"] == "Laura Martínez"
+    assert perfil["email"] == "laura@ejemplo.com"
+    assert perfil["aspiracion_salarial"] is None
+
+
+# ==============================================================================
+# BLOQUE C: Pruebas de explicaciones de vacantes por Inari
+# ==============================================================================
+
+def test_explicaciones_exito_con_gemini_simulado(monkeypatch):
+    """POST /perfil/explicaciones devuelve explicaciones con origen 'gemini' cuando el LLM responde bien."""
+    import main as main_mod
+    import agents
+    main_mod._historial_explicaciones.clear()
+
+    perfil = {"id": 1, "usuario_id": 10, "nombre": "Dev", "aspiracion_salarial": None, "habilidades": "Python"}
+    vacantes = [{"id": 1, "titulo": "Python Dev", "empresa": "Tech", "salario_min": 3_000_000, "salario_max": 5_000_000, "ubicacion": "Bogotá", "modalidad": "remoto", "habilidades": "Python"}]
+    client = _mock_db_recalcular(monkeypatch, perfiles=[perfil], vacantes=vacantes)
+    token = auth.crear_token(10, "candidato")
+
+    class MockLLM:
+        def invoke(self, prompt):
+            return FakeRespuesta('{"explicaciones": [{"vacante_id": 1, "explicacion": "Excelente vacante por tu manejo de Python."}]}')
+
+    monkeypatch.setattr(agents, "llm", MockLLM())
+
+    res = client.post(
+        "/perfil/explicaciones",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"perfil_id": 1},
+    )
+    assert res.status_code == 200
+    datos = res.json()
+    assert datos["origen"] == "gemini"
+    assert len(datos["explicaciones"]) == 1
+    assert datos["explicaciones"][0]["vacante_id"] == 1
+    assert "Python" in datos["explicaciones"][0]["explicacion"]
+
+
+def test_explicaciones_fallo_gemini_da_respaldo_marcado(monkeypatch):
+    """Si Gemini falla, POST /perfil/explicaciones devuelve frases por reglas y origen 'respaldo'."""
+    import main as main_mod
+    import agents
+    main_mod._historial_explicaciones.clear()
+
+    perfil = {"id": 1, "usuario_id": 10, "nombre": "Dev", "aspiracion_salarial": None, "habilidades": "Python"}
+    vacantes = [{"id": 1, "titulo": "Python Dev", "empresa": "Tech Corp", "salario_min": 3_000_000, "salario_max": 5_000_000, "ubicacion": "Bogotá", "modalidad": "remoto", "habilidades": "Python"}]
+    client = _mock_db_recalcular(monkeypatch, perfiles=[perfil], vacantes=vacantes)
+    token = auth.crear_token(10, "candidato")
+
+    class FalloLLM:
+        def invoke(self, prompt):
+            raise RuntimeError("Gemini no disponible temporalmente")
+
+    monkeypatch.setattr(agents, "llm", FalloLLM())
+
+    res = client.post(
+        "/perfil/explicaciones",
+        headers={"Authorization": f"Bearer {token}"},
+        json={},
+    )
+    assert res.status_code == 200
+    datos = res.json()
+    assert datos["origen"] == "respaldo"
+    assert len(datos["explicaciones"]) == 1
+    assert datos["explicaciones"][0]["vacante_id"] == 1
+    assert "Tech Corp" in datos["explicaciones"][0]["explicacion"]
+
+
+def test_explicaciones_limite_429_sin_llamar_gemini(monkeypatch):
+    """Superar el límite de 10 explicaciones por hora da 429 sin llamar al LLM."""
+    import main as main_mod
+    import agents
+
+    main_mod._historial_explicaciones.clear()
+    ahora = time.time()
+    for _ in range(10):
+        main_mod._historial_explicaciones[10].append(ahora)
+
+    llamadas_llm = []
+    class MockLLM:
+        def invoke(self, prompt):
+            llamadas_llm.append(prompt)
+            return FakeRespuesta('{"explicaciones": []}')
+
+    monkeypatch.setattr(agents, "llm", MockLLM())
+
+    perfil = {"id": 1, "usuario_id": 10, "nombre": "Dev"}
+    client = _mock_db_recalcular(monkeypatch, perfiles=[perfil], vacantes=[])
+    token = auth.crear_token(10, "candidato")
+
+    res = client.post(
+        "/perfil/explicaciones",
+        headers={"Authorization": f"Bearer {token}"},
+        json={},
+    )
+    assert res.status_code == 429
+    assert len(llamadas_llm) == 0
+
+
+def test_explicaciones_perfil_ajeno_da_403(monkeypatch):
+    """Intentar obtener explicaciones de un perfil ajeno da 403 Forbidden."""
+    import main as main_mod
+    main_mod._historial_explicaciones.clear()
+
+    perfil_ajeno = {"id": 99, "usuario_id": 20, "nombre": "Otro"}
+    client = _mock_db_recalcular(monkeypatch, perfiles=[perfil_ajeno], vacantes=[])
+    token = auth.crear_token(10, "candidato")
+
+    res = client.post(
+        "/perfil/explicaciones",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"perfil_id": 99},
+    )
+    assert res.status_code == 403
+
+
+def test_explicaciones_sin_token_da_401():
+    """Llamar a /perfil/explicaciones sin token responde 401 Unauthorized."""
+    from main import app as main_app
+    client = TestClient(main_app)
+    res = client.post("/perfil/explicaciones", json={})
+    assert res.status_code == 401
+
+
+def test_explicaciones_json_invalido_de_gemini_da_respaldo(monkeypatch):
+    """Si Gemini devuelve un JSON no parseable o sin la clave requerida, usa el respaldo."""
+    import main as main_mod
+    import agents
+    main_mod._historial_explicaciones.clear()
+
+    perfil = {"id": 1, "usuario_id": 10, "nombre": "Dev", "aspiracion_salarial": None, "habilidades": "SQL"}
+    vacantes = [{"id": 5, "titulo": "Data Analyst", "empresa": "Datos SAS", "salario_min": 3_000_000, "salario_max": 4_000_000, "ubicacion": "Bogotá", "modalidad": "remoto", "habilidades": "SQL"}]
+    client = _mock_db_recalcular(monkeypatch, perfiles=[perfil], vacantes=vacantes)
+    token = auth.crear_token(10, "candidato")
+
+    class InvalidoLLM:
+        def invoke(self, prompt):
+            return FakeRespuesta("Esto no es un json { estructura rota")
+
+    monkeypatch.setattr(agents, "llm", InvalidoLLM())
+
+    res = client.post(
+        "/perfil/explicaciones",
+        headers={"Authorization": f"Bearer {token}"},
+        json={},
+    )
+    assert res.status_code == 200
+    datos = res.json()
+    assert datos["origen"] == "respaldo"
+    assert len(datos["explicaciones"]) == 1
+    assert datos["explicaciones"][0]["vacante_id"] == 5
+
+
+
+
 
 
 

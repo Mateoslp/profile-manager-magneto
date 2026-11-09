@@ -20,7 +20,7 @@ const CIUDADES_PRESET = [
 ];
 
 const MODALIDADES_PRESET = [
-  { id: "remoto", label: "Remoto", desc: "100% desde casa" },
+  { id: "remoto", label: "Remoto", desc: "100% desde cualquier lugar" },
   { id: "hibrido", label: "Híbrido", desc: "Días en oficina y casa" },
   { id: "presencial", label: "Presencial", desc: "En sede de la empresa" },
 ];
@@ -65,16 +65,7 @@ const HABILIDADES_CATALOGO = [
   "Resolución de problemas",
 ];
 
-const SALARIOS_PRESET = [
-  1800000,
-  2500000,
-  3500000,
-  4500000,
-  6000000,
-  8000000,
-];
-
-const TOTAL_PASOS = 7;
+const TOTAL_PASOS = 6;
 
 export default function EntrevistaLexi({
   onFinalizar,
@@ -86,10 +77,9 @@ export default function EntrevistaLexi({
   const [mostrarResumenMovil, setMostrarResumenMovil] = useState<boolean>(false);
   const inputCiudadId = useId();
 
-  // Estados para rastrear interacción explícita del usuario
+  // Interacción explícita del usuario
   const [respondioPrimerEmpleo, setRespondioPrimerEmpleo] = useState<boolean>(false);
   const [movioExperiencia, setMovioExperiencia] = useState<boolean>(false);
-  const [movioSalario, setMovioSalario] = useState<boolean>(false);
 
   const [respuestas, setRespuestas] = useState<RespuestasEntrevista>({
     nombre: "",
@@ -106,10 +96,9 @@ export default function EntrevistaLexi({
     educacion: "",
     disponibilidad: "",
     habilidades: [],
-    aspiracionSalarial: 0,
   });
 
-  /* Cargar el email de la sesión activa al montar */
+  /* Cargar email de la sesión activa al montar */
   useEffect(() => {
     if (typeof window !== "undefined") {
       const emailSesion = sessionStorage.getItem("likai_user");
@@ -136,7 +125,7 @@ export default function EntrevistaLexi({
     });
   }
 
-  /* Cálculo del porcentaje de completitud con campos reales (solo cuenta interacción real) */
+  /* Cálculo del porcentaje de completitud con campos reales (arranca en 0%) */
   const camposEvaluados = [
     Boolean(respuestas.nombre.trim()),
     Boolean(respuestas.telefono.trim()),
@@ -150,7 +139,6 @@ export default function EntrevistaLexi({
     Boolean(respuestas.educacion.trim()),
     Boolean(respuestas.disponibilidad.trim()),
     respuestas.habilidades.length > 0,
-    movioSalario && respuestas.aspiracionSalarial > 0,
   ];
 
   const completados = camposEvaluados.filter(Boolean).length;
@@ -159,7 +147,9 @@ export default function EntrevistaLexi({
   function irPaso(nuevoPaso: number) {
     if (nuevoPaso >= 1 && nuevoPaso <= TOTAL_PASOS) {
       setPaso(nuevoPaso);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      if (typeof window !== "undefined") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
     }
   }
 
@@ -176,53 +166,93 @@ export default function EntrevistaLexi({
     onFinalizar(cvGenerado);
   }
 
-  function formatearPesos(val: number): string {
-    return new Intl.NumberFormat("es-CO", {
-      style: "currency",
-      currency: "COP",
-      maximumFractionDigits: 0,
-    }).format(val);
+  // Comentarios vivos y reactivos de Lexi por paso
+  function obtenerMensajeLexi(): string {
+    if (paso === 1) {
+      if (respuestas.nombre.trim()) {
+        return `¡Mucho gusto, ${respuestas.nombre.trim().split(" ")[0]}! Ahora completemos tu teléfono para que los reclutadores puedan contactarte.`;
+      }
+      return "¡Hola! Soy Lexi. Te guiaré paso a paso para estructurar tu perfil profesional. Empecemos con tus datos básicos.";
+    }
+    if (paso === 2) {
+      if (respuestas.ubicacion && respuestas.modalidad) {
+        return `Excelente: buscaremos oportunidades en ${respuestas.ubicacion} en modalidad ${respuestas.modalidad}.`;
+      }
+      if (respuestas.ubicacion) {
+        return `¡Perfecto en ${respuestas.ubicacion}! Ahora cuéntame en qué modalidad prefieres trabajar.`;
+      }
+      return "¿Dónde te encuentras y en qué modalidad te gustaría trabajar? Esto es clave para que Inari calcule tu afinidad con las vacantes.";
+    }
+    if (paso === 3) {
+      if (respondioPrimerEmpleo) {
+        if (respuestas.esPrimerEmpleo) {
+          return "¡Un gran comienzo! Enfocaremos tu perfil en tus estudios, proyectos destacados y voluntariado sin inventar experiencia laboral.";
+        }
+        return `Muy bien: ${respuestas.experienciaAnios || 1} ${
+          (respuestas.experienciaAnios || 1) === 1 ? "año" : "años"
+        } de experiencia laboral. Cuéntame cuál fue tu último cargo o rol.`;
+      }
+      return "Cuéntame sobre tu trayectoria: si es tu primer empleo, destacaremos tus proyectos y formación; si tienes experiencia previa, registraremos tus años y roles.";
+    }
+    if (paso === 4) {
+      if (respuestas.educacion && respuestas.disponibilidad) {
+        return `Formación ${respuestas.educacion} y disponibilidad ${respuestas.disponibilidad.toLowerCase()}. ¡Inari tendrá esto en cuenta!`;
+      }
+      return "¿Cuál es tu nivel de formación actual y qué tan pronto podrías comenzar a trabajar?";
+    }
+    if (paso === 5) {
+      const cant = respuestas.habilidades.length;
+      if (cant > 0) {
+        return `¡Excelente selección! Llevas ${cant} ${cant === 1 ? "habilidad clave" : "habilidades clave"}. Cada una suma directamente a tu afinidad.`;
+      }
+      return "Selecciona tus principales fortalezas técnicas y blandas. Mientras más preciso seas, mejor será la recomendación.";
+    }
+    if (paso === 6) {
+      return "¡Tu perfil está listo! Revisa cuidadosamente cada dato. Si quieres ajustar algo, pulsa Editar en cualquier sección antes de analizar con los agentes.";
+    }
+    return "Continuemos armando tu perfil profesional.";
   }
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6">
-      {/* Barra de progreso superior */}
+      {/* Barra de progreso viva */}
       <div className="card p-4">
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
-          <div className="flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent/20 text-xs font-bold text-accent-light">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-7 w-7 items-center justify-center rounded-xl bg-accent/20 text-xs font-bold text-accent-light border border-accent/30 shadow-glow-sm">
               {paso}
             </span>
-            <span className="font-medium text-text-primary">
+            <span className="font-semibold text-text-primary">
               Paso {paso} de {TOTAL_PASOS}:{" "}
-              {paso === 1 && "Datos de contacto"}
-              {paso === 2 && "Ubicación y modalidad"}
-              {paso === 3 && "¿Es tu primer empleo?"}
-              {paso === 4 && "Educación y disponibilidad"}
-              {paso === 5 && "Habilidades clave"}
-              {paso === 6 && "Aspiración salarial"}
-              {paso === 7 && "Revisión final"}
+              <span className="font-normal text-text-secondary">
+                {paso === 1 && "Datos de contacto"}
+                {paso === 2 && "Ubicación y modalidad"}
+                {paso === 3 && "Trayectoria profesional"}
+                {paso === 4 && "Educación y disponibilidad"}
+                {paso === 5 && "Habilidades clave"}
+                {paso === 6 && "Revisión final"}
+              </span>
             </span>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="w-32 sm:w-44 h-2.5 rounded-full bg-surface-elevated overflow-hidden">
+            <div className="w-32 sm:w-48 h-2.5 rounded-full bg-surface-elevated overflow-hidden border border-surface-border/50">
               <div
-                className="h-full bg-gradient-to-r from-accent to-accent-light transition-all duration-300"
+                className="h-full bg-gradient-to-r from-accent to-accent-light transition-all duration-400 ease-out motion-reduce:duration-0"
                 style={{ width: `${porcentaje}%` }}
               />
             </div>
-            <span className="text-xs font-semibold text-accent-light min-w-[3rem] text-right">
+            <span className="text-xs font-bold text-accent-light min-w-[3rem] text-right">
               {porcentaje}%
             </span>
           </div>
         </div>
 
         {/* Botón para ver resumen en móvil */}
-        <div className="mt-2 block lg:hidden">
+        <div className="mt-3 block lg:hidden">
           <button
             type="button"
-            className="btn-ghost w-full text-xs text-text-muted justify-between"
+            className="btn-ghost w-full text-xs text-text-muted justify-between border border-surface-border py-1.5"
             onClick={() => setMostrarResumenMovil(!mostrarResumenMovil)}
           >
             <span>{mostrarResumenMovil ? "Ocultar resumen del perfil" : "Ver resumen del perfil"}</span>
@@ -233,38 +263,30 @@ export default function EntrevistaLexi({
 
       {/* Contenedor en 2 columnas (formulario y resumen lateral) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Columna Principal: Pregunta actual */}
+        {/* Columna Principal: Pregunta actual con Lexi presente */}
         <div className="lg:col-span-8 card p-6 sm:p-8 space-y-6">
-          {/* Mensaje de Lexi */}
-          <div className="flex items-start gap-4 rounded-xl bg-surface-elevated/70 p-4 border border-surface-border">
-            <div className="shrink-0">
-              <AgenteSvg agente="Lexi" estado="hablando" size={54} />
+          {/* Mensaje reactivo de Lexi */}
+          <div className="flex items-start gap-4 rounded-2xl bg-surface-elevated/80 p-4 border border-surface-border shadow-sm">
+            <div className="shrink-0 pt-0.5">
+              <AgenteSvg agente="Lexi" estado="hablando" size={56} />
             </div>
             <div className="flex-1 space-y-1">
-              <span className="text-xs font-bold text-accent-light tracking-wide uppercase">
-                Lexi · Especialista de Perfil
-              </span>
-              <p className="text-sm text-text-primary leading-relaxed">
-                {paso === 1 &&
-                  "¡Hola! Te ayudaré a estructurar tu perfil paso a paso. Empecemos con tu nombre y teléfono para que las empresas te contacten."}
-                {paso === 2 &&
-                  "¿Dónde te encuentras y en qué modalidad te gustaría trabajar? Esto es clave para que Inari calcule tu afinidad con las vacantes."}
-                {paso === 3 &&
-                  "Si es tu primer empleo, no te preocupes: destacaremos tus estudios, proyectos y voluntariado sin inventar experiencia laboral."}
-                {paso === 4 &&
-                  "Cuéntame cuál es tu nivel educativo actual y cuándo estarías disponible para comenzar."}
-                {paso === 5 &&
-                  "Selecciona las habilidades que dominas o estás desarrollando. Puedes marcar varias."}
-                {paso === 6 &&
-                  "¿Cuál es tu aspiración salarial mensual en pesos colombianos (COP)? Las vacantes en la plataforma van desde $1.500.000 hasta $8.500.000 COP."}
-                {paso === 7 &&
-                  "¡Excelente trabajo! Revisa las respuestas antes de analizarlas. Puedes editar cualquier sección con un clic."}
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-accent-light tracking-wide uppercase">
+                  Lexi
+                </span>
+                <span className="text-[10px] text-text-muted uppercase tracking-wider">
+                  · Estructuración de Perfil
+                </span>
+              </div>
+              <p className="text-sm text-text-primary leading-relaxed" aria-live="polite">
+                {obtenerMensajeLexi()}
               </p>
             </div>
           </div>
 
-          {/* Formulario según el paso */}
-          <div className="space-y-6 pt-2">
+          {/* Formulario según el paso con animación de entrada */}
+          <div key={paso} className="animate-fade-in motion-reduce:animate-none space-y-6 pt-1">
             {/* PASO 1: CONTACTO */}
             {paso === 1 && (
               <div className="space-y-4">
@@ -296,12 +318,12 @@ export default function EntrevistaLexi({
                       disabled
                       readOnly
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 rounded bg-accent/20 px-2 py-0.5 text-[11px] font-semibold text-accent-light">
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg bg-accent/20 px-2 py-0.5 text-[11px] font-semibold text-accent-light">
                       De tu cuenta
                     </span>
                   </div>
                   <p className="mt-1 text-xs text-text-muted">
-                    El correo se asocia a tu usuario autenticado para proteger tu perfil.
+                    El correo se asocia a tu cuenta autenticada para proteger tu perfil.
                   </p>
                 </div>
 
@@ -341,9 +363,10 @@ export default function EntrevistaLexi({
                             actualizarCampo("ubicacion", c);
                           }}
                           className={[
-                            "rounded-xl px-4 py-2 text-xs font-semibold transition-all",
+                            "rounded-xl px-4 py-2 text-xs font-semibold transition-all duration-150 motion-reduce:transition-none",
+                            "active:scale-95 hover:scale-[1.02]",
                             seleccionada
-                              ? "bg-accent text-white shadow-sm ring-2 ring-accent"
+                              ? "bg-accent text-white shadow-glow-sm ring-2 ring-accent"
                               : "border border-surface-border bg-surface-elevated text-text-secondary hover:border-accent hover:text-text-primary",
                           ].join(" ")}
                         >
@@ -356,9 +379,10 @@ export default function EntrevistaLexi({
                       type="button"
                       onClick={() => setMostrarCiudadCustom(true)}
                       className={[
-                        "rounded-xl px-4 py-2 text-xs font-semibold transition-all",
+                        "rounded-xl px-4 py-2 text-xs font-semibold transition-all duration-150 motion-reduce:transition-none",
+                        "active:scale-95 hover:scale-[1.02]",
                         mostrarCiudadCustom
-                          ? "bg-accent text-white shadow-sm ring-2 ring-accent"
+                          ? "bg-accent text-white shadow-glow-sm ring-2 ring-accent"
                           : "border border-surface-border bg-surface-elevated text-text-secondary hover:border-accent hover:text-text-primary",
                       ].join(" ")}
                     >
@@ -400,9 +424,10 @@ export default function EntrevistaLexi({
                           type="button"
                           onClick={() => actualizarCampo("modalidad", m.id)}
                           className={[
-                            "flex flex-col items-start gap-1 rounded-2xl border p-4 text-left transition-all",
+                            "flex flex-col items-start gap-1 rounded-2xl border p-4 text-left transition-all duration-150 motion-reduce:transition-none",
+                            "active:scale-95 hover:scale-[1.01]",
                             seleccionada
-                              ? "border-accent bg-accent/15 ring-2 ring-accent/30"
+                              ? "border-accent bg-accent/15 ring-2 ring-accent/30 shadow-glow-sm"
                               : "border-surface-border bg-surface-elevated hover:border-surface-border/80",
                           ].join(" ")}
                         >
@@ -436,13 +461,14 @@ export default function EntrevistaLexi({
                         actualizarCampo("experienciaAnios", 0);
                       }}
                       className={[
-                        "flex flex-col items-center gap-1 rounded-2xl border p-4 text-center transition-all",
+                        "flex flex-col items-center gap-1.5 rounded-2xl border p-4 text-center transition-all duration-150 motion-reduce:transition-none",
+                        "active:scale-95 hover:scale-[1.01]",
                         respondioPrimerEmpleo && respuestas.esPrimerEmpleo
-                          ? "border-accent bg-accent/15 ring-2 ring-accent/30"
+                          ? "border-accent bg-accent/15 ring-2 ring-accent/30 shadow-glow-sm"
                           : "border-surface-border bg-surface-elevated hover:border-accent",
                       ].join(" ")}
                     >
-                      <span className="text-xl">🎓</span>
+                      <span className="text-2xl">🎓</span>
                       <span className="font-semibold text-sm text-text-primary">
                         Sí, primer empleo
                       </span>
@@ -461,13 +487,14 @@ export default function EntrevistaLexi({
                         }
                       }}
                       className={[
-                        "flex flex-col items-center gap-1 rounded-2xl border p-4 text-center transition-all",
+                        "flex flex-col items-center gap-1.5 rounded-2xl border p-4 text-center transition-all duration-150 motion-reduce:transition-none",
+                        "active:scale-95 hover:scale-[1.01]",
                         respondioPrimerEmpleo && !respuestas.esPrimerEmpleo
-                          ? "border-accent bg-accent/15 ring-2 ring-accent/30"
+                          ? "border-accent bg-accent/15 ring-2 ring-accent/30 shadow-glow-sm"
                           : "border-surface-border bg-surface-elevated hover:border-accent",
                       ].join(" ")}
                     >
-                      <span className="text-xl">💼</span>
+                      <span className="text-2xl">💼</span>
                       <span className="font-semibold text-sm text-text-primary">
                         No, tengo experiencia
                       </span>
@@ -481,7 +508,7 @@ export default function EntrevistaLexi({
                 {/* Subformulario según la respuesta de trayectoria */}
                 {respondioPrimerEmpleo ? (
                   respuestas.esPrimerEmpleo ? (
-                    <div className="space-y-4 rounded-2xl border border-surface-border bg-surface-elevated/40 p-4">
+                    <div className="space-y-4 rounded-2xl border border-surface-border bg-surface-elevated/40 p-4 animate-fade-in motion-reduce:animate-none">
                       <div className="flex items-center gap-2 text-xs font-semibold text-accent-light">
                         <span>ℹ️</span>
                         <span>Configuración de primer empleo (0 años de experiencia)</span>
@@ -510,7 +537,7 @@ export default function EntrevistaLexi({
                         <textarea
                           id="pe-proyectos"
                           className="textarea min-h-[90px]"
-                          placeholder="Ej. Desarrollé una aplicación de gestión con Python y SQL para el curso de bases de datos."
+                          placeholder="Ej. Desarrollé una aplicación con Python y SQL para el curso de bases de datos."
                           value={respuestas.proyectosPrimerEmpleo}
                           onChange={(e) =>
                             actualizarCampo("proyectosPrimerEmpleo", e.target.value)
@@ -525,7 +552,7 @@ export default function EntrevistaLexi({
                         <textarea
                           id="pe-voluntariado"
                           className="textarea min-h-[80px]"
-                          placeholder="Ej. Monitor de algoritmos o voluntario en eventos de tecnología comunitaria."
+                          placeholder="Ej. Monitor de algoritmos o voluntario en comunidades tecnológicas."
                           value={respuestas.voluntariadoPrimerEmpleo}
                           onChange={(e) =>
                             actualizarCampo(
@@ -538,7 +565,7 @@ export default function EntrevistaLexi({
                     </div>
                   ) : (
                     /* Rama Con Experiencia */
-                    <div className="space-y-4 rounded-2xl border border-surface-border bg-surface-elevated/40 p-4">
+                    <div className="space-y-4 rounded-2xl border border-surface-border bg-surface-elevated/40 p-4 animate-fade-in motion-reduce:animate-none">
                       <div>
                         <label htmlFor="exp-anios" className="label">
                           Años de experiencia laboral aproximada:{" "}
@@ -579,7 +606,7 @@ export default function EntrevistaLexi({
                           id="exp-cargo"
                           type="text"
                           className="input"
-                          placeholder="Ej. Desarrollador Junior / Analista de Soporte"
+                          placeholder="Ej. Desarrollador Junior / Analista de Datos"
                           value={respuestas.cargoReciente}
                           onChange={(e) => {
                             setMovioExperiencia(true);
@@ -613,9 +640,10 @@ export default function EntrevistaLexi({
                           type="button"
                           onClick={() => actualizarCampo("educacion", n)}
                           className={[
-                            "rounded-xl px-4 py-3 text-xs font-semibold text-center transition-all",
+                            "rounded-xl px-4 py-3 text-xs font-semibold text-center transition-all duration-150 motion-reduce:transition-none",
+                            "active:scale-95 hover:scale-[1.01]",
                             seleccionada
-                              ? "bg-accent text-white shadow-sm ring-2 ring-accent"
+                              ? "bg-accent text-white shadow-glow-sm ring-2 ring-accent"
                               : "border border-surface-border bg-surface-elevated text-text-secondary hover:border-accent hover:text-text-primary",
                           ].join(" ")}
                         >
@@ -639,9 +667,10 @@ export default function EntrevistaLexi({
                           type="button"
                           onClick={() => actualizarCampo("disponibilidad", d)}
                           className={[
-                            "rounded-xl px-4 py-3 text-xs font-semibold text-center transition-all",
+                            "rounded-xl px-4 py-3 text-xs font-semibold text-center transition-all duration-150 motion-reduce:transition-none",
+                            "active:scale-95 hover:scale-[1.01]",
                             seleccionada
-                              ? "bg-accent text-white shadow-sm ring-2 ring-accent"
+                              ? "bg-accent text-white shadow-glow-sm ring-2 ring-accent"
                               : "border border-surface-border bg-surface-elevated text-text-secondary hover:border-accent hover:text-text-primary",
                           ].join(" ")}
                         >
@@ -675,13 +704,14 @@ export default function EntrevistaLexi({
                         type="button"
                         onClick={() => toggleHabilidad(hab)}
                         className={[
-                          "rounded-full px-3.5 py-1.5 text-xs font-medium transition-all flex items-center gap-1.5",
+                          "rounded-full px-3.5 py-1.5 text-xs font-medium transition-all duration-150 motion-reduce:transition-none flex items-center gap-1.5",
+                          "active:scale-90 hover:scale-[1.03]",
                           activa
-                            ? "bg-accent text-white shadow-sm border border-accent"
+                            ? "bg-accent text-white shadow-glow-sm border border-accent ring-1 ring-accent-light/50"
                             : "border border-surface-border bg-surface-elevated text-text-secondary hover:border-accent/60",
                         ].join(" ")}
                       >
-                        <span>{activa ? "✓" : "+"}</span>
+                        <span aria-hidden="true">{activa ? "✓" : "+"}</span>
                         <span>{hab}</span>
                       </button>
                     );
@@ -689,96 +719,20 @@ export default function EntrevistaLexi({
                 </div>
 
                 <p className="text-xs text-text-muted">
-                  Estas habilidades se comparan directamente con las vacantes activas en Magneto para calcular tu afinidad.
+                  Estas habilidades se comparan directamente con las vacantes en la plataforma para calcular tu afinidad.
                 </p>
               </div>
             )}
 
-            {/* PASO 6: SALARIO */}
+            {/* PASO 6: REVISIÓN FINAL */}
             {paso === 6 && (
-              <div className="space-y-6">
-                <div>
-                  <label htmlFor="salario-input" className="label">
-                    Aspiración salarial mensual en pesos colombianos (COP) <span className="text-status-error">*</span>
-                  </label>
-
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl font-bold text-accent-light">
-                      {movioSalario && respuestas.aspiracionSalarial > 0
-                        ? formatearPesos(respuestas.aspiracionSalarial)
-                        : "$3.500.000 COP"}
-                    </span>
-                    <span className="text-xs text-text-muted font-medium">
-                      {movioSalario && respuestas.aspiracionSalarial > 0
-                        ? "/ mes"
-                        : "(mueve el deslizador o elige un monto para registrar)"}
-                    </span>
-                  </div>
-
-                  <div className="pt-4">
-                    <input
-                      id="salario-input"
-                      type="range"
-                      min="1500000"
-                      max="10000000"
-                      step="100000"
-                      className="w-full accent-accent cursor-pointer"
-                      value={respuestas.aspiracionSalarial || 3500000}
-                      onChange={(e) => {
-                        setMovioSalario(true);
-                        actualizarCampo(
-                          "aspiracionSalarial",
-                          Number(e.target.value)
-                        );
-                      }}
-                    />
-                    <div className="flex justify-between text-[11px] text-text-muted mt-1">
-                      <span>$1.500.000 COP</span>
-                      <span>$5.000.000 COP</span>
-                      <span>$10.000.000 COP</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Presets rápidos */}
-                <div>
-                  <span className="text-xs font-semibold text-text-muted uppercase tracking-wider block mb-2">
-                    Montos sugeridos habituales:
-                  </span>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {SALARIOS_PRESET.map((monto) => {
-                      const activo =
-                        movioSalario && respuestas.aspiracionSalarial === monto;
-                      return (
-                        <button
-                          key={monto}
-                          type="button"
-                          onClick={() => {
-                            setMovioSalario(true);
-                            actualizarCampo("aspiracionSalarial", monto);
-                          }}
-                          className={[
-                            "rounded-xl px-3 py-2 text-xs font-semibold transition-all text-center",
-                            activo
-                              ? "bg-accent text-white shadow-sm ring-2 ring-accent"
-                              : "border border-surface-border bg-surface-elevated text-text-secondary hover:border-accent hover:text-text-primary",
-                          ].join(" ")}
-                        >
-                          {formatearPesos(monto)}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* PASO 7: REVISIÓN FINAL */}
-            {paso === 7 && (
               <div className="space-y-4">
-                <p className="text-xs text-text-secondary">
-                  Revisa los datos de tu perfil. Si deseas modificar algo, pulsa el botón de editar correspondiente.
-                </p>
+                <div className="rounded-xl border border-surface-border bg-surface-elevated/40 p-3.5 text-xs text-text-secondary flex items-start gap-2.5">
+                  <span className="text-base select-none" aria-hidden="true">💡</span>
+                  <p>
+                    Revisa la información antes del análisis. Recuerda que podrás ajustar tus prioridades y filtros salariales en el siguiente paso.
+                  </p>
+                </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                   {/* Tarjeta Contacto */}
@@ -828,7 +782,7 @@ export default function EntrevistaLexi({
                   <div className="rounded-xl border border-surface-border bg-surface-elevated/60 p-3.5 space-y-1">
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-accent-light uppercase tracking-wider text-[11px]">
-                        Experiencia
+                        Trayectoria
                       </span>
                       <button
                         type="button"
@@ -869,7 +823,7 @@ export default function EntrevistaLexi({
                   <div className="rounded-xl border border-surface-border bg-surface-elevated/60 p-3.5 space-y-1">
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-accent-light uppercase tracking-wider text-[11px]">
-                        Educación y Salario
+                        Educación y Disponibilidad
                       </span>
                       <button
                         type="button"
@@ -885,12 +839,6 @@ export default function EntrevistaLexi({
                     <p className="text-text-muted">
                       Disponibilidad: {respuestas.disponibilidad || "Por definir"}
                     </p>
-                    <p className="text-text-muted font-medium">
-                      Aspiración:{" "}
-                      {movioSalario && respuestas.aspiracionSalarial > 0
-                        ? formatearPesos(respuestas.aspiracionSalarial)
-                        : "Por definir"}
-                    </p>
                   </div>
                 </div>
 
@@ -898,7 +846,7 @@ export default function EntrevistaLexi({
                 <div className="rounded-xl border border-surface-border bg-surface-elevated/60 p-3.5 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-accent-light uppercase tracking-wider text-[11px]">
-                      Habilidades ({respuestas.habilidades.length})
+                      Habilidades seleccionadas ({respuestas.habilidades.length})
                     </span>
                     <button
                       type="button"
@@ -934,7 +882,7 @@ export default function EntrevistaLexi({
             {paso > 1 ? (
               <button
                 type="button"
-                className="btn-secondary text-xs sm:text-sm"
+                className="btn-secondary text-xs sm:text-sm active:scale-95 transition-transform motion-reduce:transition-none"
                 onClick={pasoAnterior}
                 disabled={loading}
               >
@@ -947,7 +895,7 @@ export default function EntrevistaLexi({
             {paso < TOTAL_PASOS ? (
               <button
                 type="button"
-                className="btn-primary text-xs sm:text-sm"
+                className="btn-primary text-xs sm:text-sm active:scale-95 transition-transform motion-reduce:transition-none"
                 onClick={pasoSiguiente}
                 disabled={loading}
               >
@@ -956,7 +904,7 @@ export default function EntrevistaLexi({
             ) : (
               <button
                 type="button"
-                className="btn-primary text-xs sm:text-sm"
+                className="btn-primary text-xs sm:text-sm active:scale-95 transition-transform motion-reduce:transition-none"
                 onClick={manejarEnvioFinal}
                 disabled={loading || !respuestas.nombre.trim()}
               >
@@ -966,10 +914,10 @@ export default function EntrevistaLexi({
           </div>
         </div>
 
-        {/* Columna Lateral: Resumen del perfil en tiempo real */}
+        {/* Columna Lateral: Resumen del perfil en construcción animado */}
         <div
           className={[
-            "lg:col-span-4 card p-5 space-y-4 lg:sticky lg:top-4",
+            "lg:col-span-4 card p-5 space-y-4 lg:sticky lg:top-4 transition-all duration-300",
             mostrarResumenMovil ? "block" : "hidden lg:block",
           ].join(" ")}
         >
@@ -982,21 +930,21 @@ export default function EntrevistaLexi({
             </span>
           </div>
 
-          <div className="space-y-3 text-xs">
-            <div>
+          <div className="space-y-3.5 text-xs">
+            <div className="transition-all duration-200">
               <span className="text-text-muted block text-[10px] uppercase font-semibold">
                 Candidato
               </span>
-              <span className="font-medium text-text-primary">
+              <span className={`font-medium ${respuestas.nombre ? "text-text-primary" : "text-text-muted italic"}`}>
                 {respuestas.nombre || "(Sin nombre aún)"}
               </span>
             </div>
 
-            <div>
+            <div className="transition-all duration-200">
               <span className="text-text-muted block text-[10px] uppercase font-semibold">
                 Ubicación y Modalidad
               </span>
-              <span className="font-medium text-text-primary capitalize">
+              <span className={`font-medium capitalize ${respuestas.ubicacion || respuestas.modalidad ? "text-text-primary" : "text-text-muted italic"}`}>
                 {respuestas.ubicacion || respuestas.modalidad
                   ? `${respuestas.ubicacion || "(Sin ciudad)"} · ${
                       respuestas.modalidad || "(Sin modalidad)"
@@ -1005,11 +953,11 @@ export default function EntrevistaLexi({
               </span>
             </div>
 
-            <div>
+            <div className="transition-all duration-200">
               <span className="text-text-muted block text-[10px] uppercase font-semibold">
-                Experiencia
+                Trayectoria
               </span>
-              <span className="font-medium text-text-primary">
+              <span className={`font-medium ${respondioPrimerEmpleo ? "text-text-primary" : "text-text-muted italic"}`}>
                 {!respondioPrimerEmpleo
                   ? "(Por definir)"
                   : respuestas.esPrimerEmpleo
@@ -1024,22 +972,15 @@ export default function EntrevistaLexi({
               </span>
             </div>
 
-            <div>
+            <div className="transition-all duration-200">
               <span className="text-text-muted block text-[10px] uppercase font-semibold">
-                Educación
+                Educación y Disponibilidad
               </span>
-              <span className="font-medium text-text-primary">
-                {respuestas.educacion || "(Por definir)"}
-              </span>
-            </div>
-
-            <div>
-              <span className="text-text-muted block text-[10px] uppercase font-semibold">
-                Aspiración Salarial
-              </span>
-              <span className="font-medium text-accent-light">
-                {movioSalario && respuestas.aspiracionSalarial > 0
-                  ? formatearPesos(respuestas.aspiracionSalarial)
+              <span className={`font-medium ${respuestas.educacion || respuestas.disponibilidad ? "text-text-primary" : "text-text-muted italic"}`}>
+                {respuestas.educacion || respuestas.disponibilidad
+                  ? `${respuestas.educacion || "(Sin educación)"} · ${
+                      respuestas.disponibilidad || "(Sin disponibilidad)"
+                    }`
                   : "(Por definir)"}
               </span>
             </div>
@@ -1053,13 +994,13 @@ export default function EntrevistaLexi({
                   respuestas.habilidades.map((h) => (
                     <span
                       key={h}
-                      className="rounded bg-surface-elevated px-2 py-0.5 text-[10px] text-text-secondary border border-surface-border"
+                      className="rounded-lg bg-surface-elevated px-2 py-0.5 text-[10px] text-accent-light border border-surface-border font-medium animate-fade-in motion-reduce:animate-none"
                     >
                       {h}
                     </span>
                   ))
                 ) : (
-                  <span className="text-text-muted text-[10px]">
+                  <span className="text-text-muted text-[10px] italic">
                     (Ninguna seleccionada)
                   </span>
                 )}
@@ -1071,4 +1012,3 @@ export default function EntrevistaLexi({
     </div>
   );
 }
-

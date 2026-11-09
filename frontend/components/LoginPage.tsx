@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { apiLogin, apiRegistro, setToken } from "@/lib/api";
+import { apiLogin, apiRegistro, setRol, setToken } from "@/lib/api";
 
 interface LoginPageProps {
   onSuccess: (email: string) => void;
@@ -58,8 +58,10 @@ export default function LoginPage({ onSuccess }: LoginPageProps) {
 
     try {
       if (tab === "login") {
-        const { access_token } = await apiLogin(email, password);
-        setToken(access_token);
+        const resLogin = await apiLogin(email, password);
+        setToken(resLogin.access_token);
+        const rolUsuario = resLogin.rol || "candidato";
+        setRol(rolUsuario);
         sessionStorage.setItem("likai_user", email);
         onSuccess(email);
       } else {

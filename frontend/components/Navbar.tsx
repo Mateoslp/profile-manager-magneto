@@ -5,6 +5,7 @@ import {
   apiGetNotificaciones,
   apiMarcarNotificacionLeida,
   clearToken,
+  getRol,
   Notificacion,
 } from "@/lib/api";
 import { Step } from "@/components/StepIndicator";
@@ -65,17 +66,19 @@ export default function Navbar({
   const [cargandoNotif, setCargandoNotif] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
-  const esEmpresa = rol === "empresa";
+  // Rol efectivo tolerante a sesiones previas o valores nulos
+  const rolEfectivo = rol ?? getRol() ?? "candidato";
+  const esEmpresa = rolEfectivo === "empresa";
 
   const cargarNotificaciones = useCallback(async () => {
     if (!email || esEmpresa) return;
     try {
       setCargandoNotif(true);
       const res = await apiGetNotificaciones();
-      setTotalNoLeidas(res.total_no_leidas);
-      setNotificaciones(res.notificaciones);
+      setTotalNoLeidas(res.total_no_leidas ?? 0);
+      setNotificaciones(res.notificaciones ?? []);
     } catch {
-      /* Silenciar error en polling de notificaciones */
+      /* Silenciar error en polling de notificaciones; no ocultar la campanita */
     } finally {
       setCargandoNotif(false);
     }

@@ -109,6 +109,8 @@ class RecalcularRecomendacionesIn(BaseModel):
     peso_modalidad: int = Field(default=2, ge=0, le=5)
     peso_salario: int = Field(default=1, ge=0, le=5)
     peso_habilidad: int = Field(default=2, ge=0, le=5)
+    salario_minimo: Optional[int] = Field(default=None, ge=0, le=50_000_000)
+    salario_maximo: Optional[int] = Field(default=None, ge=0, le=50_000_000)
     perfil_id: Optional[int] = None
 
     @model_validator(mode="after")
@@ -120,10 +122,17 @@ class RecalcularRecomendacionesIn(BaseModel):
             and self.peso_habilidad == 0
         ):
             raise ValueError("Al menos un peso debe ser mayor que 0")
+        if self.salario_minimo is not None and self.salario_maximo is not None:
+            if self.salario_minimo > self.salario_maximo:
+                raise ValueError("El salario mínimo no puede ser mayor que el salario máximo")
         return self
 
 
 class PlanBCoachingIn(BaseModel):
+    perfil_id: Optional[int] = None
+
+
+class ExplicacionesIn(BaseModel):
     perfil_id: Optional[int] = None
 
 
@@ -361,7 +370,8 @@ def recalcular_recomendaciones(
         for v in vacantes_raw
     ]
 
-    recs = calcular_recomendaciones(
+    # Recomendaciones base sin filtro salarial (determina rango de mercado)
+    recs_base = calcular_recomendaciones(
         perfil=perfil_dict,
         vacantes=vacantes_normalizadas,
         peso_ubicacion=datos.peso_ubicacion,
@@ -370,6 +380,50 @@ def recalcular_recomendaciones(
         peso_habilidad=datos.peso_habilidad,
         limite=5,
     )
+
+    salarios_mercado = []
+    for r in recs_base:
+        if r.get("salario_min") is not None and r["salario_min"] > 0:
+            salarios_mercado.append(r["salario_min"])
+        if r.get("salario_max") is not None and r["salario_max"] > 0:
+            salarios_mercado.append(r["salario_max"])
+
+    rango_mercado = (
+        {"minimo": min(salarios_mercado), "maximo": max(salarios_mercado)}
+        if salarios_mercado
+        else None
+    )
+
+    if datos.salario_minimo is not None or datos.salario_maximo is not None:
+        def _se_cruza_salario(v):
+            v_min = v.get("salario_min")
+            v_max = v.get("salario_max")
+            if v_min is None and v_max is None:
+                return False
+            if v_min is None:
+                v_min = v_max
+            if v_max is None:
+                v_max = v_min
+            if datos.salario_minimo is not None and v_max < datos.salario_minimo:
+                return False
+            if datos.salario_maximo is not None and v_min > datos.salario_maximo:
+                return False
+            return True
+
+        vacantes_filtradas = [v for v in vacantes_normalizadas if _se_cruza_salario(v)]
+        filtradas_por_salario = len(vacantes_normalizadas) - len(vacantes_filtradas)
+        recs = calcular_recomendaciones(
+            perfil=perfil_dict,
+            vacantes=vacantes_filtradas,
+            peso_ubicacion=datos.peso_ubicacion,
+            peso_modalidad=datos.peso_modalidad,
+            peso_salario=datos.peso_salario,
+            peso_habilidad=datos.peso_habilidad,
+            limite=5,
+        )
+    else:
+        filtradas_por_salario = 0
+        recs = recs_base
 
     return {
         "perfil_id": perfil["id"],
@@ -380,6 +434,99 @@ def recalcular_recomendaciones(
             "peso_habilidad": datos.peso_habilidad,
         },
         "recomendaciones": recs,
+        "rango_mercado": rango_mercado,
+        "filtradas_por_salario": filtradas_por_salario,
+    }
+
+
+# ---------- Explicaciones de vacantes por Inari ----------
+MAX_EXPLICACIONES_POR_HORA = 10
+_historial_explicaciones = defaultdict(deque)
+
+
+def _verificar_limite_explicaciones(usuario_id: int):
+    ahora = time.time()
+    cola = _historial_explicaciones[usuario_id]
+    while cola and ahora - cola[0] > 3600:
+        cola.popleft()
+    if len(cola) >= MAX_EXPLICACIONES_POR_HORA:
+        raise HTTPException(
+            status_code=429,
+            detail="Demasiadas solicitudes de explicaciones en una hora, intenta de nuevo más tarde",
+        )
+    cola.append(ahora)
+
+
+@app.post("/perfil/explicaciones")
+def obtener_explicaciones(
+    datos: ExplicacionesIn = ExplicacionesIn(),
+    usuario: dict = Depends(usuario_actual),
+):
+    """Genera explicaciones de por qué se recomienda cada vacante en una sola llamada al LLM (con respaldo)."""
+    _verificar_limite_explicaciones(usuario["id"])
+
+    with conexion() as conn:
+        cur = conn.cursor()
+        if datos.perfil_id is not None:
+            if usuario["rol"] == "admin":
+                cur.execute(
+                    "SELECT * FROM perfiles WHERE id = %s;",
+                    (datos.perfil_id,),
+                )
+            else:
+                cur.execute(
+                    "SELECT * FROM perfiles WHERE id = %s AND usuario_id = %s;",
+                    (datos.perfil_id, usuario["id"]),
+                )
+            perfil = cur.fetchone()
+            if not perfil:
+                raise HTTPException(
+                    status_code=403,
+                    detail="No tenés acceso a este perfil",
+                )
+        else:
+            cur.execute(
+                "SELECT * FROM perfiles WHERE usuario_id = %s ORDER BY id DESC LIMIT 1;",
+                (usuario["id"],),
+            )
+            perfil = cur.fetchone()
+            if not perfil:
+                raise HTTPException(
+                    status_code=404,
+                    detail="El usuario no tiene ningún perfil registrado",
+                )
+
+        cur.execute("SELECT * FROM vacantes ORDER BY id;")
+        vacantes_raw = cur.fetchall()
+
+    perfil_dict = limpiar_perfil(perfil)
+    vacantes_normalizadas = [
+        {
+            "id": v.get("id"),
+            "titulo": v.get("titulo"),
+            "empresa": v.get("empresa"),
+            "ubicacion": v.get("ubicacion"),
+            "modalidad": v.get("modalidad"),
+            "salario_min": v.get("salario_min"),
+            "salario_max": v.get("salario_max"),
+            "habilidades": v.get("habilidades"),
+        }
+        for v in vacantes_raw
+    ]
+
+    recs = calcular_recomendaciones(
+        perfil=perfil_dict,
+        vacantes=vacantes_normalizadas,
+        limite=5,
+    )
+
+    from agents import generar_explicaciones_vacantes
+    explicaciones, origen = generar_explicaciones_vacantes(recs)
+
+    return {
+        "perfil_id": perfil["id"],
+        "origen": origen,
+        "explicaciones": explicaciones,
     }
 
 

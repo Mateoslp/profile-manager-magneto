@@ -13,7 +13,7 @@ export interface RespuestasEntrevista {
   educacion: string;
   disponibilidad: string;
   habilidades: string[];
-  aspiracionSalarial: number;
+  aspiracionSalarial?: number;
 }
 
 /**
@@ -57,10 +57,6 @@ export function generarCvDesdeEntrevista(r: RespuestasEntrevista): string {
       r.habilidades.length > 0 ? r.habilidades.join(", ") : "Habilidades generales"
     }`
   );
-
-  if (r.aspiracionSalarial > 0) {
-    lineas.push(`Aspiración salarial: ${r.aspiracionSalarial} COP`);
-  }
 
   const texto = lineas.join("\n");
 

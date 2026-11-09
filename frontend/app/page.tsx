@@ -42,7 +42,7 @@ export default function HomePage() {
 
   function handleLoginSuccess(userEmail: string) {
     setEmail(userEmail);
-    const r = getRol();
+    const r = getRol() ?? "candidato";
     setRolState(r);
     setStep(2);
   }
@@ -95,29 +95,39 @@ export default function HomePage() {
       )}
 
       {/* Contenido principal */}
-      <main className="flex flex-1 flex-col items-center px-4 py-8 sm:px-6">
+      <main className="flex flex-1 flex-col items-center px-4 py-8 sm:px-6 w-full max-w-6xl mx-auto">
         {step === 1 && (
-          <LoginPage onSuccess={handleLoginSuccess} />
+          <div key="step-1" className="w-full animate-fade-in motion-reduce:animate-none">
+            <LoginPage onSuccess={handleLoginSuccess} />
+          </div>
         )}
 
         {step > 1 && email && esEmpresa && (
-          <EmpresaPage />
+          <div key="step-empresa" className="w-full animate-fade-in motion-reduce:animate-none">
+            <EmpresaPage />
+          </div>
         )}
 
         {step === 2 && email && !esEmpresa && (
-          <CvPage onResult={handleResult} />
+          <div key="step-2" className="w-full animate-fade-in motion-reduce:animate-none">
+            <CvPage onResult={handleResult} />
+          </div>
         )}
 
         {step === 3 && resultado && !esEmpresa && (
-          <ResultadosPage
-            resultado={resultado}
-            onOtroCv={handleOtroCv}
-            onVerTablero={handleVerTablero}
-          />
+          <div key="step-3" className="w-full animate-fade-in motion-reduce:animate-none">
+            <ResultadosPage
+              resultado={resultado}
+              onOtroCv={handleOtroCv}
+              onVerTablero={handleVerTablero}
+            />
+          </div>
         )}
 
         {step === 4 && !esEmpresa && (
-          <KanbanPage onVolverResultados={handleVolverResultados} />
+          <div key="step-4" className="w-full animate-fade-in motion-reduce:animate-none">
+            <KanbanPage onVolverResultados={handleVolverResultados} />
+          </div>
         )}
       </main>
 
