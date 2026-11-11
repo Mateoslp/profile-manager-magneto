@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: "class",
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -7,38 +8,38 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Paleta principal: oscuro + acento violeta-azul
+        // Paleta adaptable: Modo Claro por defecto (:root) y Modo Oscuro (html.dark)
         surface: {
-          DEFAULT: "#0f0f1a",
-          card: "#16162a",
-          elevated: "#1e1e35",
-          border: "#2d2d50",
+          DEFAULT: "rgb(var(--color-surface) / <alpha-value>)",
+          card: "rgb(var(--color-surface-card) / <alpha-value>)",
+          elevated: "rgb(var(--color-surface-elevated) / <alpha-value>)",
+          border: "rgb(var(--color-surface-border) / <alpha-value>)",
         },
         accent: {
-          DEFAULT: "#7c6af7",
-          light: "#a89cf9",
-          dark: "#5a48d4",
-          glow: "rgba(124, 106, 247, 0.25)",
+          DEFAULT: "rgb(var(--color-accent) / <alpha-value>)",
+          light: "rgb(var(--color-accent-light) / <alpha-value>)",
+          dark: "rgb(var(--color-accent-dark) / <alpha-value>)",
+          glow: "var(--accent-glow)",
         },
         text: {
-          primary: "#e8e8f0",
-          secondary: "#9090b0",
-          muted: "#5a5a7a",
+          primary: "rgb(var(--color-text-primary) / <alpha-value>)",
+          secondary: "rgb(var(--color-text-secondary) / <alpha-value>)",
+          muted: "rgb(var(--color-text-muted) / <alpha-value>)",
         },
         status: {
-          success: "#34d399",
-          warning: "#fbbf24",
-          error: "#f87171",
-          info: "#60a5fa",
+          success: "rgb(var(--color-status-success) / <alpha-value>)",
+          warning: "rgb(var(--color-status-warning) / <alpha-value>)",
+          error: "rgb(var(--color-status-error) / <alpha-value>)",
+          info: "rgb(var(--color-status-info) / <alpha-value>)",
         },
       },
       fontFamily: {
         sans: ["var(--font-inter)", "Inter", "system-ui", "sans-serif"],
       },
       boxShadow: {
-        card: "0 4px 24px rgba(0,0,0,0.4)",
-        glow: "0 0 24px rgba(124, 106, 247, 0.3)",
-        "glow-sm": "0 0 12px rgba(124, 106, 247, 0.2)",
+        card: "var(--shadow-card)",
+        glow: "0 0 24px var(--accent-glow)",
+        "glow-sm": "0 0 12px var(--accent-glow)",
       },
       animation: {
         "fade-in": "fadeIn 0.4s ease-out forwards",

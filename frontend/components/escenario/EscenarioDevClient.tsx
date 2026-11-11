@@ -22,7 +22,7 @@ export default function EscenarioDevClient() {
     <div className="min-h-screen px-4 py-8 sm:px-6">
       <div className="mx-auto max-w-5xl space-y-8">
         {/* Encabezado con insignia Solo desarrollo */}
-        <header className="flex flex-col gap-3 rounded-2xl border border-amber-700/40 bg-amber-950/20 p-5 sm:flex-row sm:items-center sm:justify-between">
+        <header className="flex flex-col gap-3 rounded-2xl border border-amber-400/60 bg-amber-50/80 dark:border-amber-700/40 dark:bg-amber-950/20 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1">
             <div className="flex flex-wrap items-center gap-2.5">
               <span className="chip-yellow font-semibold uppercase tracking-wider">

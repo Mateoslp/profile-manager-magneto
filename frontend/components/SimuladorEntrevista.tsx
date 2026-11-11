@@ -287,8 +287,8 @@ export default function SimuladorEntrevista({
               </div>
 
               {/* Comentario general */}
-              <div className="card p-4 border-blue-800/30 bg-blue-900/10 space-y-1.5">
-                <p className="text-xs font-semibold text-blue-300">
+              <div className="card p-4 border-blue-300/70 bg-blue-50/80 dark:border-blue-800/30 dark:bg-blue-900/10 space-y-1.5">
+                <p className="text-xs font-semibold text-blue-700 dark:text-blue-300">
                   Comentario general del entrevistador:
                 </p>
                 <p className="text-xs text-text-primary leading-relaxed">

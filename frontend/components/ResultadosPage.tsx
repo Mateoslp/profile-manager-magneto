@@ -256,7 +256,7 @@ function CirculoAfinidad({ pct }: { pct: number }) {
   return (
     <div className="flex flex-col items-center gap-0.5">
       <svg width="60" height="60" viewBox="0 0 60 60">
-        <circle cx="30" cy="30" r={r} fill="none" stroke="#2d2d50" strokeWidth="5" />
+        <circle cx="30" cy="30" r={r} fill="none" stroke="var(--surface-border)" strokeWidth="5" />
         <circle
           cx="30"
           cy="30"
@@ -431,8 +431,8 @@ function TarjetaVacanteConversacion({
       {!esPostulada && onPostular && (
         <div className="pt-3 border-t border-surface-border/50 space-y-2">
           {confirmandoBajaAfinidad ? (
-            <div className="rounded-xl border border-amber-500/40 bg-amber-950/20 p-3 space-y-2 text-xs">
-              <div className="flex items-center gap-2 text-amber-300 font-semibold">
+            <div className="rounded-xl border border-amber-400/60 bg-amber-50 dark:border-amber-500/40 dark:bg-amber-950/20 p-3 space-y-2 text-xs">
+              <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-semibold">
                 <span>⚠️</span>
                 <span>Aviso de baja afinidad ({rec.afinidad}%)</span>
               </div>
@@ -1240,11 +1240,11 @@ export default function ResultadosPage({
 
       {/* Iris — Orientación y Seguimiento */}
       {mensaje_seguimiento && (
-        <div className="card p-6 border-blue-800/30 bg-gradient-to-br from-blue-900/10 to-surface-card animate-fade-in motion-reduce:animate-none">
+        <div className="card p-6 border-blue-300/70 dark:border-blue-800/30 bg-gradient-to-br from-blue-500/10 dark:from-blue-900/10 to-surface-card animate-fade-in motion-reduce:animate-none">
           <div className="flex items-center gap-3 mb-3">
             <AgenteSvg agente="Iris" estado="hablando" size={44} />
             <div>
-              <p className="font-semibold text-blue-300">Iris — Seguimiento</p>
+              <p className="font-semibold text-blue-700 dark:text-blue-300">Iris — Seguimiento</p>
               <p className="text-xs text-text-muted">
                 {postulacion_id !== null
                   ? "Orientación para tu postulación"
@@ -1276,7 +1276,7 @@ export default function ResultadosPage({
       {infoPlanB?.plan_b.activo && infoPlanB.plan_b.grupos && Object.keys(infoPlanB.plan_b.grupos).length > 0 && (
         <div
           id="seccion-plan-b"
-          className="card p-6 space-y-6 border-status-warning/40 bg-gradient-to-br from-yellow-900/10 to-surface-card"
+          className="card p-6 space-y-6 border-status-warning/40 bg-gradient-to-br from-amber-500/10 dark:from-yellow-900/10 to-surface-card"
         >
           <div className="flex items-start gap-3">
             <span className="text-2xl" aria-hidden="true">💡</span>

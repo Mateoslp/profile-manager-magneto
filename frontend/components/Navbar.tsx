@@ -64,11 +64,46 @@ export default function Navbar({
   const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
   const [mostrarMenuNotif, setMostrarMenuNotif] = useState(false);
   const [cargandoNotif, setCargandoNotif] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   // Rol efectivo tolerante a sesiones previas o valores nulos
   const rolEfectivo = rol ?? getRol() ?? "candidato";
   const esEmpresa = rolEfectivo === "empresa";
+
+  /* Inicializar y sincronizar tema (Modo Claro por defecto) */
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("likai-theme");
+      const activeTheme: "light" | "dark" = saved === "dark" ? "dark" : "light";
+      setTheme(activeTheme);
+      if (activeTheme === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+      if (!saved) {
+        localStorage.setItem("likai-theme", "light");
+      }
+    } catch {
+      /* En caso de bloqueo de localStorage, mantener modo claro por defecto */
+    }
+  }, []);
+
+  function toggleTheme() {
+    const nextTheme: "light" | "dark" = theme === "light" ? "dark" : "light";
+    setTheme(nextTheme);
+    try {
+      localStorage.setItem("likai-theme", nextTheme);
+    } catch {
+      /* Ignorar error de almacenamiento */
+    }
+    if (nextTheme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }
 
   const cargarNotificaciones = useCallback(async () => {
     if (!email || esEmpresa) return;
@@ -215,133 +250,149 @@ export default function Navbar({
           </nav>
         )}
 
-        {/* Acciones del usuario: Campanita (candidato) y Salir */}
-        {email && (
-          <div className="order-2 flex items-center gap-2 md:order-3 sm:gap-3">
-            {/* Campanita de notificaciones (solo candidato) */}
-            {!esEmpresa && (
-              <div className="relative" ref={menuRef}>
-                <button
-                  id="btn-campanita-notificaciones"
-                  type="button"
-                  onClick={() => setMostrarMenuNotif((v) => !v)}
-                  aria-expanded={mostrarMenuNotif}
-                  aria-label={`Notificaciones ${totalNoLeidas > 0 ? `(${totalNoLeidas} no leídas)` : ""}`}
-                  className="btn-ghost relative p-2 text-text-secondary hover:text-text-primary focus-visible:ring-2 focus-visible:ring-accent rounded-xl"
-                  title="Ver notificaciones"
-                >
-                  <span className="text-base" aria-hidden="true">🔔</span>
-                  {totalNoLeidas > 0 && (
-                    <span
-                      id="badge-notificaciones-no-leidas"
-                      className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-status-error px-1 text-[10px] font-bold text-white shadow-sm"
-                    >
-                      {totalNoLeidas > 9 ? "9+" : totalNoLeidas}
-                    </span>
-                  )}
-                </button>
+        {/* Acciones del usuario: Selector de tema, Campanita (candidato) y Salir */}
+        <div className="order-2 flex items-center gap-2 md:order-3 sm:gap-3">
+          {/* Selector de tema (Modo Claro / Modo Oscuro) */}
+          <button
+            id="btn-theme-toggle"
+            type="button"
+            onClick={toggleTheme}
+            aria-label={theme === "light" ? "Cambiar a modo oscuro" : "Cambiar a modo claro"}
+            title={theme === "light" ? "Cambiar a modo oscuro" : "Cambiar a modo claro"}
+            className="btn-ghost p-2 text-text-secondary hover:text-text-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface rounded-xl transition-all duration-200"
+          >
+            <span className="text-base leading-none select-none" aria-hidden="true">
+              {theme === "light" ? "🌙" : "☀️"}
+            </span>
+          </button>
 
-                {/* Popover de notificaciones */}
-                {mostrarMenuNotif && (
-                  <div
-                    id="menu-desplegable-notificaciones"
-                    className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl border border-surface-border bg-surface-card p-4 shadow-card z-50 animate-slide-up"
+          {email && (
+            <>
+              {/* Campanita de notificaciones (solo candidato) */}
+              {!esEmpresa && (
+                <div className="relative" ref={menuRef}>
+                  <button
+                    id="btn-campanita-notificaciones"
+                    type="button"
+                    onClick={() => setMostrarMenuNotif((v) => !v)}
+                    aria-expanded={mostrarMenuNotif}
+                    aria-label={`Notificaciones ${totalNoLeidas > 0 ? `(${totalNoLeidas} no leídas)` : ""}`}
+                    className="btn-ghost relative p-2 text-text-secondary hover:text-text-primary focus-visible:ring-2 focus-visible:ring-accent rounded-xl"
+                    title="Ver notificaciones"
                   >
-                    <div className="flex items-center justify-between border-b border-surface-border pb-3 mb-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-text-primary">Notificaciones</span>
-                        {totalNoLeidas > 0 && (
-                          <span className="rounded-full bg-accent/20 px-2 py-0.5 text-[11px] font-semibold text-accent-light">
-                            {totalNoLeidas} nuevas
-                          </span>
+                    <span className="text-base" aria-hidden="true">🔔</span>
+                    {totalNoLeidas > 0 && (
+                      <span
+                        id="badge-notificaciones-no-leidas"
+                        className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-status-error px-1 text-[10px] font-bold text-white shadow-sm"
+                      >
+                        {totalNoLeidas > 9 ? "9+" : totalNoLeidas}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Popover de notificaciones */}
+                  {mostrarMenuNotif && (
+                    <div
+                      id="menu-desplegable-notificaciones"
+                      className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl border border-surface-border bg-surface-card p-4 shadow-card z-50 animate-slide-up"
+                    >
+                      <div className="flex items-center justify-between border-b border-surface-border pb-3 mb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-text-primary">Notificaciones</span>
+                          {totalNoLeidas > 0 && (
+                            <span className="rounded-full bg-accent/20 px-2 py-0.5 text-[11px] font-semibold text-accent-light">
+                              {totalNoLeidas} nuevas
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={cargarNotificaciones}
+                          disabled={cargandoNotif}
+                          className="btn-ghost text-[11px] py-1 px-2 text-text-muted hover:text-text-primary"
+                          title="Actualizar notificaciones"
+                        >
+                          {cargandoNotif ? "…" : "↺"}
+                        </button>
+                      </div>
+
+                      <div className="max-h-80 overflow-y-auto space-y-2.5 pr-1">
+                        {notificaciones.length === 0 ? (
+                          <div className="py-8 text-center text-xs text-text-muted">
+                            No tienes notificaciones por el momento.
+                          </div>
+                        ) : (
+                          notificaciones.map((n) => (
+                            <div
+                              key={n.id}
+                              className={`rounded-xl border p-3 text-xs transition-colors ${
+                                n.leida
+                                  ? "border-surface-border/50 bg-surface/40 text-text-muted"
+                                  : "border-accent/40 bg-accent/10 text-text-primary shadow-sm"
+                              }`}
+                            >
+                              <p className="leading-snug">{n.mensaje}</p>
+                              <div className="mt-2 flex items-center justify-between gap-2 text-[11px]">
+                                <span className="text-text-muted">
+                                  {n.creado_en ? new Date(n.creado_en).toLocaleString("es-CO", { dateStyle: "short", timeStyle: "short" }) : ""}
+                                </span>
+                                {!n.leida && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleMarcarLeida(n.id)}
+                                    className="text-accent-light hover:underline font-medium text-[11px]"
+                                  >
+                                    Marcar como leída
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))
                         )}
                       </div>
-                      <button
-                        type="button"
-                        onClick={cargarNotificaciones}
-                        disabled={cargandoNotif}
-                        className="btn-ghost text-[11px] py-1 px-2 text-text-muted hover:text-text-primary"
-                        title="Actualizar notificaciones"
-                      >
-                        {cargandoNotif ? "…" : "↺"}
-                      </button>
                     </div>
+                  )}
+                </div>
+              )}
 
-                    <div className="max-h-80 overflow-y-auto space-y-2.5 pr-1">
-                      {notificaciones.length === 0 ? (
-                        <div className="py-8 text-center text-xs text-text-muted">
-                          No tienes notificaciones por el momento.
-                        </div>
-                      ) : (
-                        notificaciones.map((n) => (
-                          <div
-                            key={n.id}
-                            className={`rounded-xl border p-3 text-xs transition-colors ${
-                              n.leida
-                                ? "border-surface-border/50 bg-surface/40 text-text-muted"
-                                : "border-accent/40 bg-accent/10 text-text-primary shadow-sm"
-                            }`}
-                          >
-                            <p className="leading-snug">{n.mensaje}</p>
-                            <div className="mt-2 flex items-center justify-between gap-2 text-[11px]">
-                              <span className="text-text-muted">
-                                {n.creado_en ? new Date(n.creado_en).toLocaleString("es-CO", { dateStyle: "short", timeStyle: "short" }) : ""}
-                              </span>
-                              {!n.leida && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleMarcarLeida(n.id)}
-                                  className="text-accent-light hover:underline font-medium text-[11px]"
-                                >
-                                  Marcar como leída
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                )}
+              {/* Email de sesión */}
+              <div className="hidden items-center gap-2 rounded-xl border border-surface-border bg-surface-elevated px-3 py-1.5 sm:flex">
+                <div className="h-2 w-2 rounded-full bg-status-success animate-pulse-slow" />
+                <span className="max-w-[160px] truncate text-xs text-text-secondary">
+                  {email}
+                </span>
               </div>
-            )}
 
-            {/* Email de sesión */}
-            <div className="hidden items-center gap-2 rounded-xl border border-surface-border bg-surface-elevated px-3 py-1.5 sm:flex">
-              <div className="h-2 w-2 rounded-full bg-status-success animate-pulse-slow" />
-              <span className="max-w-[160px] truncate text-xs text-text-secondary">
-                {email}
-              </span>
-            </div>
-
-            {/* Cerrar sesión */}
-            <button
-              id="btn-logout"
-              type="button"
-              onClick={handleLogout}
-              className="btn-ghost text-xs px-2.5 py-1.5 flex items-center gap-1.5"
-              title="Cerrar sesión"
-              aria-label="Cerrar sesión"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-                aria-hidden="true"
+              {/* Cerrar sesión */}
+              <button
+                id="btn-logout"
+                type="button"
+                onClick={handleLogout}
+                className="btn-ghost text-xs px-2.5 py-1.5 flex items-center gap-1.5"
+                title="Cerrar sesión"
+                aria-label="Cerrar sesión"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"
-                />
-              </svg>
-              <span>Salir</span>
-            </button>
-          </div>
-        )}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  aria-hidden="true"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"
+                  />
+                </svg>
+                <span>Salir</span>
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </header>
   );
